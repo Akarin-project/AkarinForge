@@ -20,20 +20,12 @@ echo "[Akarin] Ready to build"
 	echo "[Akarin] Touch sources.."
 	
 	cd "$forgebasedir"
-	if [ "$2" == "--fast" ] || [ "$3" == "--fast" ] || [ "$4" == "--fast" ]; then
-		echo "[Akarin] Repatch has been skipped"
-		\cp -rf "$basedir/src" "$forgebasedir/projects/Forge/"
-		\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/Forge/"
-		mvn clean install -DskipTests
-	else
-		rm -rf projects/Forge
-		./gradlew build
-		\cp -rf "$basedir/src" "$forgebasedir/projects/Forge/"
-		\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/Forge/"
-		mvn clean install -DskipTests
-	fi
+	\cp -rf "$basedir/src" "$forgebasedir/projects/Forge/"
+	\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/Forge/"
+	cd "projects/Forge"
+	git commit -m '[Akarin] Gen patches for build'
+	./gradlew build
 	
-	minecraftversion="1.12.2"
 	build="$forgebasedir/build/distributions"
 	\cp -rf "$build" "$basedir/"
 	
