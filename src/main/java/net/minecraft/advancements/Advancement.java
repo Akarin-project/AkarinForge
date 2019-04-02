@@ -24,7 +24,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 public class Advancement
 {
-    private final Advancement parent;
+    private final Advancement parent; // Akarin - test
     private final DisplayInfo display;
     private final AdvancementRewards rewards;
     private final ResourceLocation id;

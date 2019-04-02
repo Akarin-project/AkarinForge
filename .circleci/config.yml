@@ -28,7 +28,7 @@ jobs:
         - v1-dep-
     - run: git config --global user.email "circle@circleci.com"
     - run: git config --global user.name "CircleCI"
-    - run: export TERM=${TERM:-dumb} && ./gradlew clean build
+    - run: export TERM=${TERM:-dumb}
     - run: chmod +x scripts/inst.sh
     - run: ./scripts/inst.sh --setup
     # Save dependency cache
@@ -37,7 +37,7 @@ jobs:
         paths:
         - ~/.m2
     # Test
-    - run: yes|cp -rf ./build/ $CIRCLE_ARTIFACTS
+    - run: yes|cp -rf ./distributions/ $CIRCLE_ARTIFACTS
     # Teardown
     # Save test results
     - store_test_results:
