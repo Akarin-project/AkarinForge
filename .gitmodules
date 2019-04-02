@@ -1,4 +1,4 @@
-[submodule "work/Paper"]
-	path = work/Paper
-	url = https://github.com/PaperMC/Paper.git
-	branch = master
+[submodule "work/MinecraftForge"]
+	path = work/MinecraftForge
+	url = https://github.com/MinecraftForge/MinecraftForge.git
+	branch = 1.12.x
