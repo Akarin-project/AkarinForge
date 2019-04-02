@@ -24,7 +24,7 @@ echo "[Akarin] Ready to build"
 	\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/Forge/"
 	cd "projects/Forge"
 	git commit -m '[Akarin] Gen patches for build'
-	gradle build
+	./gradlew build
 	
 	build="$forgebasedir/build/distributions"
 	\cp -rf "$build" "$basedir/"
