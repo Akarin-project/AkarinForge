@@ -20,3 +20,4 @@
 #forge
 /distributions
 /bin
+*.launch
