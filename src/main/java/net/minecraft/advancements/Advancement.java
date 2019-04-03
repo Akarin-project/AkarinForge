@@ -32,6 +32,7 @@ public class Advancement
     private final String[][] requirements;
     private final Set<Advancement> children = Sets.<Advancement>newLinkedHashSet();
     private final ITextComponent displayText;
+    //public final org.bukkit.advancement.Advancement bukkit = new org.bukkit.craftbukkit.advancement.CraftAdvancement(this); // CraftBukkit
 
     public Advancement(ResourceLocation id, @Nullable Advancement parentIn, @Nullable DisplayInfo displayIn, AdvancementRewards rewardsIn, Map<String, Criterion> criteriaIn, String[][] requirementsIn)
     {

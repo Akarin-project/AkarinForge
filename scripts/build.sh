@@ -10,10 +10,8 @@ if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
 	echo "[Akarin] Setup workspace.."
 	(
 		cd "$forgebasedir"
-		./gradlew build
-		
-		echo "[Akarin] Touch project.."
-		\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/"
+		\cp -rf "$basedir/jsons" "$forgebasedir/"
+		echo "[Akarin] Setup Forge.."
 		./gradlew setupForge
 
 		echo "[Akarin] Touch workspace.."
@@ -30,6 +28,7 @@ fi
 echo "[Akarin] Ready to build"
 (
 	echo "[Akarin] Touch sources.."
+	\cp -rf "$basedir/jsons" "$forgebasedir/"
 
 	cd "$forgebasedir"
 	echo "[Akarin] Setup/Clean Forge.."
@@ -37,7 +36,6 @@ echo "[Akarin] Ready to build"
 
 	echo "[Akarin] Touch Forge.."
 	\cp -rf "$basedir/src" "$forgebasedir/projects/Forge/"
-	\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/"
 	\cp -rf "$basedir/icon.ico" "$forgebasedir/"
 
 	cd "$forgebasedir"
