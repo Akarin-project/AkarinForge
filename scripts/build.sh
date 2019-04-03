@@ -16,21 +16,21 @@ fi
 
 echo "[Akarin] Ready to build"
 (
-	cd "$forgebasedir"
 	echo "[Akarin] Touch sources.."
 
 	cd "$forgebasedir"
 	echo "[Akarin] Setup/Clean Forge.."
 	rm -rf "projects"
 	./gradlew build
+
 	echo "[Akarin] Touch Forge.."
 	\cp -rf "$basedir/src" "$forgebasedir/projects/Forge/"
 	\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/Forge/"
+	\cp -rf "$basedir/icon.ico" "$forgebasedir/"
 
 	cd "$forgebasedir"
-	git add .
-	git commit -m '[Akarin] Gen patches for build'
 	echo "[Akarin] Build Forge.."
+	./gradlew genPatches
 	./gradlew build
 
 	build="$forgebasedir/build/distributions"
