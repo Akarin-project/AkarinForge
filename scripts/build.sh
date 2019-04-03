@@ -7,10 +7,20 @@ workdir="$basedir/work"
 forgebasedir="$basedir/work/MinecraftForge"
 
 if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
-	echo "[Akarin] Setup Forge.."
+	echo "[Akarin] Setup workspace.."
 	(
+		echo "[Akarin] Touch project.."
 		cd "$forgebasedir"
-		#./gradlew build
+		\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/"
+		./gradlew setupForge
+		echo "[Akarin] Touch workspace.."
+		\cp -rf "$forgebasedir/projects/Forge/.settings" "$basedir/"
+		\cp -rf "$forgebasedir/projects/Forge/.project" "$basedir/"
+		\cp -rf "$forgebasedir/projects/Forge/.classpath" "$basedir/"
+		\cp -rf "$forgebasedir/projects/Forge/.settings" "$basedir/"
+		\cp -rf "$forgebasedir/projects/Forge/Forge.iml" "$basedir/"
+		\cp -rf "$forgebasedir/projects/Forge/Forge Client.launch" "$basedir/"
+		\cp -rf "$forgebasedir/projects/Forge/Forge Server.launch" "$basedir/"
 	)
 fi
 
@@ -20,12 +30,11 @@ echo "[Akarin] Ready to build"
 
 	cd "$forgebasedir"
 	echo "[Akarin] Setup/Clean Forge.."
-	rm -rf "projects"
-	./gradlew build
+	./gradlew setupForge
 
 	echo "[Akarin] Touch Forge.."
 	\cp -rf "$basedir/src" "$forgebasedir/projects/Forge/"
-	\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/Forge/"
+	\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/"
 	\cp -rf "$basedir/icon.ico" "$forgebasedir/"
 
 	cd "$forgebasedir"

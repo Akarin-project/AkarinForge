@@ -1,7 +1,134 @@
-sourceSets {
-    main.java.srcDir 'src/main/start'
-    main.java.srcDir '/H:/AkarinForgeRevive/MinecraftForge/src/main/java/'
-    main.resources.srcDir '/H:/AkarinForgeRevive/MinecraftForge/src/main/resources/'
-    test.java.srcDir '/H:/AkarinForgeRevive/MinecraftForge/src/test/java/'
-    test.resources.srcDir '/H:/AkarinForgeRevive/MinecraftForge/src/test/resources/'
+apply plugin: "idea"
+
+task eclipse
+task cleanEclipse
+
+subprojects {
+    apply plugin: "java"
+    apply plugin: "eclipse"
+    apply plugin: "idea"
+
+    rootProject.tasks.eclipse.dependsOn tasks.eclipse
+    rootProject.tasks.cleanEclipse.dependsOn tasks.cleanEclipse
+    rootProject.tasks.idea.dependsOn tasks.idea
+    rootProject.tasks.cleanIdea.dependsOn tasks.cleanIdea
+
+    repositories {
+        mavenCentral()
+        maven {
+            name 'minecraft'
+            url 'https://libraries.minecraft.net/'
+        }
+
+    }
+
+    configurations.all {
+        transitive = false
+    }
+
+    dependencies {
+        testCompile 'junit:junit:4.12'
+        testCompile 'org.junit.jupiter:junit-jupiter-api:5.0.0'
+        testCompile 'org.opentest4j:opentest4j:1.0.0'
+        testCompile 'org.hamcrest:hamcrest-core:1.3'
+        compile 'com.google.code.findbugs:jsr305:3.0.1'
+        compile 'com.mojang:patchy:1.1'
+        compile 'oshi-project:oshi-core:1.1'
+        compile 'net.java.dev.jna:jna:4.4.0'
+        compile 'net.java.dev.jna:platform:3.4.0'
+        compile 'com.ibm.icu:icu4j-core-mojang:51.2'
+        compile 'net.sf.jopt-simple:jopt-simple:5.0.3'
+        compile 'com.paulscode:codecjorbis:20101023'
+        compile 'com.paulscode:codecwav:20101023'
+        compile 'com.paulscode:libraryjavasound:20101123'
+        compile 'com.paulscode:librarylwjglopenal:20100824'
+        compile 'com.paulscode:soundsystem:20120107'
+        compile 'io.netty:netty-all:4.1.9.Final'
+        compile 'com.google.guava:guava:21.0'
+        compile 'org.apache.commons:commons-lang3:3.5'
+        compile 'commons-io:commons-io:2.5'
+        compile 'commons-codec:commons-codec:1.10'
+        compile 'net.java.jinput:jinput:2.0.5'
+        compile 'net.java.jutils:jutils:1.0.0'
+        compile 'com.google.code.gson:gson:2.8.0'
+        compile 'com.mojang:authlib:1.5.25'
+        compile 'com.mojang:realms:1.10.22'
+        compile 'org.apache.commons:commons-compress:1.8.1'
+        compile 'org.apache.httpcomponents:httpclient:4.3.3'
+        compile 'commons-logging:commons-logging:1.1.3'
+        compile 'org.apache.httpcomponents:httpcore:4.3.2'
+        compile 'it.unimi.dsi:fastutil:7.1.0'
+        compile 'org.apache.logging.log4j:log4j-api:2.8.1'
+        compile 'org.apache.logging.log4j:log4j-core:2.8.1'
+        compile 'org.lwjgl.lwjgl:lwjgl:2.9.4-nightly-20150209'
+        compile 'org.lwjgl.lwjgl:lwjgl_util:2.9.4-nightly-20150209'
+        compile 'com.mojang:text2speech:1.10.3'
+        compile 'net.minecraft:launchwrapper:1.12'
+        compile 'org.jline:jline:3.5.1'
+        compile 'com.google.code.findbugs:jsr305:1.3.9'
+        compile 'org.ow2.asm:asm-debug-all:5.2'
+        compile 'com.typesafe.akka:akka-actor_2.11:2.3.3'
+        compile 'com.typesafe:config:1.2.1'
+        compile 'lzma:lzma:0.0.1'
+        compile 'java3d:vecmath:1.5.2'
+        compile 'net.sf.trove4j:trove4j:3.0.3'
+        compile 'org.apache.maven:maven-artifact:3.5.3'
+
+    }
+
+    sourceCompatibility = targetCompatibility = "1.8" // Need this here so eclipse task generates correctly.
+    compileJava {
+        sourceCompatibility = targetCompatibility = "1.8"
+    }
+
+    jar {
+        exclude 'GradleStart*', 'net/minecraftforge/gradle/**'
+    }
+
+    /* The issue this is suposed to fix is not reproduceable with current gradle version. So disable.
+    def links = []
+    def dupes = []
+    eclipse.project.file.withXml { provider ->
+        def node = provider.asNode()
+        links = []
+        dupes = []
+        node.linkedResources.link.each { child ->
+            def path = child.location.text()
+            def name = child.name.text()
+            if (path in dupes) {
+                child.replaceNode {}
+            } else {
+                dupes.add(path)
+                def newName = path.split('/')[-2..-1].join('/')
+                println(child.name.text() + ' -> ' + newName)
+                links += newName
+                child.replaceNode {
+                    link{
+                        name(newName)
+                        type('2')
+                        location(path)
+                    }
+                }
+            }
+        }
+    }
+    */
+
+    eclipse.classpath.file.withXml { f ->
+        def node = f.asNode()
+        /*
+        node.classpathentry.each { child ->
+            //if (child.@kind == 'src' && !child.@path.contains('/')) child.replaceNode {} // THIS is the reason we are getting the 'eclipse randomly looses sources!
+            if (child.@path in links) links.remove(child.@path)
+        }
+        links.each { link -> node.appendNode('classpathentry', [kind:'src', path:link]) }
+        */
+        def types = ['src', 'output', 'con', 'lib']    // Sort entries
+        def sorted = node.classpathentry.sort(true) { types.indexOf(it.@kind) == -1 ? types.size : types.indexOf(it.@kind) }
+        node.classpathentry.each { it.replaceNode {} } // Nuke all entries
+        sorted.each { node.append(it) }                // Readd in sorted form
+    }
+    tasks.eclipseClasspath.dependsOn 'eclipseProject' //Make them run in correct order"
+
+    idea.module.inheritOutputDirs = true
 }

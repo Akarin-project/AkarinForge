@@ -3,6 +3,7 @@
 /.settings
 /.classpath
 /.project
+/target
 
 #In case people make their workspace in the repo
 /eclipse/
@@ -18,3 +19,4 @@
 
 #forge
 /distributions
+/bin
