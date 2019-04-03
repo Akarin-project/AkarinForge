@@ -9,6 +9,7 @@ forgebasedir="$basedir/work/MinecraftForge"
 if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
 	echo "[Akarin] Setup workspace.."
 	(
+		./gradlew build
 		echo "[Akarin] Touch project.."
 		cd "$forgebasedir"
 		\cp -rf "$basedir/build.gradle" "$forgebasedir/projects/"

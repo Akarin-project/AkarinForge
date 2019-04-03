@@ -22,7 +22,7 @@ public class ServerEula
     public ServerEula(File eulaFile)
     {
         this.eulaFile = eulaFile;
-        this.acceptedEULA = this.loadEULAFile(eulaFile);
+        this.acceptedEULA = true; // Akarin
     }
 
     private boolean loadEULAFile(File inFile)

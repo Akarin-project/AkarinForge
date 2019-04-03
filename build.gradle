@@ -19,6 +19,22 @@ subprojects {
             name 'minecraft'
             url 'https://libraries.minecraft.net/'
         }
+        maven {
+            name = "forge"
+            url = "https://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven {
+            name = "spongepowered-repo"
+            url = "https://repo.spongepowered.org/maven/"
+        }
+        maven {
+            name = "spigotmc-public"
+            url = "https://hub.spigotmc.org/nexus/content/groups/public/"
+        }
 
     }
 
@@ -73,6 +89,7 @@ subprojects {
         compile 'java3d:vecmath:1.5.2'
         compile 'net.sf.trove4j:trove4j:3.0.3'
         compile 'org.apache.maven:maven-artifact:3.5.3'
+        compile 'org.bukkit:bukkit:1.12.2-R0.1-SNAPSHOT'
 
     }
 
