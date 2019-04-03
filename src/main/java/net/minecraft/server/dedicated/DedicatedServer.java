@@ -128,7 +128,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
         this.settings = new PropertyManager(new File("server.properties"));
         this.eula = new ServerEula(new File("eula.txt"));
 
-        if (!this.eula.hasAcceptedEULA())
+        if (false && !this.eula.hasAcceptedEULA()) // Akarin
         {
             LOGGER.info("You need to agree to the EULA in order to run the server. Go to eula.txt for more info.");
             this.eula.createEULAFile();
