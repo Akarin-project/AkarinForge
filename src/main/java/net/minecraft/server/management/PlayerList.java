@@ -8,6 +8,8 @@ import io.netty.buffer.Unpooled;
 import java.io.File;
 import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +29,7 @@ import net.minecraft.network.play.server.SPacketChangeGameState;
 import net.minecraft.network.play.server.SPacketChat;
 import net.minecraft.network.play.server.SPacketCustomPayload;
 import net.minecraft.network.play.server.SPacketEntityEffect;
+import net.minecraft.network.play.server.SPacketEntityMetadata;
 import net.minecraft.network.play.server.SPacketEntityStatus;
 import net.minecraft.network.play.server.SPacketHeldItemChange;
 import net.minecraft.network.play.server.SPacketJoinGame;
@@ -45,6 +48,7 @@ import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.ServerScoreboard;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.NetHandlerLoginServer;
 import net.minecraft.stats.StatList;
 import net.minecraft.stats.StatisticsManagerServer;
 import net.minecraft.util.math.BlockPos;
@@ -62,10 +66,16 @@ import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.storage.IPlayerFileData;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.common.chunkio.ChunkIOExecutor;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 public abstract class PlayerList
 {
@@ -76,7 +86,7 @@ public abstract class PlayerList
     private static final Logger LOGGER = LogManager.getLogger();
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
     private final MinecraftServer mcServer;
-    private final List<EntityPlayerMP> playerEntityList = Lists.<EntityPlayerMP>newArrayList();
+    public final List<EntityPlayerMP> playerEntityList = new java.util.concurrent.CopyOnWriteArrayList(); // CraftBukkit - ArrayList -> CopyOnWriteArrayList: Iterator safety // Akarin - public
     private final Map<UUID, EntityPlayerMP> uuidToPlayerMap = Maps.<UUID, EntityPlayerMP>newHashMap();
     private final UserListBans bannedPlayers;
     private final UserListIPBans bannedIPs;
@@ -91,9 +101,14 @@ public abstract class PlayerList
     private GameType gameType;
     private boolean commandsAllowedForAll;
     private int playerPingIndex;
+    // CraftBukkit start
+    private CraftServer cserver;
 
     public PlayerList(MinecraftServer server)
     {
+        this.cserver = server.server = new CraftServer(server, this);
+        server.console = new com.destroystokyo.paper.console.TerminalConsoleCommandSender(); // Paper
+        // CraftBukkit end
         this.bannedPlayers = new UserListBans(FILE_PLAYERBANS);
         this.bannedIPs = new UserListIPBans(FILE_IPBANS);
         this.ops = new UserListOps(FILE_OPS);
@@ -114,6 +129,12 @@ public abstract class PlayerList
         String s = gameprofile1 == null ? gameprofile.getName() : gameprofile1.getName();
         playerprofilecache.addEntry(gameprofile);
         NBTTagCompound nbttagcompound = this.readPlayerDataFromFile(playerIn);
+        // CraftBukkit start - Better rename detection
+        if (nbttagcompound != null && nbttagcompound.hasKey("bukkit")) {
+            NBTTagCompound bukkit = nbttagcompound.getCompoundTag("bukkit");
+            s = bukkit.hasKey("lastKnownName", 8) ? bukkit.getString("lastKnownName") : s;
+        }
+        // CraftBukkit end
         playerIn.setWorld(this.mcServer.getWorld(playerIn.dimension));
 
         World playerWorld = this.mcServer.getWorld(playerIn.dimension);
@@ -134,13 +155,15 @@ public abstract class PlayerList
             s1 = netManager.getRemoteAddress().toString();
         }
 
-        LOGGER.info("{}[{}] logged in with entity id {} at ({}, {}, {})", playerIn.getName(), s1, Integer.valueOf(playerIn.getEntityId()), Double.valueOf(playerIn.posX), Double.valueOf(playerIn.posY), Double.valueOf(playerIn.posZ));
+        // CraftBukkit - Moved message to after join
+        // LOGGER.info("{}[{}] logged in with entity id {} at ({}, {}, {})", playerIn.getName(), s1, Integer.valueOf(playerIn.getEntityId()), Double.valueOf(playerIn.posX), Double.valueOf(playerIn.posY), Double.valueOf(playerIn.posZ));
         WorldServer worldserver = this.mcServer.getWorld(playerIn.dimension);
         WorldInfo worldinfo = worldserver.getWorldInfo();
         this.setPlayerGameTypeBasedOnOther(playerIn, (EntityPlayerMP)null, worldserver);
         playerIn.connection = nethandlerplayserver;
         net.minecraftforge.fml.common.FMLCommonHandler.instance().fireServerConnectionEvent(netManager);
         nethandlerplayserver.sendPacket(new SPacketJoinGame(playerIn.getEntityId(), playerIn.interactionManager.getGameType(), worldinfo.isHardcoreModeEnabled(), worldserver.provider.getDimension(), worldserver.getDifficulty(), this.getMaxPlayers(), worldinfo.getTerrainType(), worldserver.getGameRules().getBoolean("reducedDebugInfo")));
+        playerIn.getBukkitEntity().sendSupportedChannels(); // CraftBukkit
         nethandlerplayserver.sendPacket(new SPacketCustomPayload("MC|Brand", (new PacketBuffer(Unpooled.buffer())).writeString(this.getServerInstance().getServerModName())));
         nethandlerplayserver.sendPacket(new SPacketServerDifficulty(worldinfo.getDifficulty(), worldinfo.isDifficultyLocked()));
         nethandlerplayserver.sendPacket(new SPacketPlayerAbilities(playerIn.capabilities));
@@ -152,18 +175,20 @@ public abstract class PlayerList
         this.mcServer.refreshStatusNextTick();
         TextComponentTranslation textcomponenttranslation;
 
+        String joinMessage; // Akarin
         if (playerIn.getName().equalsIgnoreCase(s))
         {
-            textcomponenttranslation = new TextComponentTranslation("multiplayer.player.joined", new Object[] {playerIn.getDisplayName()});
+            joinMessage = new TextComponentTranslation("multiplayer.player.joined", new Object[] {playerIn.getDisplayName()}).getFormattedText(); // Akarin
         }
         else
         {
-            textcomponenttranslation = new TextComponentTranslation("multiplayer.player.joined.renamed", new Object[] {playerIn.getDisplayName(), s});
+            joinMessage = new TextComponentTranslation("multiplayer.player.joined.renamed", new Object[] {playerIn.getDisplayName(), s}).getFormattedText(); // Akarin
         }
 
         textcomponenttranslation.getStyle().setColor(TextFormatting.YELLOW);
         this.sendMessage(textcomponenttranslation);
-        this.playerLoggedIn(playerIn);
+        this.onPlayerJoin(playerIn, joinMessage); // Akarin
+        worldserver = mcServer.getWorld(playerIn.dimension);  // CraftBukkit - Update in case join event changed it
         nethandlerplayserver.setPlayerLocation(playerIn.posX, playerIn.posY, playerIn.posZ, playerIn.rotationYaw, playerIn.rotationPitch);
         this.updateTimeAndWeatherForPlayer(playerIn, worldserver);
 
@@ -217,6 +242,8 @@ public abstract class PlayerList
 
         playerIn.addSelfToInternalCraftingInventory();
         net.minecraftforge.fml.common.FMLCommonHandler.instance().firePlayerLoggedIn(playerIn);
+        // CraftBukkit - Moved from above, added world
+        LOGGER.info("{}[{}] logged in with entity id {} at ({}, {}, {})", playerIn.getName(), s1, Integer.valueOf(playerIn.getEntityId()), Double.valueOf(playerIn.posX), Double.valueOf(playerIn.posY), Double.valueOf(playerIn.posZ));
     }
 
     protected void sendScoreboard(ServerScoreboard scoreboardIn, EntityPlayerMP playerIn)
@@ -246,28 +273,29 @@ public abstract class PlayerList
 
     public void setPlayerManager(WorldServer[] worldServers)
     {
+        if (playerDataManager != null) return; // CraftBukkit
         this.playerDataManager = worldServers[0].getSaveHandler().getPlayerNBTManager();
         worldServers[0].getWorldBorder().addListener(new IBorderListener()
         {
             public void onSizeChanged(WorldBorder border, double newSize)
             {
-                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_SIZE));
+                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_SIZE), border.world);
             }
             public void onTransitionStarted(WorldBorder border, double oldSize, double newSize, long time)
             {
-                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.LERP_SIZE));
+                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.LERP_SIZE), border.world);
             }
             public void onCenterChanged(WorldBorder border, double x, double z)
             {
-                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_CENTER));
+                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_CENTER), border.world);
             }
             public void onWarningTimeChanged(WorldBorder border, int newTime)
             {
-                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_WARNING_TIME));
+                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_WARNING_TIME), border.world);
             }
             public void onWarningDistanceChanged(WorldBorder border, int newDistance)
             {
-                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_WARNING_BLOCKS));
+                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_WARNING_BLOCKS), border.world);
             }
             public void onDamageAmountChanged(WorldBorder border, double newAmount)
             {
@@ -361,21 +389,68 @@ public abstract class PlayerList
         }
     }
 
-    public void playerLoggedIn(EntityPlayerMP playerIn)
+    // Akarin start
+    public void onPlayerJoin(EntityPlayerMP playerIn, String joinMessage) {
+        playerLoggedIn(playerIn, joinMessage);
+    }
+    public void playerLoggedIn(EntityPlayerMP playerIn) {
+        playerLoggedIn(playerIn, new TextComponentTranslation("multiplayer.player.joined", new Object[] {playerIn.getDisplayName()}).getFormattedText());
+    }
+    // Akarin end
+    public void playerLoggedIn(EntityPlayerMP playerIn, String joinMessage)
     {
         this.playerEntityList.add(playerIn);
         this.uuidToPlayerMap.put(playerIn.getUniqueID(), playerIn);
-        this.sendPacketToAllPlayers(new SPacketPlayerListItem(SPacketPlayerListItem.Action.ADD_PLAYER, new EntityPlayerMP[] {playerIn}));
+        // this.sendPacketToAllPlayers(new SPacketPlayerListItem(SPacketPlayerListItem.Action.ADD_PLAYER, new EntityPlayerMP[] {playerIn})); // CraftBukkit - replaced with loop below
         WorldServer worldserver = this.mcServer.getWorld(playerIn.dimension);
+        // CraftBukkit start
+        PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(cserver.getPlayer(playerIn), joinMessage);
+        cserver.getPluginManager().callEvent(playerJoinEvent);
 
-        for (int i = 0; i < this.playerEntityList.size(); ++i)
-        {
-            playerIn.connection.sendPacket(new SPacketPlayerListItem(SPacketPlayerListItem.Action.ADD_PLAYER, new EntityPlayerMP[] {this.playerEntityList.get(i)}));
+        if (!playerIn.connection.netManager.isChannelOpen()) {
+            return;
         }
 
+        joinMessage = playerJoinEvent.getJoinMessage();
+
+        if (joinMessage != null && joinMessage.length() > 0) {
+            for (ITextComponent line : CraftChatMessage.fromString(joinMessage)) {
+                mcServer.getPlayerList().sendPacketToAllPlayers(new SPacketChat(line));
+            }
+        }
+        // CraftBukkit end
+
+        // CraftBukkit start - sendAll above replaced with this loop
+        SPacketPlayerListItem packet = new SPacketPlayerListItem(SPacketPlayerListItem.Action.ADD_PLAYER, playerIn);
+        
+        for (int i = 0; i < this.playerEntityList.size(); ++i) {
+            EntityPlayerMP entityplayer1 = this.playerEntityList.get(i);
+
+            if (entityplayer1.getBukkitEntity().canSee(playerIn.getBukkitEntity())) {
+                entityplayer1.connection.sendPacket(packet);
+            }
+
+            if (!playerIn.getBukkitEntity().canSee(entityplayer1.getBukkitEntity())) {
+                continue;
+            }
+
+            playerIn.connection.sendPacket(new SPacketPlayerListItem(SPacketPlayerListItem.Action.ADD_PLAYER, new EntityPlayerMP[] { entityplayer1}));
+        }
+        playerIn.sentListPacket = true;
+        // CraftBukkit end
+
+        playerIn.connection.sendPacket(new SPacketEntityMetadata(playerIn.getEntityId(), playerIn.dataManager, true)); // CraftBukkit - BungeeCord#2321, send complete data to self on spawn
+
+        // CraftBukkit start - Only add if the player wasn't moved in the event
+        if (playerIn.world == worldserver && !worldserver.playerEntities.contains(playerIn)) {
+            worldserver.spawnEntity(playerIn);
+            this.preparePlayer(playerIn, (WorldServer) null);
+        }
+        // CraftBukkit end
+
         net.minecraftforge.common.chunkio.ChunkIOExecutor.adjustPoolSize(this.getCurrentPlayerCount());
-        worldserver.spawnEntity(playerIn);
-        this.preparePlayer(playerIn, (WorldServer)null);
+        //worldserver.spawnEntity(playerIn); // Akarin
+        //this.preparePlayer(playerIn, (WorldServer)null); // Akarin
     }
 
     public void serverUpdateMovingPlayer(EntityPlayerMP playerIn)
@@ -383,11 +458,23 @@ public abstract class PlayerList
         playerIn.getServerWorld().getPlayerChunkMap().updateMovingPlayer(playerIn);
     }
 
-    public void playerLoggedOut(EntityPlayerMP playerIn)
+    public void disconnect(EntityPlayerMP playerIn) { // CraftBukkit - return string
+        playerLoggedOut(playerIn);
+    }
+    public void playerLoggedOut(EntityPlayerMP playerIn) // Akarin
     {
         net.minecraftforge.fml.common.FMLCommonHandler.instance().firePlayerLoggedOut(playerIn);
         WorldServer worldserver = playerIn.getServerWorld();
         playerIn.addStat(StatList.LEAVE_GAME);
+        // CraftBukkit start - Quitting must be before we do final save of data, in case plugins need to modify it
+        org.bukkit.craftbukkit.event.CraftEventFactory.handleInventoryCloseEvent(playerIn);
+
+        PlayerQuitEvent playerQuitEvent = new PlayerQuitEvent(cserver.getPlayer(playerIn), "\u00A7e" + playerIn.getName() + " left the game");
+        cserver.getPluginManager().callEvent(playerQuitEvent);
+        playerIn.getBukkitEntity().disconnect(playerQuitEvent.getQuitMessage());
+        
+        playerIn.onUpdateEntity(); // SPIGOT-924
+        // CraftBukkit end
         this.writePlayerData(playerIn);
 
         if (playerIn.isRiding())
@@ -427,8 +514,13 @@ public abstract class PlayerList
         this.sendPacketToAllPlayers(new SPacketPlayerListItem(SPacketPlayerListItem.Action.REMOVE_PLAYER, new EntityPlayerMP[] {playerIn}));
     }
 
-    public String allowUserToConnect(SocketAddress address, GameProfile profile)
+    // CraftBukkit start - Whole method, SocketAddress to LoginListener, added hostname to signature, return EntityPlayer
+    public EntityPlayerMP attemptLogin(NetHandlerLoginServer loginlistener, SocketAddress address, GameProfile gameprofile, String hostname) {
+        return allowUserToConnect(loginlistener, address, gameprofile, hostname);
+    }
+    public EntityPlayerMP allowUserToConnect(NetHandlerLoginServer loginlistener, SocketAddress address, GameProfile gameprofile, String hostname)
     {
+        /* // Akarin
         if (this.bannedPlayers.isBanned(profile))
         {
             UserListBansEntry userlistbansentry = (UserListBansEntry)this.bannedPlayers.getEntry(profile);
@@ -461,10 +553,82 @@ public abstract class PlayerList
         {
             return this.playerEntityList.size() >= this.maxPlayers && !this.bypassesPlayerLimit(profile) ? "The server is full!" : null;
         }
+        // Akarin */
+        // Moved from processLogin
+        UUID uuid = EntityPlayer.getUUID(gameprofile);
+        ArrayList arraylist = Lists.newArrayList();
+
+        EntityPlayerMP entityplayer;
+
+        for (int i = 0; i < this.playerEntityList.size(); ++i) {
+            entityplayer = this.playerEntityList.get(i);
+            if (entityplayer.getUniqueID().equals(uuid)) {
+                arraylist.add(entityplayer);
+            }
+        }
+
+        Iterator iterator = arraylist.iterator();
+
+        while (iterator.hasNext()) {
+            entityplayer = (EntityPlayerMP) iterator.next();
+            writePlayerData(entityplayer); // CraftBukkit - Force the player's inventory to be saved
+            entityplayer.connection.disconnect(AkarinGlobalConfig.messageDupLogin); // Akarin
+        }
+
+        // Instead of kicking then returning, we need to store the kick reason
+        // in the event, check with plugins to see if it's ok, and THEN kick
+        // depending on the outcome.
+        SocketAddress socketaddress = loginlistener.networkManager.getRemoteAddress();
+
+        EntityPlayerMP entity = new EntityPlayerMP(mcServer, mcServer.getWorld(0), gameprofile, new PlayerInteractionManager(mcServer.getWorld(0)));
+        Player player = entity.getBukkitEntity();
+        PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((java.net.InetSocketAddress) socketaddress).getAddress());
+        String s;
+
+        if (getBannedPlayers().isBanned(gameprofile) && !getBannedPlayers().getEntry(gameprofile).hasBanExpired()) {
+            UserListBansEntry userlistbansentry = (UserListBansEntry)this.bannedPlayers.getEntry(gameprofile);
+            String s1 = "You are banned from this server!\nReason: " + userlistbansentry.getBanReason();
+
+            if (userlistbansentry.getBanEndDate() != null)
+            {
+                s1 = s1 + "\nYour ban will be removed on " + DATE_FORMAT.format(userlistbansentry.getBanEndDate());
+            }
+            
+            // return s;
+            if (!userlistbansentry.hasBanExpired()) event.disallow(PlayerLoginEvent.Result.KICK_BANNED, s); // Spigot
+        } else if (!this.canJoin(gameprofile)) { // Paper
+            event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, "You are not white-listed on this server!");
+        } else if (getBannedIPs().isBanned(socketaddress) && !getBannedIPs().getBanEntry(socketaddress).hasBanExpired()) {
+            UserListIPBansEntry ipbanentry = this.bannedIPs.getBanEntry(socketaddress);
+
+            UserListIPBansEntry userlistipbansentry = this.bannedIPs.getBanEntry(socketaddress);
+            s = "Your IP address is banned from this server!\nReason: " + userlistipbansentry.getBanReason();
+
+            if (userlistipbansentry.getBanEndDate() != null)
+            {
+                s = s + "\nYour ban will be removed on " + DATE_FORMAT.format(userlistipbansentry.getBanEndDate());
+            }
+            
+            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, s);
+        } else {
+            // return this.players.size() >= this.maxPlayers && !this.f(gameprofile) ? "The server is full!" : null;
+            if (this.playerEntityList.size() >= this.maxPlayers && !this.bypassesPlayerLimit(gameprofile)) {
+                event.disallow(PlayerLoginEvent.Result.KICK_FULL, "The server is full!"); // Spigot
+            }
+        }
+
+        cserver.getPluginManager().callEvent(event);
+        if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
+            loginlistener.disconnect(event.getKickMessage());
+            return null;
+        }
+        return entity;
+        // CraftBukkit end
     }
 
-    public EntityPlayerMP createPlayerForUser(GameProfile profile)
+    public EntityPlayerMP createPlayerForUser(GameProfile profile, EntityPlayerMP player) // CraftBukkit - added EntityPlayer
     {
+        /* CraftBukkit startMoved up
         UUID uuid = EntityPlayer.getUUID(profile);
         List<EntityPlayerMP> list = Lists.<EntityPlayerMP>newArrayList();
 
@@ -502,10 +666,18 @@ public abstract class PlayerList
         }
 
         return new EntityPlayerMP(this.mcServer, this.mcServer.getWorld(0), profile, playerinteractionmanager);
+        */
+        return player;
+        // CraftBukkit end
     }
 
     public EntityPlayerMP recreatePlayerEntity(EntityPlayerMP playerIn, int dimension, boolean conqueredEnd)
     {
+        return this.moveToWorld(playerIn, dimension, conqueredEnd, null, true);
+    }
+
+    public EntityPlayerMP moveToWorld(EntityPlayerMP playerIn, int dimension, boolean conqueredEnd, Location location, boolean avoidSuffocation) {
+        playerIn.dismountRidingEntity(); // CraftBukkit
         World world = mcServer.getWorld(dimension);
         if (world == null)
         {
@@ -518,12 +690,13 @@ public abstract class PlayerList
         if (mcServer.getWorld(dimension) == null) dimension = 0;
 
         playerIn.getServerWorld().getEntityTracker().removePlayerFromTrackers(playerIn);
-        playerIn.getServerWorld().getEntityTracker().untrack(playerIn);
+        // playerIn.getServerWorld().getEntityTracker().untrack(playerIn); // CraftBukkit
         playerIn.getServerWorld().getPlayerChunkMap().removePlayer(playerIn);
         this.playerEntityList.remove(playerIn);
         this.mcServer.getWorld(playerIn.dimension).removeEntityDangerously(playerIn);
         BlockPos blockpos = playerIn.getBedLocation(dimension);
         boolean flag = playerIn.isSpawnForced(dimension);
+        /* CraftBukkit start
         playerIn.dimension = dimension;
         PlayerInteractionManager playerinteractionmanager;
 
@@ -537,6 +710,11 @@ public abstract class PlayerList
         }
 
         EntityPlayerMP entityplayermp = new EntityPlayerMP(this.mcServer, this.mcServer.getWorld(playerIn.dimension), playerIn.getGameProfile(), playerinteractionmanager);
+        // */
+        EntityPlayerMP entityplayermp = playerIn;
+        org.bukkit.World fromWorld = entityplayermp.getBukkitEntity().getWorld();
+        entityplayermp.queuedEndExit = false;
+        // CraftBukkit end
         entityplayermp.connection = playerIn.connection;
         entityplayermp.copyFrom(playerIn, conqueredEnd);
         entityplayermp.dimension = dimension;
@@ -550,7 +728,7 @@ public abstract class PlayerList
         }
 
         WorldServer worldserver = this.mcServer.getWorld(playerIn.dimension);
-        this.setPlayerGameTypeBasedOnOther(entityplayermp, playerIn, worldserver);
+        // this.setPlayerGameTypeBasedOnOther(entityplayermp, playerIn, worldserver); // CraftBukkit - removed
 
         if (blockpos != null)
         {

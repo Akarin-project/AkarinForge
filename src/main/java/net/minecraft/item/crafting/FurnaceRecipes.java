@@ -15,7 +15,7 @@ import net.minecraft.item.ItemStack;
 public class FurnaceRecipes
 {
     private static final FurnaceRecipes SMELTING_BASE = new FurnaceRecipes();
-    private final Map<ItemStack, ItemStack> smeltingList = Maps.<ItemStack, ItemStack>newHashMap();
+    public final Map<ItemStack, ItemStack> smeltingList = Maps.<ItemStack, ItemStack>newHashMap(); // Akarin - public
     private final Map<ItemStack, Float> experienceList = Maps.<ItemStack, Float>newHashMap();
 
     public static FurnaceRecipes instance()
