@@ -13,6 +13,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
+import joptsimple.OptionSet;
+
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -23,6 +25,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -55,6 +58,7 @@ import net.minecraft.profiler.ISnooperInfo;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.profiler.Snooper;
 import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.server.dedicated.PropertyManager;
 import net.minecraft.server.management.PlayerList;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.util.IProgressUpdate;
@@ -149,20 +153,38 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     protected long currentTime = getCurrentTimeMillis();
     @SideOnly(Side.CLIENT)
     private boolean worldIconSet;
+    // CraftBukkit start
+    public List<WorldServer> bworlds = new ArrayList<WorldServer>();
+    public org.bukkit.craftbukkit.CraftServer server;
+    public OptionSet options;
+    public org.bukkit.command.ConsoleCommandSender console;
+    public org.bukkit.command.RemoteConsoleCommandSender remoteConsole;
+    public final Thread primaryThread;
+    public java.util.Queue<Runnable> processQueue = new java.util.concurrent.ConcurrentLinkedQueue<Runnable>();
+    public int autosavePeriod;
+    // CraftBukkit end
 
-    public MinecraftServer(File anvilFileIn, Proxy proxyIn, DataFixer dataFixerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
+    public MinecraftServer(OptionSet options, Proxy proxyIn, DataFixer dataFixerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
     {
         this.serverProxy = proxyIn;
         this.authService = authServiceIn;
         this.sessionService = sessionServiceIn;
         this.profileRepo = profileRepoIn;
         this.profileCache = profileCacheIn;
-        this.anvilFile = anvilFileIn;
+        // this.anvilFile = anvilFileIn; // CraftBukkit
         this.networkSystem = new NetworkSystem(this);
         this.commandManager = this.createCommandManager();
-        this.anvilConverterForAnvilFile = new AnvilSaveConverter(anvilFileIn, dataFixerIn);
+        // this.anvilConverterForAnvilFile = new AnvilSaveConverter(anvilFileIn, dataFixerIn); // CraftBukkit - moved to DedicatedServer.init
         this.dataFixer = dataFixerIn;
+        // CraftBukkit start
+        this.options = options;
+        Runtime.getRuntime().addShutdownHook(new ServerShutdownThread(this));
+
+        this.serverThread = primaryThread = new Thread(this, "Server thread"); // Moved from main
     }
+
+    public abstract PropertyManager getPropertyManager();
+    // CraftBukkit end
 
     public ServerCommandManager createCommandManager()
     {
