@@ -4,15 +4,27 @@ import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
+
+import org.bukkit.Bukkit;
+import org.bukkit.block.BlockState;
+import org.bukkit.event.block.BlockCanBuildEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.generator.ChunkGenerator;
+
 import net.minecraft.advancements.AdvancementManager;
 import net.minecraft.advancements.FunctionManager;
 import net.minecraft.block.Block;
@@ -25,12 +37,22 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.INpc;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.EntityXPOrb;
+import net.minecraft.entity.monster.EntityGhast;
+import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.monster.EntitySlime;
+import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.SPacketWorldBorder;
 import net.minecraft.pathfinding.PathWorldListener;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.scoreboard.Scoreboard;
@@ -52,6 +74,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.VillageCollection;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.border.IBorderListener;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -121,9 +144,53 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public java.util.ArrayList<net.minecraftforge.common.util.BlockSnapshot> capturedBlockSnapshots = new java.util.ArrayList<net.minecraftforge.common.util.BlockSnapshot>();
     private net.minecraftforge.common.capabilities.CapabilityDispatcher capabilities;
     private net.minecraftforge.common.util.WorldCapabilityData capabilityData;
+    // CraftBukkit start Added the following
+    private final CraftWorld world;
+    public boolean pvpMode;
+    public boolean keepSpawnInMemory = true;
+    public ChunkGenerator generator;
 
-    protected World(ISaveHandler saveHandlerIn, WorldInfo info, WorldProvider providerIn, Profiler profilerIn, boolean client)
+    public boolean captureBlockStates = false;
+    public boolean captureTreeGeneration = false;
+    public ArrayList<BlockState> capturedBlockStates= new ArrayList<BlockState>(){
+        @Override
+        public boolean add( BlockState blockState ) {
+            Iterator<BlockState> blockStateIterator = this.iterator();
+            while( blockStateIterator.hasNext() ) {
+                BlockState blockState1 = blockStateIterator.next();
+                if ( blockState1.getLocation().equals( blockState.getLocation() ) ) {
+                    return false;
+                }
+            }
+
+            return super.add( blockState );
+        }
+    };
+    public List<EntityItem> captureDrops;
+    public long ticksPerAnimalSpawns;
+    public long ticksPerMonsterSpawns;
+    public boolean populating;
+    private int tickPosition;
+
+    public CraftWorld getWorld() {
+        return this.world;
+    }
+
+    public CraftServer getServer() {
+        return (CraftServer) Bukkit.getServer();
+    }
+
+    public Chunk getChunkIfLoaded(int x, int z) {
+        return ((ChunkProviderServer) this.chunkProvider).getChunkIfLoaded(x, z);
+    }
+
+    protected World(ISaveHandler saveHandlerIn, WorldInfo info, WorldProvider providerIn, Profiler profilerIn, boolean client, ChunkGenerator gen, org.bukkit.World.Environment env)
     {
+        this.generator = gen;
+        this.world = new CraftWorld((WorldServer) this, gen, env);
+        this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns(); // CraftBukkit
+        this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns(); // CraftBukkit
+        // CraftBukkit end
         this.eventListeners = Lists.newArrayList(this.pathListener);
         this.calendar = Calendar.getInstance();
         this.worldScoreboard = new Scoreboard();
@@ -137,6 +204,36 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         this.isRemote = client;
         this.worldBorder = providerIn.createWorldBorder();
         perWorldStorage = new MapStorage((ISaveHandler)null);
+        // CraftBukkit start
+        getWorldBorder().world = (WorldServer) this;
+        // From PlayerList.setPlayerFileData
+        getWorldBorder().addListener(new IBorderListener() {
+            public void onSizeChanged(WorldBorder worldborder, double d0) {
+                getServer().getHandle().sendAll(new SPacketWorldBorder(worldborder, SPacketWorldBorder.Action.SET_SIZE), worldborder.world);
+            }
+
+            public void onTransitionStarted(WorldBorder worldborder, double d0, double d1, long i) {
+                getServer().getHandle().sendAll(new SPacketWorldBorder(worldborder, SPacketWorldBorder.Action.LERP_SIZE), worldborder.world);
+            }
+
+            public void onCenterChanged(WorldBorder worldborder, double d0, double d1) {
+                getServer().getHandle().sendAll(new SPacketWorldBorder(worldborder, SPacketWorldBorder.Action.SET_CENTER), worldborder.world);
+            }
+
+            public void onWarningTimeChanged(WorldBorder worldborder, int i) {
+                getServer().getHandle().sendAll(new SPacketWorldBorder(worldborder, SPacketWorldBorder.Action.SET_WARNING_TIME), worldborder.world);
+            }
+
+            public void onWarningDistanceChanged(WorldBorder worldborder, int i) {
+                getServer().getHandle().sendAll(new SPacketWorldBorder(worldborder, SPacketWorldBorder.Action.SET_WARNING_BLOCKS), worldborder.world);
+            }
+
+            public void onDamageAmountChanged(WorldBorder worldborder, double d0) {}
+
+            public void onDamageBufferChanged(WorldBorder worldborder, double d0) {}
+        });
+        this.getServer().addWorld(this.world);
+        // CraftBukkit end
     }
 
     public World init()
@@ -317,6 +414,27 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
     public boolean setBlockState(BlockPos pos, IBlockState newState, int flags)
     {
+        // CraftBukkit start - tree generation
+        if (this.captureTreeGeneration) {
+            BlockState blockstate = null;
+            Iterator<BlockState> it = capturedBlockStates.iterator();
+            while (it.hasNext()) {
+                BlockState previous = it.next();
+                if (previous.getX() == pos.getX() && previous.getY() == pos.getY() && previous.getZ() == pos.getZ()) {
+                    blockstate = previous;
+                    it.remove();
+                    break;
+                }
+            }
+            if (blockstate == null) {
+                blockstate = CraftBlockState.getBlockState(this, pos.getX(), pos.getY(), pos.getZ(), flags);
+            }
+            blockstate.setTypeId(CraftMagicNumbers.getId(newState.getBlock()));
+            blockstate.setRawData((byte) newState.getBlock().getMetaFromState(newState));
+            this.capturedBlockStates.add(blockstate);
+            return true;
+        }
+        // CraftBukkit end
         if (this.isOutsideBuildHeight(pos))
         {
             return false;
@@ -341,9 +459,21 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
             int oldOpacity = oldState.getLightOpacity(this, pos);
 
             IBlockState iblockstate = chunk.setBlockState(pos, newState);
+            // CraftBukkit start - capture blockstates
+            BlockState blockstate = null;
+            if (this.captureBlockStates) {
+                blockstate = CraftBlockState.getBlockState(this, pos.getX(), pos.getY(), pos.getZ(), flags);
+                this.capturedBlockStates.add(blockstate);
+            }
+            // CraftBukkit end
 
             if (iblockstate == null)
             {
+                // CraftBukkit start - remove blockstate if failed
+                if (this.captureBlockStates) {
+                    this.capturedBlockStates.remove(blockstate);
+                }
+                // CraftBukkit end
                 if (blockSnapshot != null) this.capturedBlockSnapshots.remove(blockSnapshot);
                 return false;
             }
@@ -356,7 +486,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                     this.profiler.endSection();
                 }
 
-                if (blockSnapshot == null) // Don't notify clients or update physics while capturing blockstates
+                if (!this.captureBlockStates || blockSnapshot == null) // Don't notify clients or update physics while capturing blockstates
                 {
                     this.markAndNotifyBlock(pos, chunk, iblockstate, newState, flags);
                 }
@@ -364,6 +494,12 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
             }
         }
     }
+    
+    // CraftBukkit start - Split off from above in order to directly send client and physic updates
+    public void notifyAndUpdatePhysics(BlockPos pos, @Nullable Chunk chunk, IBlockState iblockstate, IBlockState newState, int flags) {
+        markAndNotifyBlock(pos, chunk, iblockstate, newState, flags); // Akarin
+    }
+    // CraftBukkit end
 
     // Split off from original setBlockState(BlockPos, IBlockState, int) method in order to directly send client and physic updates
     public void markAndNotifyBlock(BlockPos pos, @Nullable Chunk chunk, IBlockState iblockstate, IBlockState newState, int flags)
@@ -437,6 +573,11 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     {
         if (this.worldInfo.getTerrainType() != WorldType.DEBUG_ALL_BLOCK_STATES)
         {
+            // CraftBukkit start
+            if (populating) {
+                return;
+            }
+            // CraftBukkit end
             this.notifyNeighborsOfStateChange(pos, blockType, p_175722_3_);
         }
     }
@@ -548,6 +689,17 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
             try
             {
+                // CraftBukkit start
+                CraftWorld world = ((WorldServer) this).getWorld();
+                if (world != null) { // Paper
+                    BlockPhysicsEvent event = new BlockPhysicsEvent(world.getBlockAt(blockIn.getX(), blockIn.getY(), blockIn.getZ()), CraftMagicNumbers.getId(blockIn));
+                    this.getServer().getPluginManager().callEvent(event);
+
+                    if (event.isCancelled()) {
+                        return;
+                    }
+                }
+                // CraftBukkit end
                 iblockstate.neighborChanged(this, pos, blockIn, fromPos);
             }
             catch (Throwable throwable)
@@ -902,6 +1054,20 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
     public IBlockState getBlockState(BlockPos pos)
     {
+        // CraftBukkit start - tree generation
+        final int x = pos.getX();
+        final int y = pos.getY();
+        final int z = pos.getZ();
+        if (captureTreeGeneration) {
+            Iterator<BlockState> it = capturedBlockStates.iterator();
+            while (it.hasNext()) {
+                BlockState previous = it.next();
+                if (previous.getX() == x && previous.getY() == y && previous.getZ() == z) {
+                    return CraftMagicNumbers.getBlock(previous.getTypeId()).getStateFromMeta(previous.getRawData());
+                }
+            }
+        }
+        // CraftBukkit end
         if (this.isOutsideBuildHeight(pos))
         {
             return Blocks.AIR.getDefaultState();
@@ -1178,6 +1344,41 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
     public boolean spawnEntity(Entity entityIn)
     {
+     // CraftBukkit start - Used for entities other than creatures
+        return addEntity(entity, SpawnReason.DEFAULT);
+    }
+
+    public boolean addEntity(Entity entityIn, SpawnReason spawnReason) { // Changed signature, added SpawnReason
+        if (entityIn == null) return false;
+
+        org.bukkit.event.Cancellable event = null;
+        if (entityIn instanceof EntityLivingBase && !(entityIn instanceof EntityPlayerMP)) {
+            boolean isAnimal = entityIn instanceof EntityAnimal || entityIn instanceof EntityWaterMob || entityIn instanceof EntityGolem;
+            boolean isMonster = entityIn instanceof EntityMob || entityIn instanceof EntityGhast || entityIn instanceof EntitySlime;
+            boolean isNpc = entityIn instanceof INpc;
+
+            if (spawnReason != SpawnReason.CUSTOM) {
+                if (isAnimal && !spawnPeacefulMobs || isMonster && !spawnHostileMobs || isNpc && !getServer().getServer().getCanSpawnNPCs()) {
+                    entityIn.isDead = true;
+                    return false;
+                }
+            }
+
+            event = CraftEventFactory.callCreatureSpawnEvent((EntityLivingBase) entityIn, spawnReason);
+        } else if (entityIn instanceof EntityItem) {
+            event = CraftEventFactory.callItemSpawnEvent((EntityItem) entityIn);
+        } else if (entityIn.getBukkitEntity() instanceof org.bukkit.entity.Projectile) {
+            // Not all projectiles extend EntityProjectile, so check for Bukkit interface instead
+            event = CraftEventFactory.callProjectileLaunchEvent(entityIn);
+        } else if (entityIn.getBukkitEntity() instanceof org.bukkit.entity.Vehicle){
+            event = CraftEventFactory.callVehicleCreateEvent(entityIn);
+        }
+
+        if (event != null && (event.isCancelled() || entityIn.isDead)) {
+            entityIn.isDead = true;
+            return false;
+        }
+        // CraftBukkit end
         // do not drop any items while restoring blocksnapshots. Prevents dupes
         if (!this.isRemote && (entityIn == null || (entityIn instanceof net.minecraft.entity.item.EntityItem && this.restoringBlockSnapshots))) return false;
 
@@ -1218,6 +1419,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         {
             ((IWorldEventListener)this.eventListeners.get(i)).onEntityAdded(entityIn);
         }
+        entityIn.valid = true; // CraftBukkit
         entityIn.onAddedToWorld();
     }
 
@@ -1227,6 +1429,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         {
             ((IWorldEventListener)this.eventListeners.get(i)).onEntityRemoved(entityIn);
         }
+        entityIn.valid = false; // CraftBukkit
         entityIn.onRemovedFromWorld();
     }
 
@@ -1271,7 +1474,15 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
             this.getChunkFromChunkCoords(i, j).removeEntity(entityIn);
         }
 
-        this.loadedEntityList.remove(entityIn);
+        // CraftBukkit start - Decrement loop variable field if we've already ticked this entity
+        int index = this.loadedEntityList.indexOf(entityIn);
+        if (index != -1) {
+            if (index <= this.tickPosition) {
+                this.tickPosition--;
+            }
+            this.loadedEntityList.remove(index);
+        }
+        // CraftBukkit end
         this.onEntityRemoved(entityIn);
     }
 
@@ -1674,6 +1885,11 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         for (int i = 0; i < this.weatherEffects.size(); ++i)
         {
             Entity entity = this.weatherEffects.get(i);
+            // CraftBukkit start - Fixed an NPE
+            if (entity == null) {
+                continue;
+            }
+            // CraftBukkit end
 
             try
             {
@@ -1734,9 +1950,10 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         this.tickPlayers();
         this.profiler.endStartSection("regular");
 
-        for (int i1 = 0; i1 < this.loadedEntityList.size(); ++i1)
-        {
-            Entity entity2 = this.loadedEntityList.get(i1);
+        // CraftBukkit start - Use field for loop variable
+        for (this.tickPosition = 0; this.tickPosition < this.loadedEntityList.size(); ++this.tickPosition) {
+            Entity entity2 = (Entity) this.loadedEntityList.get(this.tickPosition);
+            // CraftBukkit end
             Entity entity3 = entity2.getRidingEntity();
 
             if (entity3 != null)
@@ -1787,7 +2004,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                     this.getChunkFromChunkCoords(l1, i2).removeEntity(entity2);
                 }
 
-                this.loadedEntityList.remove(i1--);
+                this.loadedEntityList.remove(this.tickPosition--); // CraftBukkit - Use field for loop variable
                 this.onEntityRemoved(entity2);
             }
 
@@ -1879,10 +2096,12 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
                 if (!tileentity1.isInvalid())
                 {
+                    /* CraftBukkit start - Order matters, moved down
                     if (!this.loadedTileEntityList.contains(tileentity1))
                     {
                         this.addTileEntity(tileentity1);
                     }
+                    // CraftBukkit end */
 
                     if (this.isBlockLoaded(tileentity1.getPos()))
                     {
@@ -1890,6 +2109,12 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                         IBlockState iblockstate = chunk.getBlockState(tileentity1.getPos());
                         chunk.addTileEntity(tileentity1.getPos(), tileentity1);
                         this.notifyBlockUpdate(tileentity1.getPos(), iblockstate, iblockstate, 3);
+                        // CraftBukkit start
+                        // From above, don't screw this up - SPIGOT-1746
+                        if (!this.loadedTileEntityList.contains(tileentity1)) {
+                            this.addTileEntity(tileentity1);
+                        }
+                        // CraftBukkit end
                     }
                 }
             }
@@ -1989,8 +2214,10 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
             }
             else
             {
-                if(!entityIn.updateBlocked)
-                entityIn.onUpdate();
+                if(!entityIn.updateBlocked) { // Akarin
+                    entityIn.onUpdate();
+                    entityIn.postTick();// CraftBukkit
+                } // Akarin
             }
         }
 
@@ -2378,6 +2605,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         return this.chunkProvider.makeString();
     }
 
+    public Map<BlockPos, TileEntity> capturedTileEntities = Maps.newHashMap();
     @Nullable
     public TileEntity getTileEntity(BlockPos pos)
     {
@@ -2387,6 +2615,11 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         }
         else
         {
+            // CraftBukkit start
+            if (capturedTileEntities.containsKey(pos)) {
+                return capturedTileEntities.get(pos);
+            }
+            // CraftBukkit end
             TileEntity tileentity2 = null;
 
             if (this.processingLoadedTiles)
@@ -2431,6 +2664,14 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         {
             if (tileEntityIn != null && !tileEntityIn.isInvalid())
             {
+                // CraftBukkit start
+                if (captureBlockStates) {
+                    tileEntityIn.setWorld(this);
+                    tileEntityIn.setPos(pos);
+                    capturedTileEntities.put(pos, tileEntityIn);
+                    return;
+                }
+                // CraftBukkit end
                 if (this.processingLoadedTiles)
                 {
                     tileEntityIn.setPos(pos);
@@ -2657,6 +2898,13 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                 }
 
                 this.rainingStrength = MathHelper.clamp(this.rainingStrength, 0.0F, 1.0F);
+                // CraftBukkit start
+                for (int idx = 0; idx < this.playerEntities.size(); ++idx) {
+                    if (((EntityPlayerMP) this.playerEntities.get(idx)).world == this) {
+                        ((EntityPlayerMP) this.playerEntities.get(idx)).tickWeather();
+                    }
+                }
+                // CraftBukkit end
             }
         }
     }
@@ -3152,6 +3400,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         {
             if (!net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.EntityJoinWorldEvent(entity4, this)))
             {
+                if (entity4 == null || entity4.isDead || entity4.valid) continue; // CraftBukkit // Paper - prevent adding already added or dead entities
                 loadedEntityList.add(entity4);
                 this.onEntityAdded(entity4);
             }
@@ -3168,14 +3417,31 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         IBlockState iblockstate1 = this.getBlockState(pos);
         AxisAlignedBB axisalignedbb = skipCollisionCheck ? null : blockIn.getDefaultState().getCollisionBoundingBox(this, pos);
 
-        if (!((placer instanceof EntityPlayer) || !net.minecraftforge.event.ForgeEventFactory.onBlockPlace(placer, new net.minecraftforge.common.util.BlockSnapshot(this, pos, blockIn.getDefaultState()), sidePlacedOn).isCanceled())) return false;
+        if (!((placer instanceof EntityPlayer) || !net.minecraftforge.event.ForgeEventFactory.onBlockPlace(placer, new net.minecraftforge.common.util.BlockSnapshot(this, pos, blockIn.getDefaultState()), sidePlacedOn).isCanceled())) {
+            // Akarin start - respect bukkit
+            BlockCanBuildEvent event = new BlockCanBuildEvent(this.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()), CraftMagicNumbers.getId(blockIn), false);
+            this.getServer().getPluginManager().callEvent(event);
+
+             return event.isBuildable(); // Akarin
+            // Akarin end
+        }
         if (axisalignedbb != Block.NULL_AABB && !this.checkNoEntityCollision(axisalignedbb.offset(pos))) // Forge: Remove second parameter, we patch placer to be non-null, passing it here skips collision checks for the placer
         {
-            return false;
+            // CraftBukkit start - store default return
+            BlockCanBuildEvent event = new BlockCanBuildEvent(this.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()), CraftMagicNumbers.getId(blockIn), false);
+            this.getServer().getPluginManager().callEvent(event);
+
+             return event.isBuildable(); // Akarin
+            // CraftBukkit end
         }
         else if (iblockstate1.getMaterial() == Material.CIRCUITS && blockIn == Blocks.ANVIL)
         {
-            return true;
+            // CraftBukkit start - store default return
+            BlockCanBuildEvent event = new BlockCanBuildEvent(this.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()), CraftMagicNumbers.getId(blockIn), true);
+            this.getServer().getPluginManager().callEvent(event);
+
+             return event.isBuildable(); // Akarin
+            // CraftBukkit end
         }
         else
         {
@@ -3344,6 +3610,11 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         for (int j2 = 0; j2 < this.playerEntities.size(); ++j2)
         {
             EntityPlayer entityplayer1 = this.playerEntities.get(j2);
+            // CraftBukkit start - Fixed an NPE
+            if (entityplayer1 == null || entityplayer1.isDead) {
+                continue;
+            }
+            // CraftBukkit end
 
             if (p_190525_9_.apply(entityplayer1))
             {
@@ -3359,6 +3630,15 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
         return entityplayer;
     }
+    // CraftBukkit start
+    // Calls the method that checks to see if players are sleeping
+    // Called by CraftPlayer.setPermanentSleeping()
+    public void checkSleepStatus() {
+        if (!this.isRemote) {
+            this.updateAllPlayersSleepingFlag();
+        }
+    }
+    // CraftBukkit end
 
     public boolean isAnyPlayerWithinRangeAt(double x, double y, double z, double range)
     {
@@ -3880,7 +4160,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         int j2 = x * 16 + 8 - blockpos1.getX();
         int k2 = z * 16 + 8 - blockpos1.getZ();
         int l2 = 128;
-        return j2 >= -128 && j2 <= 128 && k2 >= -128 && k2 <= 128;
+        return this.keepSpawnInMemory && j2 >= -128 && j2 <= 128 && k2 >= -128 && k2 <= 128; // CraftBukkit - Added 'this.keepSpawnInMemory'
     }
 
     /* ======================================== FORGE START =====================================*/

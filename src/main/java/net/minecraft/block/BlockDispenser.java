@@ -38,6 +38,7 @@ public class BlockDispenser extends BlockContainer
     public static final PropertyBool TRIGGERED = PropertyBool.create("triggered");
     public static final RegistryDefaulted<Item, IBehaviorDispenseItem> DISPENSE_BEHAVIOR_REGISTRY = new RegistryDefaulted<Item, IBehaviorDispenseItem>(new BehaviorDefaultDispenseItem());
     protected Random rand = new Random();
+    public static boolean eventFired = false; // CraftBukkit
 
     protected BlockDispenser()
     {
@@ -140,6 +141,7 @@ public class BlockDispenser extends BlockContainer
 
                 if (ibehaviordispenseitem != IBehaviorDispenseItem.DEFAULT_BEHAVIOR)
                 {
+                    eventFired = false; // CraftBukkit - reset event status
                     tileentitydispenser.setInventorySlotContents(i, ibehaviordispenseitem.dispense(blocksourceimpl, itemstack));
                 }
             }

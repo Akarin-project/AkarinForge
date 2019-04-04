@@ -573,7 +573,8 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
 
             for (ItemStack drop : drops)
             {
-                if (worldIn.rand.nextFloat() <= chance)
+                // CraftBukkit - <= to < to allow for plugins to completely disable block drops from explosions
+                if (worldIn.rand.nextFloat() < chance)
                 {
                     spawnAsEntity(worldIn, pos, drop);
                 }
@@ -596,9 +597,21 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
             double d2 = (double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D;
             EntityItem entityitem = new EntityItem(worldIn, (double)pos.getX() + d0, (double)pos.getY() + d1, (double)pos.getZ() + d2, stack);
             entityitem.setDefaultPickupDelay();
-            worldIn.spawnEntity(entityitem);
+            // CraftBukkit start
+            if (worldIn.captureDrops != null) {
+                worldIn.captureDrops.add(entityitem);
+            } else {
+                worldIn.spawnEntity(entityitem);
+            }
+            // CraftBukkit end
         }
     }
+    
+    // CraftBukkit start
+    public int getExpDrop(World world, IBlockState data, int enchantmentLevel) {
+        return 0;
+    }
+    // CraftBukkit end
 
     public void dropXpOnBlockBreak(World worldIn, BlockPos pos, int amount)
     {

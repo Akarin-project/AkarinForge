@@ -77,7 +77,7 @@ public abstract class EntityLiving extends EntityLivingBase
     private final NonNullList<ItemStack> inventoryArmor = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
     protected float[] inventoryArmorDropChances = new float[4];
     private boolean canPickUpLoot;
-    private boolean persistenceRequired;
+    boolean persistenceRequired; // Akarin - package
     private final Map<PathNodeType, Float> mapPathPriority = Maps.newEnumMap(PathNodeType.class);
     private ResourceLocation deathLootTable;
     private long deathLootTableSeed;

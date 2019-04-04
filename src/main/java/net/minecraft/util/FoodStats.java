@@ -10,7 +10,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class FoodStats
 {
-    private int foodLevel = 20;
+    public int foodLevel = 20; // CraftBukkit - public
     private float foodSaturationLevel = 5.0F;
     private float foodExhaustionLevel;
     private int foodTimer;

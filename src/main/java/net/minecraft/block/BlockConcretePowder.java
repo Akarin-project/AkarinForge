@@ -29,9 +29,8 @@ public class BlockConcretePowder extends BlockFalling
 
     public void onEndFalling(World worldIn, BlockPos pos, IBlockState p_176502_3_, IBlockState p_176502_4_)
     {
-        if (p_176502_4_.getMaterial().isLiquid())
-        {
-            worldIn.setBlockState(pos, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, p_176502_3_.getValue(COLOR)), 3);
+        if (p_176502_4_.getMaterial().isLiquid() && worldIn.getBlockState(pos).getBlock() != Blocks.CONCRETE) { // CraftBukkit - don't double concrete
+            CraftEventFactory.handleBlockFormEvent(worldIn, pos, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, p_176502_3_.getValue(BlockConcretePowder.COLOR)), null); // CraftBukkit
         }
     }
 
@@ -55,7 +54,7 @@ public class BlockConcretePowder extends BlockFalling
 
         if (flag)
         {
-            worldIn.setBlockState(pos, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, state.getValue(COLOR)), 3);
+            CraftEventFactory.handleBlockFormEvent(worldIn, pos, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, state.getValue(BlockConcretePowder.COLOR)), null); // CraftBukkit
         }
 
         return flag;

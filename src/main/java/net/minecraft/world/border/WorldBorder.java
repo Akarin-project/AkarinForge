@@ -23,6 +23,7 @@ public class WorldBorder
     private double damageBuffer;
     private int warningTime;
     private int warningDistance;
+    public WorldServer world; // CraftBukkit
 
     public WorldBorder()
     {
@@ -206,6 +207,7 @@ public class WorldBorder
 
     public void addListener(IBorderListener listener)
     {
+        if (listeners.contains(listener)) return; // CraftBukkit
         this.listeners.add(listener);
     }
 

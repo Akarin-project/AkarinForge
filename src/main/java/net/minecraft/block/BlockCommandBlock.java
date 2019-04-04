@@ -27,6 +27,7 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.event.block.BlockRedstoneEvent;
 
 public class BlockCommandBlock extends BlockContainer
 {
@@ -58,6 +59,15 @@ public class BlockCommandBlock extends BlockContainer
                 TileEntityCommandBlock tileentitycommandblock = (TileEntityCommandBlock)tileentity;
                 boolean flag = worldIn.isBlockPowered(pos);
                 boolean flag1 = tileentitycommandblock.isPowered();
+                // CraftBukkit start
+                org.bukkit.block.Block bukkitBlock = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+                int old = flag1 ? 15 : 0;
+                int current = flag ? 15 : 0;
+
+                BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bukkitBlock, old, current);
+                worldIn.getServer().getPluginManager().callEvent(eventRedstone);
+                flag = eventRedstone.getNewCurrent() > 0;
+                // CraftBukkit end
                 tileentitycommandblock.setPowered(flag);
 
                 if (!flag1 && !tileentitycommandblock.isAuto() && tileentitycommandblock.getMode() != TileEntityCommandBlock.Mode.SEQUENCE)

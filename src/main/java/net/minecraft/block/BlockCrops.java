@@ -81,7 +81,10 @@ public class BlockCrops extends BlockBush implements IGrowable
 
                 if(net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, rand.nextInt((int)(25.0F / f) + 1) == 0))
                 {
-                    worldIn.setBlockState(pos, this.withAge(i + 1), 2);
+                    // CraftBukkit start
+                    IBlockState data = this.withAge(i + 1);
+                    CraftEventFactory.handleBlockGrowEvent(worldIn, pos.getX(), pos.getY(), pos.getZ(), this, getMetaFromState(data));
+                    // CraftBukkit end
                     net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state, worldIn.getBlockState(pos));
                 }
             }
@@ -98,7 +101,10 @@ public class BlockCrops extends BlockBush implements IGrowable
             i = j;
         }
 
-        worldIn.setBlockState(pos, this.withAge(i), 2);
+        // CraftBukkit start
+        IBlockState data = this.withAge(i);
+        CraftEventFactory.handleBlockGrowEvent(worldIn, pos.getX(), pos.getY(), pos.getZ(), this, getMetaFromState(data));
+        // CraftBukkit end
     }
 
     protected int getBonemealAgeIncrease(World worldIn)

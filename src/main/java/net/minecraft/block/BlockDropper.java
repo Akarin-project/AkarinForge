@@ -1,8 +1,11 @@
 package net.minecraft.block;
 
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
+
 import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
 import net.minecraft.dispenser.IBehaviorDispenseItem;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryLargeChest;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityDispenser;
@@ -56,10 +59,25 @@ public class BlockDropper extends BlockDispenser
                     }
                     else
                     {
-                        itemstack1 = TileEntityHopper.putStackInInventoryAllSlots(tileentitydispenser, iinventory, itemstack.copy().splitStack(1), enumfacing.getOpposite());
+                        // CraftBukkit start - Fire event when pushing items into other inventories
+                        CraftItemStack oitemstack = CraftItemStack.asCraftMirror(itemstack.copy().splitStack(1));
 
-                        if (itemstack1.isEmpty())
-                        {
+                        org.bukkit.inventory.Inventory destinationInventory;
+                        // Have to special case large chests as they work oddly
+                        if (iinventory instanceof InventoryLargeChest) {
+                            destinationInventory = new CraftInventoryDoubleChest((InventoryLargeChest) iinventory);
+                        } else {
+                            destinationInventory = iinventory.getOwner().getInventory();
+                        }
+
+                        InventoryMoveItemEvent event = new InventoryMoveItemEvent(tileentitydispenser.getOwner().getInventory(), oitemstack.clone(), destinationInventory, true);
+                        worldIn.getServer().getPluginManager().callEvent(event);
+                        if (event.isCancelled()) {
+                            return;
+                        }
+                        itemstack1 = TileEntityHopper.putStackInInventoryAllSlots(tileentitydispenser, iinventory, CraftItemStack.asNMSCopy(event.getItem()), enumdirection.getOpposite());
+                        if (event.getItem().equals(oitemstack) && itemstack1.isEmpty()) {
+                            // CraftBukkit end
                             itemstack1 = itemstack.copy();
                             itemstack1.shrink(1);
                         }

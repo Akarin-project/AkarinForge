@@ -47,7 +47,7 @@ public class PlayerProfileCache
     private static boolean onlineMode;
     private final Map<String, PlayerProfileCache.ProfileEntry> usernameToProfileEntryMap = Maps.<String, PlayerProfileCache.ProfileEntry>newHashMap();
     private final Map<UUID, PlayerProfileCache.ProfileEntry> uuidToProfileEntryMap = Maps.<UUID, PlayerProfileCache.ProfileEntry>newHashMap();
-    private final Deque<GameProfile> gameProfiles = Lists.<GameProfile>newLinkedList();
+    private final Deque<GameProfile> gameProfiles = new java.util.concurrent.LinkedBlockingDeque<GameProfile>(); // CraftBukkit
     private final GameProfileRepository profileRepo;
     protected final Gson gson;
     private final File usercacheFile;

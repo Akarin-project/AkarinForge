@@ -89,8 +89,24 @@ public class AdvancementRewards
 
         if (functionobject != null)
         {
-            ICommandSender icommandsender = new ICommandSender()
-            {
+            // CraftBukkit start
+            ICommandSender icommandlistener = new AdvancementCommandListener(player, minecraftserver);
+
+            minecraftserver.getFunctionManager().execute(functionobject, icommandlistener);
+        }
+
+    }
+
+            public static class AdvancementCommandListener implements ICommandSender {
+
+                private final EntityPlayerMP player;
+                private final MinecraftServer minecraftserver;
+
+                public AdvancementCommandListener(EntityPlayerMP entityplayer, MinecraftServer minecraftserver) {
+                    this.player = entityplayer;
+                    this.minecraftserver = minecraftserver;
+                }
+
                 public String getName()
                 {
                     return player.getName();
@@ -134,10 +150,9 @@ public class AdvancementRewards
                 {
                     return player.getServer();
                 }
-            };
-            minecraftserver.getFunctionManager().execute(functionobject, icommandsender);
-        }
-    }
+            }
+    // CraftBukkit end
+            
 
     public String toString()
     {

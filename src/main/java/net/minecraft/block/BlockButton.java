@@ -3,6 +3,10 @@ package net.minecraft.block;
 import java.util.List;
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.event.block.BlockRedstoneEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
@@ -165,6 +169,19 @@ public abstract class BlockButton extends BlockDirectional
         }
         else
         {
+            // CraftBukkit start
+            boolean powered = ((Boolean) state.getValue(POWERED));
+            org.bukkit.block.Block block = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+            int old = (powered) ? 15 : 0;
+            int current = (!powered) ? 15 : 0;
+
+            BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, old, current);
+            worldIn.getServer().getPluginManager().callEvent(eventRedstone);
+
+            if ((eventRedstone.getNewCurrent() > 0) != (!powered)) {
+                return true;
+            }
+            // CraftBukkit end
             worldIn.setBlockState(pos, state.withProperty(POWERED, Boolean.valueOf(true)), 3);
             worldIn.markBlockRangeForRenderUpdate(pos, pos);
             this.playClickSound(playerIn, worldIn, pos);
@@ -226,6 +243,16 @@ public abstract class BlockButton extends BlockDirectional
                 }
                 else
                 {
+                    // CraftBukkit start
+                    org.bukkit.block.Block block = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+
+                    BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, 15, 0);
+                    worldIn.getServer().getPluginManager().callEvent(eventRedstone);
+
+                    if (eventRedstone.getNewCurrent() > 0) {
+                        return;
+                    }
+                    // CraftBukkit end
                     worldIn.setBlockState(pos, state.withProperty(POWERED, Boolean.valueOf(false)));
                     this.notifyNeighbors(worldIn, pos, (EnumFacing)state.getValue(FACING));
                     this.playReleaseSound(worldIn, pos);
@@ -255,8 +282,42 @@ public abstract class BlockButton extends BlockDirectional
         boolean flag = !list.isEmpty();
         boolean flag1 = ((Boolean)state.getValue(POWERED)).booleanValue();
 
+        // CraftBukkit start - Call interact event when arrows turn on wooden buttons
+        if (flag1 != flag && flag) {
+            org.bukkit.block.Block block = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+            boolean allowed = false;
+
+            // If all of the events are cancelled block the button press, else allow
+            for (Object object : list) {
+                if (object != null) {
+                    EntityInteractEvent event = new EntityInteractEvent(((Entity) object).getBukkitEntity(), block);
+                    worldIn.getServer().getPluginManager().callEvent(event);
+
+                    if (!event.isCancelled()) {
+                        allowed = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!allowed) {
+                return;
+            }
+        }
+        // CraftBukkit end
+
         if (flag && !flag1)
         {
+            // CraftBukkit start
+            org.bukkit.block.Block block = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+
+            BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, 0, 15);
+            worldIn.getServer().getPluginManager().callEvent(eventRedstone);
+
+            if (eventRedstone.getNewCurrent() <= 0) {
+                return;
+            }
+            // CraftBukkit end
             worldIn.setBlockState(pos, state.withProperty(POWERED, Boolean.valueOf(true)));
             this.notifyNeighbors(worldIn, pos, (EnumFacing)state.getValue(FACING));
             worldIn.markBlockRangeForRenderUpdate(pos, pos);
@@ -265,6 +326,16 @@ public abstract class BlockButton extends BlockDirectional
 
         if (!flag && flag1)
         {
+            // CraftBukkit start
+            org.bukkit.block.Block block = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+
+            BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, 15, 0);
+            worldIn.getServer().getPluginManager().callEvent(eventRedstone);
+
+            if (eventRedstone.getNewCurrent() > 0) {
+                return;
+            }
+            // CraftBukkit end
             worldIn.setBlockState(pos, state.withProperty(POWERED, Boolean.valueOf(false)));
             this.notifyNeighbors(worldIn, pos, (EnumFacing)state.getValue(FACING));
             worldIn.markBlockRangeForRenderUpdate(pos, pos);

@@ -142,7 +142,11 @@ public class PlayerAdvancements
 
                     if (advancement == null)
                     {
-                        LOGGER.warn("Ignored advancement '" + entry.getKey() + "' in progress file " + this.progressFile + " - it doesn't exist anymore?");
+                        // CraftBukkit start
+                        if (((ResourceLocation) entry.getKey()).getResourceDomain().equals("minecraft")) {
+                            PlayerAdvancements.LOGGER.warn("Ignored advancement \'" + entry.getKey() + "\' in progress file " + this.progressFile + " - it doesn\'t exist anymore?");
+                        }
+                        // CraftBukkit end
                     }
                     else
                     {
@@ -211,6 +215,7 @@ public class PlayerAdvancements
 
             if (!flag1 && advancementprogress.isDone())
             {
+                this.player.world.getServer().getPluginManager().callEvent(new org.bukkit.event.player.PlayerAdvancementDoneEvent(this.player.getBukkitEntity(), p_192750_1_.bukkit)); // CraftBukkit
                 p_192750_1_.getRewards().apply(this.player);
 
                 if (p_192750_1_.getDisplay() != null && p_192750_1_.getDisplay().shouldAnnounceToChat() && this.player.world.getGameRules().getBoolean("announceAdvancements"))

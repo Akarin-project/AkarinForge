@@ -4,9 +4,16 @@ import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
+
+import org.bukkit.Bukkit;
+import org.bukkit.event.weather.ThunderChangeEvent;
+import org.bukkit.event.weather.WeatherChangeEvent;
+
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.crash.ICrashReportDetail;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketServerDifficulty;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.datafix.DataFixer;
 import net.minecraft.util.datafix.FixTypes;
@@ -17,6 +24,7 @@ import net.minecraft.world.DimensionType;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.GameType;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.fml.relauncher.Side;
@@ -66,6 +74,7 @@ public class WorldInfo
     private final Map<Integer, NBTTagCompound> dimensionData = Maps.newHashMap();
     private GameRules gameRules = new GameRules();
     private java.util.Map<String, net.minecraft.nbt.NBTBase> additionalProperties;
+    public WorldServer world; // CraftBukkit
 
     protected WorldInfo()
     {
@@ -511,6 +520,16 @@ public class WorldInfo
 
     public void setThundering(boolean thunderingIn)
     {
+        // CraftBukkit start
+        org.bukkit.World world = Bukkit.getWorld(getWorldName());
+        if (world != null) {
+            ThunderChangeEvent thunder = new ThunderChangeEvent(world, flag);
+            Bukkit.getServer().getPluginManager().callEvent(thunder);
+            if (thunder.isCancelled()) {
+                return;
+            }
+        }
+        // CraftBukkit end
         this.thundering = thunderingIn;
     }
 
@@ -531,6 +550,16 @@ public class WorldInfo
 
     public void setRaining(boolean isRaining)
     {
+        // CraftBukkit start
+        org.bukkit.World world = Bukkit.getWorld(getWorldName());
+        if (world != null) {
+            WeatherChangeEvent weather = new WeatherChangeEvent(world, flag);
+            Bukkit.getServer().getPluginManager().callEvent(weather);
+            if (weather.isCancelled()) {
+                return;
+            }
+        }
+        // CraftBukkit end
         this.raining = isRaining;
     }
 
@@ -711,6 +740,13 @@ public class WorldInfo
 
     public void setDifficulty(EnumDifficulty newDifficulty)
     {
+        this.difficulty = newDifficulty;
+        // CraftBukkit start
+        SPacketServerDifficulty packet = new SPacketServerDifficulty(this.getDifficulty(), this.isDifficultyLocked());
+        for (EntityPlayerMP player : (java.util.List<EntityPlayerMP>) (java.util.List) world.playerEntities) {
+            player.connection.sendPacket(packet);
+        }
+        // CraftBukkit end
         net.minecraftforge.common.ForgeHooks.onDifficultyChange(newDifficulty, this.difficulty);
         this.difficulty = newDifficulty;
     }
@@ -869,4 +905,12 @@ public class WorldInfo
     {
         return this.versionName;
     }
+    
+    // CraftBukkit start - Check if the name stored in NBT is the correct one
+    public void checkName( String name ) {
+        if ( !this.levelName.equals( name ) ) {
+            this.levelName = name;
+        }
+    }
+    // CraftBukkit end
 }

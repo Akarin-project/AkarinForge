@@ -1,6 +1,9 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.event.block.BlockRedstoneEvent;
+
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
@@ -223,10 +226,22 @@ public class BlockDoor extends Block
             }
             else
             {
-                boolean flag = worldIn.isBlockPowered(pos) || worldIn.isBlockPowered(blockpos1);
+                // CraftBukkit start
+                org.bukkit.World bworld = worldIn.getWorld();
+                org.bukkit.block.Block bukkitBlock = bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+                org.bukkit.block.Block blockTop = bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ());
 
-                if (blockIn != this && (flag || blockIn.getDefaultState().canProvidePower()) && flag != ((Boolean)iblockstate1.getValue(POWERED)).booleanValue())
-                {
+                int power = bukkitBlock.getBlockPower();
+                int powerTop = blockTop.getBlockPower();
+                if (powerTop > power) power = powerTop;
+                int oldPower = (Boolean) iblockstate1.getValue(BlockDoor.POWERED) ? 15 : 0;
+
+                if (oldPower == 0 ^ power == 0) {
+                    BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bukkitBlock, oldPower, power);
+                    worldIn.getServer().getPluginManager().callEvent(eventRedstone);
+
+                    boolean flag = eventRedstone.getNewCurrent() > 0;
+                    // CraftBukkit end
                     worldIn.setBlockState(blockpos1, iblockstate1.withProperty(POWERED, Boolean.valueOf(flag)), 2);
 
                     if (flag != ((Boolean)state.getValue(OPEN)).booleanValue())

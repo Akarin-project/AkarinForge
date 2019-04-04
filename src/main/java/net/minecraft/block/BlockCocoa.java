@@ -50,7 +50,10 @@ public class BlockCocoa extends BlockHorizontal implements IGrowable
 
             if (i < 2 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, rand.nextInt(5) == 0))
             {
-                worldIn.setBlockState(pos, state.withProperty(AGE, Integer.valueOf(i + 1)), 2);
+                // CraftBukkit start
+                IBlockState data = state.withProperty(AGE, Integer.valueOf(i + 1));
+                CraftEventFactory.handleBlockGrowEvent(worldIn, pos.getX(), pos.getY(), pos.getZ(), this, getMetaFromState(data));
+                // CraftBukkit end
                 net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state, worldIn.getBlockState(pos));
             }
         }
@@ -171,7 +174,10 @@ public class BlockCocoa extends BlockHorizontal implements IGrowable
 
     public void grow(World worldIn, Random rand, BlockPos pos, IBlockState state)
     {
-        worldIn.setBlockState(pos, state.withProperty(AGE, Integer.valueOf(((Integer)state.getValue(AGE)).intValue() + 1)), 2);
+        // CraftBukkit start
+        IBlockState data = state.withProperty(AGE, Integer.valueOf(((Integer) state.getValue(AGE)).intValue() + 1));
+        CraftEventFactory.handleBlockGrowEvent(worldIn, pos.getX(), pos.getY(), pos.getZ(), this, getMetaFromState(data));
+        // CraftBukkit end
     }
 
     @SideOnly(Side.CLIENT)

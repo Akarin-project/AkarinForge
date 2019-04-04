@@ -106,8 +106,20 @@ public class BlockChorusFlower extends Block
 
                     if (flag && areAllNeighborsEmpty(worldIn, blockpos, (EnumFacing)null) && worldIn.isAirBlock(pos.up(2)))
                     {
-                        worldIn.setBlockState(pos, Blocks.CHORUS_PLANT.getDefaultState(), 2);
-                        this.placeGrownFlower(worldIn, blockpos, i);
+                        // CraftBukkit start - add event
+                        // worldIn.setBlockState(pos, Blocks.CHORUS_PLANT.getDefaultState(), 2);
+                        // this.placeGrownFlower(worldIn, blockpos, i);
+                        BlockPos target = blockpos;
+                        if (CraftEventFactory.handleBlockSpreadEvent(
+                                worldIn.getWorld().getBlockAt(target.getX(), target.getY(), target.getZ()),
+                                worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()),
+                                this,
+                                getMetaFromState(this.getDefaultState().withProperty(BlockChorusFlower.AGE, Integer.valueOf(i)))
+                        )) {
+                            worldIn.setBlockState(pos, Blocks.CHORUS_PLANT.getDefaultState(), 2);
+                            worldIn.playEvent(1033, pos, 0);
+                        }
+                        // CraftBukkit end
                     }
                     else if (i < 4)
                     {
@@ -126,8 +138,19 @@ public class BlockChorusFlower extends Block
 
                             if (worldIn.isAirBlock(blockpos1) && worldIn.isAirBlock(blockpos1.down()) && areAllNeighborsEmpty(worldIn, blockpos1, enumfacing.getOpposite()))
                             {
-                                this.placeGrownFlower(worldIn, blockpos1, i + 1);
-                                flag2 = true;
+                                // CraftBukkit start - add event
+                                // this.placeGrownFlower(worldIn, blockpos1, i + 1);
+                                BlockPos target = blockpos1;
+                                if (CraftEventFactory.handleBlockSpreadEvent(
+                                        worldIn.getWorld().getBlockAt(target.getX(), target.getY(), target.getZ()),
+                                        worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()),
+                                        this,
+                                        getMetaFromState(this.getDefaultState().withProperty(BlockChorusFlower.AGE, Integer.valueOf(i + 1)))
+                                )) {
+                                    worldIn.playEvent(1033, pos, 0);
+                                    flag2 = true;
+                                }
+                                // CraftBukkit end
                             }
                         }
 
@@ -137,12 +160,36 @@ public class BlockChorusFlower extends Block
                         }
                         else
                         {
-                            this.placeDeadFlower(worldIn, pos);
+                            // CraftBukkit - add event
+                            if (CraftEventFactory.handleBlockGrowEvent(
+                                    worldIn,
+                                    pos.getX(),
+                                    pos.getY(),
+                                    pos.getZ(),
+                                    this,
+                                    getMetaFromState(state.withProperty(BlockChorusFlower.AGE, Integer.valueOf(5)))
+                            )) {
+                                worldIn.playEvent(1034, pos, 0);
+                            }
+                            // this.placeDeadFlower(worldIn, pos);
+                            // CraftBukkit end
                         }
                     }
                     else if (i == 4)
                     {
-                        this.placeDeadFlower(worldIn, pos);
+                        // CraftBukkit - add event
+                        if (CraftEventFactory.handleBlockGrowEvent(
+                                worldIn,
+                                pos.getX(),
+                                pos.getY(),
+                                pos.getZ(),
+                                this,
+                                getMetaFromState(state.withProperty(BlockChorusFlower.AGE, Integer.valueOf(5)))
+                        )) {
+                            worldIn.playEvent(1034, pos, 0);
+                        }
+                        // this.placeDeadFlower(worldIn, pos);
+                        // CraftBukkit end
                     }
                     net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state, worldIn.getBlockState(pos));
                 }

@@ -61,10 +61,20 @@ public abstract class BlockRedstoneDiode extends BlockHorizontal
 
             if (this.isRepeaterPowered && !flag)
             {
+                // CraftBukkit start
+                if (CraftEventFactory.callRedstoneChange(worldIn, pos.getX(), pos.getY(), pos.getZ(), 15, 0).getNewCurrent() != 0) {
+                    return;
+                }
+                // CraftBukkit end
                 worldIn.setBlockState(pos, this.getUnpoweredState(state), 2);
             }
             else if (!this.isRepeaterPowered)
             {
+                // CraftBukkit start
+                if (CraftEventFactory.callRedstoneChange(worldIn, pos.getX(), pos.getY(), pos.getZ(), 0, 15).getNewCurrent() != 15) {
+                    return;
+                }
+                // CraftBukkit end
                 worldIn.setBlockState(pos, this.getPoweredState(state), 2);
 
                 if (!flag)
