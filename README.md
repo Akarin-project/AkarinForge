@@ -26,6 +26,7 @@ Get Akarin
 
 **Notes**
 * Please ensure that your machine has sufficient memory before compiling the project.
+* Add `--setup` option to setup the development workspace for [Eclipse](https://www.eclipse.org/), and following the [Forge Documentation](https://mcforge.readthedocs.io/en/latest/) if you are using others IDE.
 
 Demo Servers
 ---
