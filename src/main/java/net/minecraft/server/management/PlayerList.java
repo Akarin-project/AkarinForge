@@ -617,7 +617,7 @@ public abstract class PlayerList
         WorldServer worldserver = this.mcServer.getWorld(player.dimension);
         player.dimension = dimensionIn;
         WorldServer worldserver1 = this.mcServer.getWorld(player.dimension);
-        player.connection.sendPacket(new SPacketRespawn(player.dimension, worldserver1.getDifficulty(), worldserver1.getWorldInfo().getTerrainType(), player.interactionManager.getGameType()));
+        player.connection.sendPacket(new SPacketRespawn(player.dimension, worldserver1.getDifficulty(), worldserver1.getWorldInfo().getTerrainType(), player.interactionManager.getGameType())); // Forge: Use new dimensions information
         this.updatePermissionLevel(player);
         worldserver.removeEntityDangerously(player);
         player.isDead = false;

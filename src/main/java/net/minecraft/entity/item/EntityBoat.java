@@ -449,6 +449,12 @@ public class EntityBoat extends Entity
                         blockpos$pooledmutableblockpos.setPos(l1, k1, i2);
                         IBlockState iblockstate = this.world.getBlockState(blockpos$pooledmutableblockpos);
 
+                        Boolean result = iblockstate.getBlock().isAABBInsideMaterial(world, blockpos$pooledmutableblockpos, new AxisAlignedBB(blockpos$pooledmutableblockpos), Material.WATER);
+                        if (result != null) {
+                            if (!result) continue;
+                            f = Math.max(f, iblockstate.getBlock().getBlockLiquidHeight(world, blockpos$pooledmutableblockpos, iblockstate, Material.WATER) + blockpos$pooledmutableblockpos.getY());
+                        }
+
                         if (iblockstate.getMaterial() == Material.WATER)
                         {
                             f = Math.max(f, BlockLiquid.getBlockLiquidHeight(iblockstate, this.world, blockpos$pooledmutableblockpos));
@@ -551,6 +557,15 @@ public class EntityBoat extends Entity
                         blockpos$pooledmutableblockpos.setPos(k1, l1, i2);
                         IBlockState iblockstate = this.world.getBlockState(blockpos$pooledmutableblockpos);
 
+                        Boolean result = iblockstate.getBlock().isAABBInsideMaterial(world, blockpos$pooledmutableblockpos, axisalignedbb, Material.WATER);
+                        if (result != null) {
+                            if (!result) continue;
+                            
+                            float f = iblockstate.getBlock().getBlockLiquidHeight(world, blockpos$pooledmutableblockpos, iblockstate, Material.WATER) + blockpos$pooledmutableblockpos.getY();
+                            this.waterLevel = Math.max((double)f, this.waterLevel);
+                            flag |= axisalignedbb.minY < (double)f;
+                        }
+
                         if (iblockstate.getMaterial() == Material.WATER)
                         {
                             float f = BlockLiquid.getLiquidHeight(iblockstate, this.world, blockpos$pooledmutableblockpos);
@@ -593,6 +608,18 @@ public class EntityBoat extends Entity
                     {
                         blockpos$pooledmutableblockpos.setPos(k1, l1, i2);
                         IBlockState iblockstate = this.world.getBlockState(blockpos$pooledmutableblockpos);
+
+                        Boolean result = iblockstate.getBlock().isAABBInsideMaterial(world, blockpos$pooledmutableblockpos, axisalignedbb, Material.WATER);
+                        if (result != null) {
+                            if (!result) continue;
+                            
+                            if(iblockstate.getBlock().getBlockLiquidHeight(world, blockpos$pooledmutableblockpos, iblockstate, Material.WATER) > 0)
+                            {   
+                                blockpos$pooledmutableblockpos.release();
+                                return EntityBoat.Status.UNDER_FLOWING_WATER;
+                            } else
+                                continue;
+                        }
 
                         if (iblockstate.getMaterial() == Material.WATER && d0 < (double)BlockLiquid.getLiquidHeight(iblockstate, this.world, blockpos$pooledmutableblockpos))
                         {

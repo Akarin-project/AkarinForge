@@ -2135,6 +2135,20 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
      {
          return null;
      }
+     
+     /**
+      * Called when entities are swimming in the given liquid and returns the relative height (used by {@link net.minecraft.entity.item.EntityBoat})
+      * 
+      * @param world world that is being tested.
+      * @param pos block thats being tested.
+      * @param state state at world/pos
+      * @param material liquid thats being tested.
+      * @return relative height of the given liquid (material), a value between 0 and 1
+      */
+     public float getBlockLiquidHeight(World world, BlockPos pos, IBlockState state, Material material)
+     {
+         return 0;
+     }
 
      /**
      * Queries if this block should render in a given layer.
