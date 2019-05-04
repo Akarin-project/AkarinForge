@@ -17,6 +17,7 @@ import net.minecraft.world.DimensionType;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.GameType;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.fml.relauncher.Side;
@@ -66,6 +67,15 @@ public class WorldInfo
     private final Map<Integer, NBTTagCompound> dimensionData = Maps.newHashMap();
     private GameRules gameRules = new GameRules();
     private java.util.Map<String, net.minecraft.nbt.NBTBase> additionalProperties;
+    // Akarin start
+    public WorldServer world;
+    
+    public void checkName(String name) {
+        if (!this.levelName.equals(name)) {
+            this.levelName = name;
+        }
+    }
+    // Akarin end
 
     protected WorldInfo()
     {

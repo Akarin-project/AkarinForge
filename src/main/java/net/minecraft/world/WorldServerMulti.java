@@ -1,5 +1,8 @@
 package net.minecraft.world;
 
+import org.bukkit.World.Environment;
+import org.bukkit.generator.ChunkGenerator;
+
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.village.VillageCollection;
@@ -7,15 +10,16 @@ import net.minecraft.world.border.IBorderListener;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.storage.DerivedWorldInfo;
 import net.minecraft.world.storage.ISaveHandler;
+import net.minecraft.world.storage.WorldInfo;
 
 public class WorldServerMulti extends WorldServer
 {
     private final WorldServer delegate;
     private IBorderListener borderListener;
 
-    public WorldServerMulti(MinecraftServer server, ISaveHandler saveHandlerIn, int dimensionId, WorldServer delegate, Profiler profilerIn)
+    public WorldServerMulti(MinecraftServer server, ISaveHandler saveHandlerIn, int dimensionId, WorldServer delegate, Profiler profilerIn, WorldInfo worlddata, Environment environment, ChunkGenerator gen)
     {
-        super(server, saveHandlerIn, new DerivedWorldInfo(delegate.getWorldInfo()), dimensionId, profilerIn);
+        super(server, saveHandlerIn, new DerivedWorldInfo(delegate.getWorldInfo()), dimensionId, profilerIn, environment, gen);
         this.delegate = delegate;
         this.borderListener = new IBorderListener()
         {

@@ -81,6 +81,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.World.Environment;
+import org.bukkit.generator.ChunkGenerator;
 
 public class WorldServer extends World implements IThreadListener
 {
@@ -105,7 +107,7 @@ public class WorldServer extends World implements IThreadListener
     protected Set<ChunkPos> doneChunks = new java.util.HashSet<ChunkPos>();
     public List<Teleporter> customTeleporters = new ArrayList<Teleporter>();
 
-    public WorldServer(MinecraftServer server, ISaveHandler saveHandlerIn, WorldInfo info, int dimensionId, Profiler profilerIn)
+    public WorldServer(MinecraftServer server, ISaveHandler saveHandlerIn, WorldInfo info, int dimensionId, Profiler profilerIn, Environment worldEnvironment, ChunkGenerator gen)
     {
         super(saveHandlerIn, info, net.minecraftforge.common.DimensionManager.createProviderFor(dimensionId), profilerIn, false);
         this.mcServer = server;

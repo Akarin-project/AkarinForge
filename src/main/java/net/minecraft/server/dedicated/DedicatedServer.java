@@ -4,6 +4,9 @@ import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+
+import joptsimple.OptionSet;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -64,9 +67,9 @@ public class DedicatedServer extends MinecraftServer implements IServer
     private boolean guiIsEnabled;
     public static boolean allowPlayerLogins = false;
 
-    public DedicatedServer(File anvilFileIn, DataFixer dataFixerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
+    public DedicatedServer(OptionSet options, DataFixer dataFixerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
     {
-        super(anvilFileIn, Proxy.NO_PROXY, dataFixerIn, authServiceIn, sessionServiceIn, profileRepoIn, profileCacheIn);
+        super(options, Proxy.NO_PROXY, dataFixerIn, authServiceIn, sessionServiceIn, profileRepoIn, profileCacheIn);
         Thread thread = new Thread("Server Infinisleeper")
         {
             {
@@ -216,6 +219,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
             }
             else
             {
+                this.anvilConverterForAnvilFile = new net.minecraft.world.chunk.storage.AnvilSaveConverter(server.getWorldContainer(), this.dataFixer); // Akarin
                 net.minecraftforge.fml.common.FMLCommonHandler.instance().onServerStarted();
                 this.setPlayerList(new DedicatedPlayerList(this));
                 long j = System.nanoTime();
