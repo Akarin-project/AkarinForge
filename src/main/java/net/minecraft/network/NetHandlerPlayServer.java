@@ -796,12 +796,13 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
                 {
                     this.player.setPositionAndUpdate(entity.posX, entity.posY, entity.posZ);
                 }
-                else
+                else if (net.minecraftforge.common.ForgeHooks.onTravelToDimension(this.player, entity.dimension))
                 {
+                    int prevDimension = this.player.dimension;
                     WorldServer worldserver1 = this.player.getServerWorld();
                     WorldServer worldserver2 = (WorldServer)entity.world;
                     this.player.dimension = entity.dimension;
-                    this.sendPacket(new SPacketRespawn(this.player.dimension, worldserver1.getDifficulty(), worldserver1.getWorldInfo().getTerrainType(), this.player.interactionManager.getGameType()));
+                    this.sendPacket(new SPacketRespawn(this.player.dimension, worldserver2.getDifficulty(), worldserver2.getWorldInfo().getTerrainType(), this.player.interactionManager.getGameType())); // Forge: Use new dimensions information
                     this.serverController.getPlayerList().updatePermissionLevel(this.player);
                     worldserver1.removeEntityDangerously(this.player);
                     this.player.isDead = false;
@@ -820,6 +821,7 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
                     this.player.interactionManager.setWorld(worldserver2);
                     this.serverController.getPlayerList().updateTimeAndWeatherForPlayer(this.player, worldserver2);
                     this.serverController.getPlayerList().syncPlayerInventory(this.player);
+                    net.minecraftforge.fml.common.FMLCommonHandler.instance().firePlayerChangedDimensionEvent(this.player, prevDimension, this.player.dimension);
                 }
             }
         }

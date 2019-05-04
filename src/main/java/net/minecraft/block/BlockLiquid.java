@@ -448,6 +448,12 @@ public abstract class BlockLiquid extends Block
         return (float)pos.getY() + getBlockLiquidHeight(state, worldIn, pos);
     }
 
+    @Override
+    public float getBlockLiquidHeight(World world, BlockPos pos, IBlockState state, Material material)
+    {
+        return BlockLiquid.getBlockLiquidHeight(state, world, pos);
+    }
+
     public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face)
     {
         return BlockFaceShape.UNDEFINED;
