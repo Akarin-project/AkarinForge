@@ -11,7 +11,7 @@ package io.akarin.forge.remapper;
 
 import com.google.common.collect.Multimap;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 import io.akarin.forge.remapper.ReflectionTransformer;
 
 import java.lang.reflect.Field;
@@ -28,7 +28,7 @@ import org.objectweb.asm.Type;
 public class RemapUtils {
     private static Map<String, Boolean> classNeedRemap = new ConcurrentHashMap<String, Boolean>();
     public static final String NMS_PREFIX = "net/minecraft/server/";
-    public static final String NMS_VERSION = CatServer.getNativeVersion();
+    public static final String NMS_VERSION = AkarinForge.getNativeVersion();
 
     public static String reverseMapExternal(Class<?> name) {
         return RemapUtils.reverseMap(name).replace('$', '.').replace('/', '.');

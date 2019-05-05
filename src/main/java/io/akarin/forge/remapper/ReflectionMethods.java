@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 import io.akarin.forge.remapper.CatServerRemapper;
 import io.akarin.forge.remapper.ReflectionTransformer;
 import io.akarin.forge.remapper.ReflectionUtils;
@@ -28,7 +28,7 @@ public class ReflectionMethods {
     }
 
     public static Class<?> forName(String className, boolean initialize, ClassLoader classLoader) throws ClassNotFoundException {
-        if (className.startsWith("net.minecraft.server." + CatServer.getNativeVersion())) {
+        if (className.startsWith("net.minecraft.server." + AkarinForge.getNativeVersion())) {
             className = ReflectionTransformer.jarMapping.classes.getOrDefault(className.replace('.', '/'), className).replace('/', '.');
         }
         return Class.forName(className, initialize, classLoader);

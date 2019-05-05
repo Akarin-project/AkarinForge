@@ -1,11 +1,3 @@
-/*
- * Decompiled with CFR 0_119.
- * 
- * Could not load the following classes:
- *  org.apache.commons.io.Charsets
- *  org.apache.commons.io.FileUtils
- *  org.apache.commons.io.IOUtils
- */
 package io.akarin.forge;
 
 import com.conversantmedia.util.concurrent.NoLockDisruptorBlockingQueue;
@@ -40,7 +32,7 @@ import org.apache.commons.io.IOUtils;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginDescriptionFile;
 
-public class CatServer {
+public class AkarinForge {
     private static final String version = "2.0.0";
     private static final String native_verson = "v1_12_R1";
     public static YamlConfiguration config;
@@ -60,33 +52,25 @@ public class CatServer {
     public static int buildTime = 1555099130;
     public static boolean fakePlayerEventPass;
     public static final ExecutorService fileIOThread;
-
+    
     public static String getVersion() {
-        return "2.0.0";
+        return "1.0.0";
     }
-
+    
     public static String getNativeVersion() {
         return "v1_12_R1";
     }
-
+    
     public static boolean isDev() {
         return System.getProperty("net.minecraftforge.gradle.GradleStart.srg.srg-mcp") != null;
     }
-
-    public static boolean asyncCatch(String reason) {
-        if (Thread.currentThread() != MinecraftServer.getServerInst().primaryThread) {
-            FMLLog.warning("Try to asynchronously " + reason + ", caught!", new Object[0]);
-            return true;
-        }
-        return false;
-    }
-
+    
     public static void loadConfig() {
-        configFile = new File("catserver.yml");
+        configFile = new File("akarinforge.yml");
         if (configFile.exists()) {
             config = YamlConfiguration.loadConfiguration(configFile);
         } else {
-            config = YamlConfiguration.loadConfiguration(new InputStreamReader(VeryConfig.class.getClassLoader().getResourceAsStream("configurations/catserver.yml")));
+            config = YamlConfiguration.loadConfiguration(new InputStreamReader(AkarinForge.class.getClassLoader().getResourceAsStream("configurations/akarinforge.yml")));
             try {
                 configFile.createNewFile();
                 config.save(configFile);
@@ -95,19 +79,19 @@ public class CatServer {
                 e2.printStackTrace();
             }
         }
-        hopperAsync = CatServer.getOrWriteBooleanConfig("async.hopper", hopperAsync);
-        entityMoveAsync = CatServer.getOrWriteBooleanConfig("async.entityMove", hopperAsync);
-        threadLag = CatServer.getOrWriteBooleanConfig("check.threadLag", threadLag);
-        chunkGenAsync = CatServer.getOrWriteBooleanConfig("async.chunkGen", chunkGenAsync);
-        disableForgeGenWorld = CatServer.getOrWriteStringListConfig("world.worldGen.disableForgeGenWorld", disableForgeGenWorld);
-        disableUpdateGameProfile = CatServer.getOrWriteBooleanConfig("disableUpdateGameProfile", disableUpdateGameProfile);
-        worldGenMaxTickTime = CatServer.getOrWriteStringLongConfig("maxTickTime.worldGen", 15) * 1000000;
-        modMob = CatServer.getOrWriteBooleanConfig("async.modMob", modMob);
-        entityAI = CatServer.getOrWriteBooleanConfig("async.entityAI", entityAI);
-        entityPoolNum = CatServer.getOrWriteIntConfig("async.asyncPoolNum", entityPoolNum);
-        fakePlayerEventPass = CatServer.getOrWriteBooleanConfig("fakePlayer.eventPass", fakePlayerEventPass);
+        hopperAsync = AkarinForge.getOrWriteBooleanConfig("async.hopper", hopperAsync);
+        entityMoveAsync = AkarinForge.getOrWriteBooleanConfig("async.entityMove", hopperAsync);
+        threadLag = AkarinForge.getOrWriteBooleanConfig("check.threadLag", threadLag);
+        chunkGenAsync = AkarinForge.getOrWriteBooleanConfig("async.chunkGen", chunkGenAsync);
+        disableForgeGenWorld = AkarinForge.getOrWriteStringListConfig("world.worldGen.disableForgeGenWorld", disableForgeGenWorld);
+        disableUpdateGameProfile = AkarinForge.getOrWriteBooleanConfig("disableUpdateGameProfile", disableUpdateGameProfile);
+        worldGenMaxTickTime = AkarinForge.getOrWriteStringLongConfig("maxTickTime.worldGen", 15) * 1000000;
+        modMob = AkarinForge.getOrWriteBooleanConfig("async.modMob", modMob);
+        entityAI = AkarinForge.getOrWriteBooleanConfig("async.entityAI", entityAI);
+        entityPoolNum = AkarinForge.getOrWriteIntConfig("async.asyncPoolNum", entityPoolNum);
+        fakePlayerEventPass = AkarinForge.getOrWriteBooleanConfig("fakePlayer.eventPass", fakePlayerEventPass);
         try {
-            CatServer.reloadFakePlayerPermissions();
+            AkarinForge.reloadFakePlayerPermissions();
         }
         catch (IOException e3) {
             System.out.println("FakePlayer\u6743\u9650\u6587\u4ef6\u8bfb\u53d6\u5931\u8d25");
@@ -192,7 +176,7 @@ public class CatServer {
         File permissFile = new File("fakePlayerPermission.txt");
         if (!permissFile.exists()) {
             permissFile.createNewFile();
-            InputStreamReader inputStreamReader = new InputStreamReader(VeryConfig.class.getClassLoader().getResourceAsStream("configurations/fakePlayerPermission.txt"));
+            InputStreamReader inputStreamReader = new InputStreamReader(AkarinForge.class.getClassLoader().getResourceAsStream("configurations/fakePlayerPermission.txt"));
             List lines = IOUtils.readLines((Reader)inputStreamReader);
             FileUtils.writeLines((File)permissFile, (Collection)lines);
         }

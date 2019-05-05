@@ -15,7 +15,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 import io.akarin.forge.remapper.MappingLoader;
 import io.akarin.forge.remapper.ReflectionMethods;
 import io.akarin.forge.remapper.RemapUtils;
@@ -126,7 +126,7 @@ public class CatHandleLookup {
 
     static {
         try {
-            CatHandleLookup.loadMappings(new BufferedReader(new InputStreamReader(MappingLoader.class.getClassLoader().getResourceAsStream("mappings/" + CatServer.getNativeVersion() + "/cb2srg.srg"))));
+            CatHandleLookup.loadMappings(new BufferedReader(new InputStreamReader(MappingLoader.class.getClassLoader().getResourceAsStream("mappings/" + AkarinForge.getNativeVersion() + "/cb2srg.srg"))));
         }
         catch (IOException e2) {
             e2.printStackTrace();

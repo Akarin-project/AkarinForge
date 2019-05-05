@@ -1,6 +1,3 @@
-/*
- * Decompiled with CFR 0_119.
- */
 package io.akarin.forge.utils;
 
 import java.io.IOException;
@@ -15,30 +12,29 @@ import java.util.Spliterator;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-public class CatTreeSet<E>
-extends TreeSet<E> {
+public class AkarinTreeSet<E> extends TreeSet<E> {
     private ConcurrentSkipListSet<E> m;
     private static final Object PRESENT = new Object();
     private static final long serialVersionUID = -2479143000061671589L;
 
-    CatTreeSet(ConcurrentSkipListSet<E> m2) {
+    AkarinTreeSet(ConcurrentSkipListSet<E> m2) {
         this.m = m2;
     }
 
-    public CatTreeSet() {
+    public AkarinTreeSet() {
         this(new ConcurrentSkipListSet());
     }
 
-    public CatTreeSet(Comparator<? super E> comparator) {
+    public AkarinTreeSet(Comparator<? super E> comparator) {
         this(new ConcurrentSkipListSet<E>(comparator));
     }
 
-    public CatTreeSet(Collection<? extends E> c2) {
+    public AkarinTreeSet(Collection<? extends E> c2) {
         this();
         this.addAll(c2);
     }
 
-    public CatTreeSet(SortedSet<E> s2) {
+    public AkarinTreeSet(SortedSet<E> s2) {
         this(s2.comparator());
         this.addAll(s2);
     }

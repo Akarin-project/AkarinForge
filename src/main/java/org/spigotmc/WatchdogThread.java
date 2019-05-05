@@ -9,6 +9,8 @@ import java.lang.management.ThreadInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.World;
+
 import org.bukkit.Bukkit;
 import org.spigotmc.RestartCommand;
 
@@ -53,10 +55,10 @@ extends Thread {
                 log.log(Level.SEVERE, "Please report this to http://www.spigotmc.org/");
                 log.log(Level.SEVERE, "Be sure to include ALL relevant console errors and Minecraft crash reports");
                 log.log(Level.SEVERE, "Spigot version: " + Bukkit.getServer().getVersion());
-                if (amu.haveWeSilencedAPhysicsCrash) {
+                if (World.haveWeSilencedAPhysicsCrash) {
                     log.log(Level.SEVERE, "------------------------------");
                     log.log(Level.SEVERE, "During the run of the server, a physics stackoverflow was supressed");
-                    log.log(Level.SEVERE, "near " + amu.blockLocation);
+                    log.log(Level.SEVERE, "near " + World.blockLocation);
                 }
                 log.log(Level.SEVERE, "------------------------------");
                 log.log(Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Spigot!):");
@@ -92,7 +94,7 @@ extends Thread {
             }
         }
         log.log(Level.SEVERE, "\tStack:");
-        for (MonitorInfo stack : thread.getStackTrace()) {
+        for (StackTraceElement stack : thread.getStackTrace()) {
             log.log(Level.SEVERE, "\t\t" + stack);
         }
     }

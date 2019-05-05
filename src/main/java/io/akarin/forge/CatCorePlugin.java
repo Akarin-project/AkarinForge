@@ -9,7 +9,7 @@ package io.akarin.forge;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 import io.akarin.forge.remapper.NetworkTransformer;
 import io.akarin.forge.remapper.SideTransformer;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
@@ -19,7 +19,7 @@ implements IFMLLoadingPlugin {
     @Override
     public String[] getASMTransformerClass() {
         String[] arrstring;
-        if (!CatServer.isDev()) {
+        if (!AkarinForge.isDev()) {
             String[] arrstring2 = new String[2];
             arrstring2[0] = NetworkTransformer.class.getCanonicalName();
             arrstring = arrstring2;

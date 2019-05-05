@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 
 public class CraftFuckPlayer
 extends CraftPlayer {
@@ -24,7 +24,7 @@ extends CraftPlayer {
 
     @Override
     public boolean hasPermission(String name) {
-        if (CatServer.fakePlayerPermissions.contains(name)) {
+        if (AkarinForge.fakePlayerPermissions.contains(name)) {
             return true;
         }
         Player realPlayer = this.getRealPlayer();
@@ -36,7 +36,7 @@ extends CraftPlayer {
 
     @Override
     public boolean isPermissionSet(String name) {
-        if (CatServer.fakePlayerPermissions.contains(name)) {
+        if (AkarinForge.fakePlayerPermissions.contains(name)) {
             return true;
         }
         Player realPlayer = this.getRealPlayer();
@@ -48,7 +48,7 @@ extends CraftPlayer {
 
     @Override
     public boolean isPermissionSet(Permission perm) {
-        if (CatServer.fakePlayerPermissions.contains(perm.getName())) {
+        if (AkarinForge.fakePlayerPermissions.contains(perm.getName())) {
             return true;
         }
         Player realPlayer = this.getRealPlayer();
@@ -60,7 +60,7 @@ extends CraftPlayer {
 
     @Override
     public boolean hasPermission(Permission perm) {
-        if (CatServer.fakePlayerPermissions.contains(perm.getName())) {
+        if (AkarinForge.fakePlayerPermissions.contains(perm.getName())) {
             return true;
         }
         Player realPlayer = this.getRealPlayer();

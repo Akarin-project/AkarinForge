@@ -35,7 +35,7 @@ import net.minecraft.server.MinecraftServer;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 import io.akarin.forge.remapper.CatServerRemapper;
 import io.akarin.forge.remapper.ClassInheritanceProvider;
 import io.akarin.forge.remapper.MappingLoader;
@@ -86,7 +86,7 @@ extends URLClassLoader {
      * WARNING - Removed try catching itself - possible behaviour change.
      */
     private Class<?> findClass(String name, boolean checkGlobal) throws ClassNotFoundException {
-        if (name.startsWith("net.minecraft.server." + CatServer.getNativeVersion())) {
+        if (name.startsWith("net.minecraft.server." + AkarinForge.getNativeVersion())) {
             String remappedClass = (String)this.jarMapping.classes.get(name.replaceAll("\\.", "\\/"));
             Class clazz = ((LaunchClassLoader)MinecraftServer.getServerInst().getClass().getClassLoader()).findClass(remappedClass);
             return clazz;

@@ -52,8 +52,8 @@ public class Metrics {
     private static boolean logResponseStatusText;
     private static String serverUUID;
     private final List<CustomChart> charts = new ArrayList<CustomChart>();
-    private final String pluginName = "CatServer";
-    private final String pluginVersion = "1.12.2-pro";
+    private final String pluginName = "AkarinForge";
+    private final String pluginVersion = "1.12.2-SNAPSHOT";
 
     public Metrics() {
         File bStatsFolder = new File(new File((File)MinecraftServer.getServerInst().options.valueOf("plugins"), "bStats"), "config.yml");

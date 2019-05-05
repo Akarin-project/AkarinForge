@@ -7,23 +7,30 @@
 package io.akarin.forge;
 
 import com.google.common.collect.Lists;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
+import net.minecraft.world.WorldServer;
+
 import java.util.List;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
 public class WorldCapture {
-    private oo world;
+    private WorldServer world;
     private boolean capture;
-    private aed curPlayer;
-    private aip curItemStack;
-    private ub curHand;
+    private EntityPlayerMP curPlayer;
+    private ItemStack curItemStack;
+    private EnumHand curHand;
     private List<EntitySnap> entitySnap = Lists.newArrayList();
     private List<ItemSnap> itemSnap = Lists.newArrayList();
 
-    public WorldCapture(oo world) {
+    public WorldCapture(WorldServer world) {
         this.world = world;
     }
 
-    public void startCapture(aed player, aip stack, ub hand) {
+    public void startCapture(EntityPlayerMP player, ItemStack stack, EnumHand hand) {
         this.curPlayer = player;
         this.curItemStack = stack;
         this.curHand = hand;
@@ -68,11 +75,11 @@ public class WorldCapture {
     }
 
     class ItemSnap {
-        private final aed player;
-        private final aip stack;
+        private final EntityPlayerMP player;
+        private final ItemStack stack;
         private boolean isApply;
 
-        public ItemSnap(aed player, aip stack) {
+        public ItemSnap(EntityPlayerMP player, ItemStack stack) {
             this.player = player;
             this.stack = stack;
         }
@@ -88,11 +95,11 @@ public class WorldCapture {
     }
 
     class EntitySnap {
-        private final vg entity;
+        private final Entity entity;
         private final CreatureSpawnEvent.SpawnReason reason;
         private boolean isApply;
 
-        public EntitySnap(vg entity, CreatureSpawnEvent.SpawnReason reason) {
+        public EntitySnap(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
             this.entity = entity;
             this.reason = reason;
         }

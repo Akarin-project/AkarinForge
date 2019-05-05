@@ -5,12 +5,14 @@ package io.akarin.forge.utils;
 
 import java.util.Set;
 
+import net.minecraft.entity.Entity;
+
 public class EntityNearTask
 implements Runnable {
-    public final vp entity;
+    public final Entity entity;
     public final long time;
 
-    public EntityNearTask(vp entity, long time) {
+    public EntityNearTask(Entity entity, long time) {
         this.entity = entity;
         this.time = time;
     }

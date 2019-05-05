@@ -1,20 +1,25 @@
-/*
- * Akarin Forge
- */
 package org.spigotmc;
 
 import org.spigotmc.SpigotWorldConfig;
 
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.EntityItemFrame;
+import net.minecraft.entity.item.EntityPainting;
+import net.minecraft.entity.item.EntityXPOrb;
+import net.minecraft.entity.monster.EntityGhast;
+import net.minecraft.entity.player.EntityPlayerMP;
+
 public class TrackingRange {
-    public static int getEntityTrackingRange(vg entity, int defaultRange) {
+    public static int getEntityTrackingRange(Entity entity, int defaultRange) {
         SpigotWorldConfig config = entity.l.spigotConfig;
-        if (entity instanceof oq) {
+        if (entity instanceof EntityPlayerMP) {
             return config.playerTrackingRange;
         }
         if (entity.activationType == 1) {
             return config.monsterTrackingRange;
         }
-        if (entity instanceof acy) {
+        if (entity instanceof EntityGhast) {
             if (config.monsterTrackingRange > config.monsterActivationRange) {
                 return config.monsterTrackingRange;
             }
@@ -23,7 +28,7 @@ public class TrackingRange {
         if (entity.activationType == 2) {
             return config.animalTrackingRange;
         }
-        if (entity instanceof acb || entity instanceof acd || entity instanceof acl || entity instanceof vm) {
+        if (entity instanceof EntityItemFrame || entity instanceof EntityPainting || entity instanceof EntityItem || entity instanceof EntityXPOrb) {
             return config.miscTrackingRange;
         }
         return config.otherTrackingRange;

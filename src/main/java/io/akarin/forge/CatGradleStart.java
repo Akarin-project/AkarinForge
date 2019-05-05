@@ -19,7 +19,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -41,7 +41,7 @@ public class CatGradleStart {
     protected static Logger LOGGER = LogManager.getLogger((String)"GradleStart");
     Map<String, String> argMap = Maps.newHashMap();
     List<String> extras = Lists.newArrayList();
-    static final File SRG_SRG_MCP = new File(CatGradleStart.class.getClassLoader().getResource("mappings/" + CatServer.getNativeVersion() + "/srg2mcp.srg").getFile());
+    static final File SRG_SRG_MCP = new File(CatGradleStart.class.getClassLoader().getResource("mappings/" + AkarinForge.getNativeVersion() + "/srg2mcp.srg").getFile());
 
     public static void main(String[] args) throws Throwable {
         new CatGradleStart().launch(args);

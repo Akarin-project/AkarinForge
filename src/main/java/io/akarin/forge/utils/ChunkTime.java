@@ -1,13 +1,12 @@
-/*
- * Decompiled with CFR 0_119.
- */
 package io.akarin.forge.utils;
 
+import net.minecraft.world.chunk.Chunk;
+
 public class ChunkTime {
-    public final axw chunk;
+    public final Chunk chunk;
     public final long time;
 
-    public ChunkTime(axw chunk, long time) {
+    public ChunkTime(Chunk chunk, long time) {
         this.chunk = chunk;
         this.time = time;
     }

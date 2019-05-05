@@ -25,9 +25,6 @@
  */
 package org.bukkit.craftbukkit.v1_12_R1;
 
-import catserver.server.CatServer;
-import catserver.server.command.CraftSimpleCommandMap;
-import catserver.server.remapper.ReflectionTransformer;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -36,6 +33,8 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.mojang.authlib.GameProfile;
+
+import io.akarin.forge.command.CraftSimpleCommandMap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
@@ -75,6 +74,7 @@ import jline.console.ConsoleReader;
 import joptsimple.OptionSet;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.PlayerList;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
@@ -208,7 +208,7 @@ implements Server {
     private final StandardMessenger messenger;
     private final SimplePluginManager pluginManager;
     protected final MinecraftServer console;
-    protected final ny playerList;
+    protected final PlayerList playerList;
     private final Map<String, World> worlds;
     private YamlConfiguration configuration;
     private YamlConfiguration commandsConfiguration;
@@ -240,7 +240,7 @@ implements Server {
         return this.craftCommandMap;
     }
 
-    public CraftServer(MinecraftServer console, pl playerList) {
+    public CraftServer(MinecraftServer console, PlayerList playerList) {
         this.craftCommandMap = new CraftSimpleCommandMap(this);
         this.commandMap = new SimpleCommandMap(this);
         this.helpMap = new SimpleHelpMap(this);
@@ -276,19 +276,19 @@ implements Server {
             @Override
             public void broadcast(BaseComponent component) {
                 for (Player player : CraftServer.this.getOnlinePlayers()) {
-                    player.org_bukkit_entity_Player$Spigot_spigot().sendMessage(component);
+                    player.spigot().sendMessage(component);
                 }
             }
 
             @Override
             public /* varargs */ void broadcast(BaseComponent ... components) {
                 for (Player player : CraftServer.this.getOnlinePlayers()) {
-                    player.org_bukkit_entity_Player$Spigot_spigot().sendMessage(components);
+                    player.spigot().sendMessage(components);
                 }
             }
         };
         this.console = console;
-        this.playerList = (ny)playerList;
+        this.playerList = playerList;
         this.playerView = Collections.unmodifiableList(Lists.transform(playerList.v(), (Function)new Function<oq, CraftPlayer>(){
 
             public CraftPlayer apply(oq player) {

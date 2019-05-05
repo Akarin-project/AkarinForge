@@ -48,7 +48,7 @@ import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.JavaPluginLoader;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 import io.akarin.forge.remapper.CatServerRemapper;
 import io.akarin.forge.remapper.ClassInheritanceProvider;
 import io.akarin.forge.remapper.MappingLoader;
@@ -120,7 +120,7 @@ extends URLClassLoader {
      * WARNING - Removed try catching itself - possible behaviour change.
      */
     Class<?> findClass(String name, boolean checkGlobal) throws ClassNotFoundException {
-        if (name.startsWith("net.minecraft.server." + CatServer.getNativeVersion())) {
+        if (name.startsWith("net.minecraft.server." + AkarinForge.getNativeVersion())) {
             String remappedClass = (String)this.jarMapping.classes.get(name.replaceAll("\\.", "\\/"));
             Class clazz = ((LaunchClassLoader)MinecraftServer.getServerInst().getClass().getClassLoader()).findClass(remappedClass);
             return clazz;
@@ -225,7 +225,7 @@ extends URLClassLoader {
     @Override
     protected Package getPackage(String name) {
         if (name == "org.bukkit.craftbukkit") {
-            name = "org.bukkit.craftbukkit." + CatServer.getNativeVersion();
+            name = "org.bukkit.craftbukkit." + AkarinForge.getNativeVersion();
         }
         return super.getPackage(name);
     }

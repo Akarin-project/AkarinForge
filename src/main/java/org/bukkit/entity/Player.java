@@ -305,7 +305,7 @@ PluginMessageRecipient {
     public String getLocale();
 
     @Override
-    public Spigot org_bukkit_entity_Player$Spigot_spigot();
+    public Spigot spigot();
 
     public static class Spigot
     extends Entity.Spigot {

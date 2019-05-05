@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.transformer.MappingTransformer;
 import net.md_5.specialsource.transformer.MavenShade;
@@ -40,7 +40,7 @@ public class MappingLoader {
             jarMapping.packages.put(org_bukkit_craftbukkit + "/libs/joptsimple", "joptsimple");
             jarMapping.methods.put("org/bukkit/Bukkit/getOnlinePlayers ()[Lorg/bukkit/entity/Player;", "getOnlinePlayers_1710");
             jarMapping.methods.put("org/bukkit/Server/getOnlinePlayers ()[Lorg/bukkit/entity/Player;", "getOnlinePlayers_1710");
-            MappingLoader.loadNmsMappings(jarMapping, CatServer.getNativeVersion());
+            MappingLoader.loadNmsMappings(jarMapping, AkarinForge.getNativeVersion());
         }
         catch (Exception e2) {
             e2.printStackTrace();

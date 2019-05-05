@@ -1,13 +1,10 @@
-/*
- * Decompiled with CFR 0_119.
- */
 package io.akarin.forge.utils;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.LongAdder;
 
-public class CachedSizeConcurrentLinkedQueue<E>
-extends ConcurrentLinkedQueue<E> {
+public class CachedSizeConcurrentLinkedQueue<E> extends ConcurrentLinkedQueue<E> {
+    private static final long serialVersionUID = 1827077420088366210L;
     private final LongAdder cachedSize = new LongAdder();
 
     @Override
@@ -21,7 +18,7 @@ extends ConcurrentLinkedQueue<E> {
 
     @Override
     public E poll() {
-        Object result = super.poll();
+        E result = super.poll();
         if (result != null) {
             this.cachedSize.decrement();
         }
@@ -33,4 +30,3 @@ extends ConcurrentLinkedQueue<E> {
         return this.cachedSize.intValue();
     }
 }
-

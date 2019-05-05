@@ -6,6 +6,8 @@ package io.akarin.forge;
 import org.bukkit.util.NumberConversions;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.math.BlockPos;
 
 public class PlayerDataFixer {
     public static void checkVector(Entity entity) {
@@ -20,9 +22,9 @@ public class PlayerDataFixer {
         }
     }
 
-    public static void checkLocation(aed entity) {
+    public static void checkLocation(EntityPlayerMP entity) {
         if (!(NumberConversions.isFinite(entity.p) && NumberConversions.isFinite(entity.q) && NumberConversions.isFinite(entity.r))) {
-            et pos = entity.e().T();
+            BlockPos pos = entity.e().T();
             entity.b(pos.p(), pos.q(), pos.r());
         }
     }

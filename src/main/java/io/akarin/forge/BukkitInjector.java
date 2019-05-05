@@ -1,9 +1,3 @@
-/*
- * Decompiled with CFR 0_119.
- * 
- * Could not load the following classes:
- *  org.apache.logging.log4j.Level
- */
 package io.akarin.forge;
 
 import java.util.Locale;
@@ -37,9 +31,12 @@ public class BukkitInjector {
 
     public static void injectItemBukkitMaterials() {
         for (Entry<ResourceLocation, Item> entry : ForgeRegistries.ITEMS.getEntries()) {
-            nf key = entry.getKey();
-            ain item = entry.getValue();
-            if (key.b().equals("minecraft")) continue;
+            ResourceLocation key = entry.getKey();
+            Item item = entry.getValue();
+            
+            if (key.getResourceDomain().equals("minecraft"))
+                continue;
+            
             String materialName = key.toString().toUpperCase().replaceAll("(:|\\s)", "_").replaceAll("\\W", "");
             Material material = Material.addMaterial(EnumHelper.addEnum(Material.class, materialName, new Class[]{Integer.TYPE, Integer.TYPE}, new Object[]{ain.a(item), item.j()}));
             if (material != null) {
@@ -52,13 +49,18 @@ public class BukkitInjector {
 
     public static void injectBlockBukkitMaterials() {
         for (Material material : Material.values()) {
-            if (material.getId() >= 256) continue;
+            //if (material.getId() >= 256) // TODO
+            //    continue;
+            
             Material.addBlockMaterial(material);
         }
         for (Map.Entry<ResourceLocation, Block> entry : ForgeRegistries.BLOCKS.getEntries()) {
             ResourceLocation key = entry.getKey();
             Block block = entry.getValue();
-            if (key.b().equals("minecraft")) continue;
+            
+            if (key.getResourceDomain().equals("minecraft"))
+                continue;
+            
             String materialName = key.toString().toUpperCase().replaceAll("(:|\\s)", "_").replaceAll("\\W", "");
             Material material = Material.addBlockMaterial(EnumHelper.addEnum(Material.class, materialName, new Class[]{Integer.TYPE}, new Object[]{aow.a(block)}));
             if (material != null) {
@@ -71,7 +73,7 @@ public class BukkitInjector {
 
     public static void injectBiomes() {
         block0 : for (Entry<ResourceLocation, net.minecraft.world.biome.Biome> entry : ForgeRegistries.BIOMES.getEntries()) {
-            String biomeName = entry.getKey().a().toUpperCase(Locale.ENGLISH);
+            String biomeName = entry.getKey().getResourcePath().toUpperCase(Locale.ENGLISH);
             for (Biome biome : Biome.values()) {
                 if (biome.toString().equals(biomeName)) continue block0;
             }
@@ -93,14 +95,14 @@ public class BukkitInjector {
     }
 
     public static void registerEnchantments() {
-        for (alk enchantment : alk.b) {
+        for (alk enchantment : Enchantment.b) {
             Enchantment.registerEnchantment(new CraftEnchantment(enchantment));
         }
         Enchantment.stopAcceptingRegistrations();
     }
 
     public static void registerPotions() {
-        for (uz effect : uz.b) {
+        for (uz effect : PotionEffectType.b) {
             PotionEffectType.registerPotionEffectType(new CraftPotionEffectType(effect));
         }
         PotionEffectType.stopAcceptingRegistrations();

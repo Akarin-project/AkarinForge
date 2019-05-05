@@ -11,7 +11,7 @@ package org.bukkit.craftbukkit.v1_12_R1.event;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -698,9 +698,6 @@ public class CraftEventFactory {
     }
 
     public static afr callInventoryOpenEvent(oq player, afr container, boolean cancelled) {
-        if (CatServer.asyncCatch("call InventoryOpenEvent")) {
-            return container;
-        }
         if (player.by != player.bx) {
             player.a.a(new lg(player.by.d));
         }
@@ -841,9 +838,6 @@ public class CraftEventFactory {
     }
 
     public static void handleInventoryCloseEvent(aed human) {
-        if (CatServer.asyncCatch("call InventoryCloseEvent")) {
-            return;
-        }
         InventoryCloseEvent event = new InventoryCloseEvent(human.by.getBukkitView());
         if (human.by.getBukkitView() != null) {
             human.l.getServer().getPluginManager().callEvent(event);

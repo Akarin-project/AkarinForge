@@ -1,10 +1,3 @@
-/*
- * Decompiled with CFR 0_119.
- * 
- * Could not load the following classes:
- *  com.google.common.util.concurrent.ListenableFuture
- *  org.apache.logging.log4j.Logger
- */
 package io.akarin.forge.utils;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -19,9 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.spigotmc.AsyncCatcher;
 
-public class ThreadSafeList<E>
-extends Vector<E> {
-    private static final String message = "\u63d2\u4ef6/MOD\u5c1d\u8bd5\u5f02\u6b65\u64cd\u4f5cList\u5df2\u62e6\u622a,\u8bf7\u4e0e\u63d2\u4ef6/MOD\u4f5c\u8005\u53cd\u9988!";
+public class ThreadSafeList<E> extends Vector<E> {
     private final boolean print;
 
     public ThreadSafeList(boolean print) {

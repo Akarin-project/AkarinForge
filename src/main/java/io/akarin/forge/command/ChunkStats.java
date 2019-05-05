@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 import io.akarin.forge.utils.ChunkTime;
 
 public class ChunkStats
@@ -39,7 +39,7 @@ extends Command {
         }
         if (args[0].equals("start")) {
             chunks = new HashMap<axw, Long>();
-            CatServer.chunkStats = true;
+            AkarinForge.chunkStats = true;
             sender.sendMessage("Chunk stats started.");
             return true;
         }
@@ -74,7 +74,7 @@ extends Command {
     }
 
     public static void addTime(axw chunk, long time) {
-        if (!CatServer.chunkStats) {
+        if (!AkarinForge.chunkStats) {
             return;
         }
         Long oldTime = chunks.get(chunk);

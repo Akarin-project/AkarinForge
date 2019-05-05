@@ -7,7 +7,7 @@ import java.io.IOException;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 
 public class PermissionCommand
 extends Command {
@@ -30,7 +30,7 @@ extends Command {
             return false;
         }
         try {
-            CatServer.reloadFakePlayerPermissions();
+            AkarinForge.reloadFakePlayerPermissions();
             sender.sendMessage("SUCCESS");
             return true;
         }

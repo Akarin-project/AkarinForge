@@ -12,7 +12,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.fml.common.FMLLog;
 import org.apache.logging.log4j.Logger;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 
 public class WatchCatThread
 extends TimerTask {
@@ -40,7 +40,7 @@ extends TimerTask {
     }
 
     public static void startThread() {
-        if (CatServer.threadLag) {
+        if (AkarinForge.threadLag) {
             timer.schedule((TimerTask)new WatchCatThread(), 30000, 500);
         }
     }

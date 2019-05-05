@@ -9,7 +9,7 @@ package org.bukkit.plugin;
 
 import com.google.common.collect.ImmutableSet;
 
-import io.akarin.forge.CatServer;
+import io.akarin.forge.AkarinForge;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -407,7 +407,7 @@ implements PluginManager {
      */
     @Override
     public void callEvent(Event event) {
-        if (CatServer.fakePlayerEventPass && event instanceof PlayerEvent && ((PlayerEvent)event).getPlayer() instanceof CraftFuckPlayer) {
+        if (AkarinForge.fakePlayerEventPass && event instanceof PlayerEvent && ((PlayerEvent)event).getPlayer() instanceof CraftFuckPlayer) {
             return;
         }
         if (event.isAsynchronous() || !Bukkit.isPrimaryThread()) {
