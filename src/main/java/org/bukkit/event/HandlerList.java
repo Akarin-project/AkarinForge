@@ -145,7 +145,7 @@ public class HandlerList {
         if (this.handlers != null) {
             return;
         }
-        ArrayList entries = new ArrayList();
+        ArrayList<RegisteredListener> entries = new ArrayList();
         for (Map.Entry<EventPriority, ArrayList<RegisteredListener>> entry : this.handlerslots.entrySet()) {
             entries.addAll(entry.getValue());
         }
@@ -172,7 +172,7 @@ public class HandlerList {
                 HandlerList h2;
                 HandlerList handlerList = h2 = iterator.next();
                 synchronized (handlerList) {
-                    for (List list : h2.handlerslots.values()) {
+                    for (List<RegisteredListener> list : h2.handlerslots.values()) {
                         for (RegisteredListener listener : list) {
                             if (!listener.getPlugin().equals(plugin)) continue;
                             listeners.add(listener);

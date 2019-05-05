@@ -43,8 +43,8 @@ Sittable {
             Type[] arrtype = Type.values();
             int n2 = arrtype.length;
             for (int i2 = 0; i2 < n2; ++i2) {
-                Type type;
-                Type.types[type.getId()] = type = arrtype[i2];
+                Type type = arrtype[i2];
+                Type.types[type.getId()] = type;
             }
         }
     }

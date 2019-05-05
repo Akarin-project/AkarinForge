@@ -68,13 +68,13 @@ Merchant {
         }
 
         public static List<Career> getCareers(Profession profession) {
-            return careerMap.containsKey((Object)profession) ? ImmutableList.copyOf((Collection)careerMap.get((Object)profession)) : ImmutableList.of();
+            return careerMap.containsKey((Object)profession) ? ImmutableList.copyOf((Collection)careerMap.get(profession)) : ImmutableList.of();
         }
 
         static {
             careerMap = LinkedListMultimap.create();
             for (Career career : Career.values()) {
-                careerMap.put((Object)career.profession, (Object)career);
+                careerMap.put(career.profession, career);
             }
         }
     }

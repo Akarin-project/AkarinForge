@@ -4,7 +4,6 @@
 package org.bukkit.entity;
 
 import org.bukkit.block.Block;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Projectile;
 
@@ -26,8 +25,7 @@ extends Projectile {
 
     public void setPickupStatus(PickupStatus var1);
 
-    @Override
-    public Spigot org_bukkit_entity_Arrow$Spigot_spigot();
+    public Spigot spigot();
 
     public static class Spigot
     extends Entity.Spigot {

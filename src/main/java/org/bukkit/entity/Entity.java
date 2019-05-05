@@ -138,8 +138,7 @@ Nameable {
 
     public PistonMoveReaction getPistonMoveReaction();
 
-    @Override
-    public Spigot org_bukkit_entity_Entity$Spigot_spigot();
+    public Spigot spigot();
 
     public static class Spigot
     extends CommandSender.Spigot {

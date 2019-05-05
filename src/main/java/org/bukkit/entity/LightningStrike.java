@@ -12,7 +12,7 @@ extends Weather {
     public boolean isEffect();
 
     @Override
-    public Spigot org_bukkit_entity_LightningStrike$Spigot_spigot();
+    public Spigot spigot();
 
     public static class Spigot
     extends Entity.Spigot {
