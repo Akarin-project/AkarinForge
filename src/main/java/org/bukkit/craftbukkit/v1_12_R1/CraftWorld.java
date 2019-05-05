@@ -465,7 +465,7 @@ implements World {
         ((CraftChunk)this.getChunkAt((int)chunk.getX(), (int)chunk.getZ())).getHandle().bukkitChunk = chunk;
     }
 
-    public oo getHandle() {
+    public WorldServer getHandle() {
         return this.world;
     }
 

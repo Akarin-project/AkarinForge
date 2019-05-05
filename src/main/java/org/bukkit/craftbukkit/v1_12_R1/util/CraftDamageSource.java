@@ -1,21 +1,27 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.craftbukkit.v1_12_R1.util;
 
-public final class CraftDamageSource
-extends ur {
-    public static ur copyOf(ur original) {
-        CraftDamageSource newSource = new CraftDamageSource(original.u);
-        if (original.e()) {
-            newSource.k();
+import net.minecraft.util.DamageSource;
+
+// Util class to create custom DamageSources.
+public final class CraftDamageSource extends DamageSource {
+    public static DamageSource copyOf(final DamageSource original) {
+        CraftDamageSource newSource = new CraftDamageSource(original.damageType);
+
+        // Check ignoresArmor
+        if (original.isUnblockable()) {
+            newSource.setDamageBypassesArmor();
         }
-        if (original.s()) {
-            newSource.t();
+
+        // Check magic
+        if (original.isMagicDamage()) {
+            newSource.setMagicDamage();
         }
-        if (original.c()) {
-            newSource.d();
+
+        // Check fire
+        if (original.isExplosion()) {
+            newSource.setFireDamage();
         }
+
         return newSource;
     }
 
@@ -23,4 +29,3 @@ extends ur {
         super(identifier);
     }
 }
-

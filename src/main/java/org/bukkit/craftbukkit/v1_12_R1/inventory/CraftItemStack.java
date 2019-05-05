@@ -9,6 +9,9 @@
 package org.bukkit.craftbukkit.v1_12_R1.inventory;
 
 import com.google.common.collect.ImmutableMap;
+
+import net.minecraft.item.Item;
+
 import java.util.Map;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Material;
@@ -88,11 +91,11 @@ extends ItemStack {
         return new CraftItemStack(original);
     }
 
-    public static CraftItemStack asNewCraftStack(ain item) {
+    public static CraftItemStack asNewCraftStack(Item item) {
         return CraftItemStack.asNewCraftStack(item, 1);
     }
 
-    public static CraftItemStack asNewCraftStack(ain item, int amount) {
+    public static CraftItemStack asNewCraftStack(Item item, int amount) {
         return new CraftItemStack(CraftMagicNumbers.getMaterial(item), amount, 0, null);
     }
 
