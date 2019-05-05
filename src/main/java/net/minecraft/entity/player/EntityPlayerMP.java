@@ -1,8 +1,11 @@
 package net.minecraft.entity.player;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
 import io.netty.buffer.Unpooled;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -72,6 +75,7 @@ import net.minecraft.scoreboard.IScoreCriteria;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
+import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerInteractionManager;
@@ -83,12 +87,14 @@ import net.minecraft.stats.StatisticsManagerServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityCommandBlock;
 import net.minecraft.tileentity.TileEntitySign;
+import net.minecraft.util.CombatTracker;
 import net.minecraft.util.CooldownTracker;
 import net.minecraft.util.CooldownTrackerServer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
+import net.minecraft.util.FoodStats;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.ResourceLocation;
@@ -103,21 +109,42 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextComponentBase;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.village.MerchantRecipeList;
 import net.minecraft.world.GameType;
 import net.minecraft.world.IInteractionObject;
 import net.minecraft.world.ILockableContainer;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.loot.ILootContainer;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerDropsEvent;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.WeatherType;
+import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.v1_12_R1.util.CraftChatMessage;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerChangedMainHandEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerLocaleChangeEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.inventory.MainHand;
 
 public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 {
     private static final Logger LOGGER = LogManager.getLogger();
-    private String language = "en_US";
+    private String language = "en_us"; // Akarin
     public NetHandlerPlayServer connection;
     public final MinecraftServer mcServer;
     public final PlayerInteractionManager interactionManager;
@@ -152,13 +179,204 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     public boolean isChangingQuantityOnly;
     public int ping;
     public boolean queuedEndExit;
+    // Akarin start
+    public String displayName;
+    public ITextComponent listName;
+    public Location compassTarget;
+    public int newExp = 0;
+    public int newLevel = 0;
+    public int newTotalExp = 0;
+    public boolean keepLevel = false;
+    public double maxHealthCache;
+    public boolean joining = true;
+    public boolean sentListPacket = false;
+    public long timeOffset = 0;
+    public boolean relativeTime = true;
+    public WeatherType weather;
+    private float pluginRainPosition;
+    private float pluginRainPositionPrevious;
+    
+    public final BlockPos getSpawnPoint(MinecraftServer minecraftserver, WorldServer worldserver) {
+        BlockPos blockposition = worldserver.getSpawnPoint();
+
+        if (worldserver.provider.hasSkyLight() && worldserver.getWorldInfo().getGameType() != GameType.ADVENTURE) {
+            int i = Math.max(0, minecraftserver.getSpawnRadius(worldserver));
+            int j = MathHelper.floor(worldserver.getWorldBorder().getClosestDistance((double) blockposition.getX(), (double) blockposition.getZ()));
+
+            if (j < i) {
+                i = j;
+            }
+
+            if (j <= 1) {
+                i = 1;
+            }
+
+            blockposition = worldserver.getTopSolidOrLiquidBlock(blockposition.add(this.rand.nextInt(i * 2 + 1) - i, 0, this.rand.nextInt(i * 2 + 1) - i));
+        }
+
+        return blockposition;
+    }
+    
+    public void setWorld(World world) {
+        super.setWorld(world);
+        if (world == null) {
+            this.isDead = false;
+            BlockPos position = null;
+            if (this.spawnWorld != null && !this.spawnWorld.equals("")) {
+                CraftWorld cworld = (CraftWorld) Bukkit.getServer().getWorld(this.spawnWorld);
+                if (cworld != null && this.getBedLocation() != null) {
+                    world = cworld.getHandle();
+                    position = EntityPlayer.getBedSpawnLocation(cworld.getHandle(), this.getBedLocation(), false);
+                }
+            }
+            if (world == null || position == null) {
+                world = ((CraftWorld) Bukkit.getServer().getWorlds().get(0)).getHandle();
+                position = world.getSpawnPoint();
+            }
+            this.world = world;
+            this.setPosition(position.getX() + 0.5, position.getY(), position.getZ() + 0.5);
+        }
+        this.dimension = ((WorldServer) this.world).dimension;
+        this.interactionManager.setWorld((WorldServer) world);
+    }
+
+    public long getPlayerTime() {
+        if (this.relativeTime) {
+            // Adds timeOffset to the current server time.
+            return this.world.getWorldTime() + this.timeOffset;
+        } else {
+            // Adds timeOffset to the beginning of this day.
+            return this.world.getWorldTime() - (this.world.getWorldTime() % 24000) + this.timeOffset;
+        }
+    }
+
+    public WeatherType getPlayerWeather() {
+        return this.weather;
+    }
+
+    public void setPlayerWeather(WeatherType type, boolean plugin) {
+        if (!plugin && this.weather != null) {
+            return;
+        }
+
+        if (plugin) {
+            this.weather = type;
+        }
+
+        if (type == WeatherType.DOWNFALL) {
+            this.connection.sendPacket(new SPacketChangeGameState(2, 0));
+        } else {
+            this.connection.sendPacket(new SPacketChangeGameState(1, 0));
+        }
+    }
+
+    public void updateWeather(float oldRain, float newRain, float oldThunder, float newThunder) {
+        if (this.weather == null) {
+            // Vanilla
+            if (oldRain != newRain) {
+                this.connection.sendPacket(new SPacketChangeGameState(7, newRain));
+            }
+        } else {
+            // Plugin
+            if (pluginRainPositionPrevious != pluginRainPosition) {
+                this.connection.sendPacket(new SPacketChangeGameState(7, pluginRainPosition));
+            }
+        }
+
+        if (oldThunder != newThunder) {
+            if (weather == WeatherType.DOWNFALL || weather == null) {
+                this.connection.sendPacket(new SPacketChangeGameState(8, newThunder));
+            } else {
+                this.connection.sendPacket(new SPacketChangeGameState(8, 0));
+            }
+        }
+    }
+
+    public void tickWeather() {
+        if (this.weather == null) return;
+
+        pluginRainPositionPrevious = pluginRainPosition;
+        if (weather == WeatherType.DOWNFALL) {
+            pluginRainPosition += 0.01;
+        } else {
+            pluginRainPosition -= 0.01;
+        }
+
+        pluginRainPosition = MathHelper.clamp(pluginRainPosition, 0.0F, 1.0F);
+    }
+
+    public void resetPlayerWeather() {
+        this.weather = null;
+        this.setPlayerWeather(this.world.getWorldInfo().isRaining() ? WeatherType.DOWNFALL : WeatherType.CLEAR, false);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + "(" + this.getName() + " at " + this.posX + "," + this.posY + "," + this.posZ + ")";
+    }
+
+    // SPIGOT-1903, MC-98153
+    public void forceSetPositionRotation(double x, double y, double z, float yaw, float pitch) {
+        this.setLocationAndAngles(x, y, z, yaw, pitch);
+        this.connection.captureCurrentPosition();
+    }
+
+    @Override
+    protected boolean isMovementBlocked() {
+        return super.isMovementBlocked() || this.getBukkitEntity().isOnline();
+    }
+
+    @Override
+    public Scoreboard getWorldScoreboard() {
+        return getBukkitEntity().getScoreboard().getHandle();
+    }
+
+    public void reset() {
+        float exp = 0;
+        boolean keepInventory = this.world.getGameRules().getBoolean("keepInventory");
+
+        if (this.keepLevel || keepInventory) {
+            exp = this.experience;
+            this.newTotalExp = this.experienceTotal;
+            this.newLevel = this.experienceLevel;
+        }
+
+        this.setHealth(this.getMaxHealth());
+        this.fire = 0;
+        this.fallDistance = 0;
+        this.foodStats = new FoodStats(this);
+        this.experienceLevel = this.newLevel;
+        this.experienceTotal = this.newTotalExp;
+        this.experience = 0;
+        this.deathTime = 0;
+        this.setArrowCountInEntity(0);
+        this.clearActivePotions();
+        this.potionsNeedUpdate = true;
+        this.openContainer = this.inventoryContainer;
+        this.attackingPlayer = null;
+        this.revengeTarget = null;
+        this._combatTracker = new CombatTracker(this);
+        this.lastExperience = -1;
+        if (this.keepLevel || keepInventory) {
+            this.experience = exp;
+        } else {
+            this.addExperience(this.newExp);
+        }
+        this.keepLevel = false;
+    }
+
+    @Override
+    public CraftPlayer getBukkitEntity() {
+        return (CraftPlayer) super.getBukkitEntity();
+    }
+    // Akarin end
 
     public EntityPlayerMP(MinecraftServer server, WorldServer worldIn, GameProfile profile, PlayerInteractionManager interactionManagerIn)
     {
         super(worldIn, profile);
         interactionManagerIn.player = this;
         this.interactionManager = interactionManagerIn;
-        BlockPos blockpos = worldIn.provider.getRandomizedSpawnPoint();
+        BlockPos blockpos = worldIn.provider.getSpawnPoint(); // Akarin
 
         if (false && worldIn.provider.hasSkyLight() && worldIn.getWorldInfo().getGameType() != GameType.ADVENTURE)
         {
@@ -188,6 +406,11 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         {
             this.setPosition(this.posX, this.posY + 1.0D, this.posZ);
         }
+        // Akarin start
+        this.displayName = this.getName();
+        this.canPickUpLoot = true;
+        this.maxHealthCache = this.getMaxHealth();
+        // Akarin end
     }
 
     public void readEntityFromNBT(NBTTagCompound compound)
@@ -218,6 +441,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         {
             this.recipeBook.read(compound.getCompoundTag("recipeBook"));
         }
+        this.getBukkitEntity().readExtraData(compound); // Akarin
     }
 
     public static void registerFixesPlayerMP(DataFixer p_191522_0_)
@@ -270,6 +494,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         }
 
         compound.setTag("recipeBook", this.recipeBook.write());
+        this.getBukkitEntity().setExtraData(compound); // Akarin
     }
 
     public void addExperienceLevel(int levels)
@@ -313,6 +538,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     public void onUpdate()
     {
+        if (this.joining) this.joining = false; // Akarin
         this.interactionManager.updateBlockRemoving();
         --this.respawnInvulnerabilityTicks;
 
@@ -398,7 +624,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
             if (this.getHealth() != this.lastHealth || this.lastFoodLevel != this.foodStats.getFoodLevel() || this.foodStats.getSaturationLevel() == 0.0F != this.wasHungry)
             {
-                this.connection.sendPacket(new SPacketUpdateHealth(this.getHealth(), this.foodStats.getFoodLevel(), this.foodStats.getSaturationLevel()));
+                this.connection.sendPacket(new SPacketUpdateHealth(this.getBukkitEntity().getScaledHealth(), this.foodStats.getFoodLevel(), this.foodStats.getSaturationLevel())); // CraftBukkit
                 this.lastHealth = this.getHealth();
                 this.lastFoodLevel = this.foodStats.getFoodLevel();
                 this.wasHungry = this.foodStats.getSaturationLevel() == 0.0F;
@@ -421,6 +647,11 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
                 this.lastAirScore = this.getAir();
                 this.updateScorePoints(IScoreCriteria.AIR, MathHelper.ceil((float)this.lastAirScore));
             }
+            // Akarin start
+            if (this.maxHealthCache != this.getMaxHealth()) {
+                this.getBukkitEntity().updateScaledHealth();
+            }
+            // Akarin end
 
             if (this.getTotalArmorValue() != this.lastArmorScore)
             {
@@ -450,6 +681,16 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
             {
                 CriteriaTriggers.LOCATION.trigger(this);
             }
+            // Akarin start
+            if (this.oldLevel == -1) {
+                this.oldLevel = this.experienceLevel;
+            }
+
+            if (this.oldLevel != this.experienceLevel) {
+                CraftEventFactory.callPlayerLevelChangeEvent(this.world.getServer().getPlayer((EntityPlayerMP) this), this.oldLevel, this.experienceLevel);
+                this.oldLevel = this.experienceLevel;
+            }
+            // Akarin end
         }
         catch (Throwable throwable)
         {
@@ -462,11 +703,13 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     private void updateScorePoints(IScoreCriteria criteria, int points)
     {
-        for (ScoreObjective scoreobjective : this.getWorldScoreboard().getObjectivesFromCriteria(criteria))
+        // Akarin start
+        for (Score score : this.world.getServer().getScoreboardManager().getScoreboardScores(criteria, this.getName(), Lists.newArrayList()))
         {
-            Score score = this.getWorldScoreboard().getOrCreateScore(this.getName(), scoreobjective);
+            //Score score = this.getWorldScoreboard().getOrCreateScore(this.getName(), scoreobjective);
             score.setScorePoints(points);
         }
+        // Akarin end
     }
 
     public void onDeath(DamageSource cause)
@@ -475,6 +718,67 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         boolean flag = this.world.getGameRules().getBoolean("showDeathMessages");
         this.connection.sendPacket(new SPacketCombatEvent(this.getCombatTracker(), SPacketCombatEvent.Event.ENTITY_DIED, flag));
 
+        // Akarin start
+        if (this.isDead) {
+            return;
+        }
+        ArrayList<org.bukkit.inventory.ItemStack> loot = new java.util.ArrayList<org.bukkit.inventory.ItemStack>(this.inventory.getSizeInventory());
+        boolean keepInventory = this.world.getGameRules().getBoolean("keepInventory") || this.isSpectator();
+
+        if (!keepInventory) {
+            for (ItemStack item : this.inventory.getContents()) {
+                if (!item.isEmpty() && !EnchantmentHelper.hasVanishingCurse(item)) {
+                    loot.add(CraftItemStack.asCraftMirror(item));
+                }
+            }
+        }
+        
+        ITextComponent chatmessage = this.getCombatTracker().getDeathMessage();
+        String deathmessage = chatmessage.getUnformattedText();
+        
+        this.captureDrops = true;
+        PlayerDeathEvent deathEvent = CraftEventFactory.callPlayerDeathEvent(this, loot, deathmessage, keepInventory);
+        this.captureDrops = false;
+        
+        String deathMessage = deathEvent.getDeathMessage();
+        if (deathMessage != null && deathMessage.length() > 0 && flag) {
+            if (deathMessage.equals(deathmessage)) {
+                Team scoreboardteambase = this.getTeam();
+
+                if (scoreboardteambase != null && scoreboardteambase.getDeathMessageVisibility() != Team.EnumVisible.ALWAYS) {
+                    if (scoreboardteambase.getDeathMessageVisibility() == Team.EnumVisible.HIDE_FOR_OTHER_TEAMS) {
+                        this.mcServer.getPlayerList().sendMessageToAllTeamMembers((EntityPlayer) this, chatmessage);
+                    } else if (scoreboardteambase.getDeathMessageVisibility() == Team.EnumVisible.HIDE_FOR_OWN_TEAM) {
+                        this.mcServer.getPlayerList().sendMessageToTeamOrAllPlayers((EntityPlayer) this, chatmessage);
+                    }
+                } else {
+                    this.mcServer.getPlayerList().sendMessage(chatmessage);
+                }
+            } else {
+                this.mcServer.getPlayerList().sendMessage(CraftChatMessage.fromString(deathMessage));
+            }
+        }
+        
+        this.spawnShoulderEntities();
+        if (!deathEvent.getKeepInventory()) {
+            this.inventory.clear();
+        }
+        
+        if (!(keepInventory || this.y() || MinecraftForge.EVENT_BUS.post(new PlayerDropsEvent(this, cause, this.capturedDrops, this.aT > 0)))) {
+            for (net.minecraft.entity.item.EntityItem item : capturedDrops) {
+                this.world.spawnEntity(item);
+            }
+        }
+        
+        this.closeInventory();
+        this.setSpectatingEntity(this); // Remove spectated target
+        
+        Collection<Score> collection = this.world.getServer().getScoreboardManager().getScoreboardScores(IScoreCriteria.DEATH_COUNT, this.getName(), Lists.newArrayList());
+        for (Score score : collection) {
+            score.incrementScore();
+        }
+        
+        /*
         if (flag)
         {
             Team team = this.getTeam();
@@ -521,6 +825,8 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
             Score score = this.getWorldScoreboard().getOrCreateScore(this.getName(), scoreobjective);
             score.incrementScore();
         }
+        */
+        // Akarin end
 
         EntityLivingBase entitylivingbase = this.getAttackingEntity();
 
@@ -549,12 +855,12 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         {
             super.awardKillScore(p_191956_1_, p_191956_2_, p_191956_3_);
             this.addScore(p_191956_2_);
-            Collection<ScoreObjective> collection = this.getWorldScoreboard().getObjectivesFromCriteria(IScoreCriteria.TOTAL_KILL_COUNT);
+            Collection<Score> collection = this.world.getServer().getScoreboardManager().getScoreboardScores(IScoreCriteria.TOTAL_KILL_COUNT, this.getName(), Lists.newArrayList()); // Akarin
 
             if (p_191956_1_ instanceof EntityPlayer)
             {
                 this.addStat(StatList.PLAYER_KILLS);
-                collection.addAll(this.getWorldScoreboard().getObjectivesFromCriteria(IScoreCriteria.PLAYER_KILL_COUNT));
+                this.world.getServer().getScoreboardManager().getScoreboardScores(IScoreCriteria.PLAYER_KILL_COUNT, this.getName(), collection); // Akarin
             }
             else
             {
@@ -563,16 +869,16 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
             collection.addAll(this.awardTeamKillScores(p_191956_1_));
 
-            for (ScoreObjective scoreobjective : collection)
+            for (Score scoreobjective : collection) // Akarin
             {
-                this.getWorldScoreboard().getOrCreateScore(this.getName(), scoreobjective).incrementScore();
+                scoreobjective.incrementScore(); // Akarin
             }
 
             CriteriaTriggers.PLAYER_KILLED_ENTITY.trigger(this, p_191956_1_, p_191956_3_);
         }
     }
 
-    private Collection<ScoreObjective> awardTeamKillScores(Entity p_192038_1_)
+    private Collection<Score> awardTeamKillScores(Entity p_192038_1_) // Akarin
     {
         String s = p_192038_1_ instanceof EntityPlayer ? p_192038_1_.getName() : p_192038_1_.getCachedUniqueIdString();
         ScorePlayerTeam scoreplayerteam = this.getWorldScoreboard().getPlayersTeam(this.getName());
@@ -599,11 +905,11 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
             if (j >= 0 && j < IScoreCriteria.TEAM_KILL.length)
             {
-                return this.getWorldScoreboard().getObjectivesFromCriteria(IScoreCriteria.TEAM_KILL[j]);
+                return this.world.getServer().getScoreboardManager().getScoreboardScores(IScoreCriteria.TEAM_KILL[j], this.getName(), Lists.newArrayList()); // Akarin
             }
         }
 
-        return Lists.<ScoreObjective>newArrayList();
+        return Lists.newArrayList(); // Akarin
     }
 
     public boolean attackEntityFrom(DamageSource source, float amount)
@@ -654,14 +960,15 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     private boolean canPlayersAttack()
     {
-        return this.mcServer.isPVPEnabled();
+        return this.world.pvpMode; // Akarin
     }
 
     @Nullable
     public Entity changeDimension(int dimensionIn, net.minecraftforge.common.util.ITeleporter teleporter)
     {
+        if (this.isPlayerSleeping()) return this; // Akarin
         if (!net.minecraftforge.common.ForgeHooks.onTravelToDimension(this, dimensionIn)) return this;
-        this.invulnerableDimensionChange = true;
+        //this.invulnerableDimensionChange = true; // Akarin
 
         if (this.dimension == 0 && dimensionIn == -1)
         {
@@ -674,6 +981,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
         if (this.dimension == 1 && dimensionIn == 1 && teleporter.isVanilla())
         {
+            this.invulnerableDimensionChange = true; // Akarin
             this.world.removeEntity(this);
 
             if (!this.queuedEndExit)
@@ -692,7 +1000,8 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
                 dimensionIn = 1;
             }
 
-            this.mcServer.getPlayerList().transferPlayerToDimension(this, dimensionIn, teleporter);
+            PlayerTeleportEvent.TeleportCause cause = this.dimension == 1 || dimensionIn == 1 ? PlayerTeleportEvent.TeleportCause.END_PORTAL : (this.dimension == -1 || dimensionIn == -1 ? PlayerTeleportEvent.TeleportCause.NETHER_PORTAL : PlayerTeleportEvent.TeleportCause.MOD); // Akarin
+            this.mcServer.getPlayerList().transferPlayerToDimension(this, dimensionIn, teleporter, cause); // Akarin
             this.connection.sendPacket(new SPacketEffect(1032, BlockPos.ORIGIN, 0, false));
             this.lastExperience = -1;
             this.lastHealth = -1.0F;
@@ -751,6 +1060,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     public void wakeUpPlayer(boolean immediately, boolean updateWorldFlag, boolean setSpawn)
     {
+        if (!this.sleeping) return; // Akarin
         if (this.isPlayerSleeping())
         {
             this.getServerWorld().getEntityTracker().sendToTrackingAndSelf(this, new SPacketAnimation(this, 2));
@@ -844,13 +1154,29 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         this.connection.sendPacket(new SPacketSignEditorOpen(signTile.getPos()));
     }
 
-    public void getNextWindowId()
+    public int getNextWindowId() // Akarin
     {
         this.currentWindowId = this.currentWindowId % 100 + 1;
+        return currentWindowId; // Akarin
     }
 
     public void displayGui(IInteractionObject guiOwner)
     {
+        // Akarin start
+        boolean cancelled = guiOwner instanceof ILootContainer && ((ILootContainer) guiOwner).getLootTable() != null && this.isSpectator();
+        Container container = CraftEventFactory.callInventoryOpenEvent(this, guiOwner.createContainer(this.inventory, this), cancelled);
+        if (container == null) {
+            return;
+        }
+        this.getNextWindowId();
+        this.openContainer = container;
+        this.connection.sendPacket(new SPacketOpenWindow(this.currentWindowId, guiOwner.getGuiID(), guiOwner.getDisplayName()));
+        
+        this.openContainer.windowId = this.currentWindowId;
+        this.openContainer.addListener(this);
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerContainerEvent.Open(this, this.openContainer));
+        
+        /*
         if (guiOwner instanceof ILootContainer && ((ILootContainer)guiOwner).getLootTable() != null && this.isSpectator())
         {
             this.sendStatusMessage((new TextComponentTranslation("container.spectatorCantOpen", new Object[0])).setStyle((new Style()).setColor(TextFormatting.RED)), true);
@@ -864,10 +1190,34 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
             this.openContainer.addListener(this);
             net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerContainerEvent.Open(this, this.openContainer));
         }
+        */
+        // Akarin end
     }
 
     public void displayGUIChest(IInventory chestInventory)
     {
+        // Akarin start
+        boolean cancelled = false;
+        if (chestInventory instanceof ILockableContainer) {
+            ILockableContainer itileinventory = (ILockableContainer) chestInventory;
+            cancelled = itileinventory.isLocked() && !this.canOpen(itileinventory.getLockCode()) && !this.isSpectator();
+        }
+
+        Container container;
+        if (chestInventory instanceof IInteractionObject) {
+            if (chestInventory instanceof TileEntity) {
+                Preconditions.checkArgument(((TileEntity) chestInventory).getWorld() != null, "Container must have world to be opened");
+            }
+            container = ((IInteractionObject) chestInventory).createContainer(this.inventory, this);
+        } else {
+            container = new ContainerChest(this.inventory, chestInventory, this);
+        }
+        container = CraftEventFactory.callInventoryOpenEvent(this, container, cancelled);
+        if (container == null && !cancelled) { // Let pre-cancelled events fall through
+            chestInventory.closeInventory(this);
+            return;
+        }
+        // Akarin end
         if (chestInventory instanceof ILootContainer && ((ILootContainer)chestInventory).getLootTable() != null && this.isSpectator())
         {
             this.sendStatusMessage((new TextComponentTranslation("container.spectatorCantOpen", new Object[0])).setStyle((new Style()).setColor(TextFormatting.RED)), true);
@@ -887,6 +1237,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
                 {
                     this.connection.sendPacket(new SPacketChat(new TextComponentTranslation("container.isLocked", new Object[] {chestInventory.getDisplayName()}), ChatType.GAME_INFO));
                     this.connection.sendPacket(new SPacketSoundEffect(SoundEvents.BLOCK_CHEST_LOCKED, SoundCategory.BLOCKS, this.posX, this.posY, this.posZ, 1.0F, 1.0F));
+                    chestInventory.closeInventory(this); // Akarin
                     return;
                 }
             }
@@ -896,12 +1247,12 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
             if (chestInventory instanceof IInteractionObject)
             {
                 this.connection.sendPacket(new SPacketOpenWindow(this.currentWindowId, ((IInteractionObject)chestInventory).getGuiID(), chestInventory.getDisplayName(), chestInventory.getSizeInventory()));
-                this.openContainer = ((IInteractionObject)chestInventory).createContainer(this.inventory, this);
+                this.openContainer = container; // Akarin
             }
             else
             {
                 this.connection.sendPacket(new SPacketOpenWindow(this.currentWindowId, "minecraft:container", chestInventory.getDisplayName(), chestInventory.getSizeInventory()));
-                this.openContainer = new ContainerChest(this.inventory, chestInventory, this);
+                this.openContainer = container; // Akarin
             }
 
             this.openContainer.windowId = this.currentWindowId;
@@ -912,8 +1263,14 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     public void displayVillagerTradeGui(IMerchant villager)
     {
+        // Akarin start
+        Container container = CraftEventFactory.callInventoryOpenEvent(this, new ContainerMerchant(this.inventory, villager, this.world));
+        if (container == null) {
+            return;
+        }
+        // Akarin end
         this.getNextWindowId();
-        this.openContainer = new ContainerMerchant(this.inventory, villager, this.world);
+        this.openContainer = container; // Akarin
         this.openContainer.windowId = this.currentWindowId;
         this.openContainer.addListener(this);
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerContainerEvent.Open(this, this.openContainer));
@@ -933,6 +1290,13 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     public void openGuiHorseInventory(AbstractHorse horse, IInventory inventoryIn)
     {
+        // Akarin start
+        Container container = CraftEventFactory.callInventoryOpenEvent(this, new ContainerHorseInventory(this.inventory, horse, inventoryIn, this));
+        if (container == null) {
+            inventoryIn.closeInventory(this);
+            return;
+        }
+        // Akarin end
         if (this.openContainer != this.inventoryContainer)
         {
             this.closeScreen();
@@ -940,7 +1304,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
         this.getNextWindowId();
         this.connection.sendPacket(new SPacketOpenWindow(this.currentWindowId, "EntityHorse", inventoryIn.getDisplayName(), inventoryIn.getSizeInventory(), horse.getEntityId()));
-        this.openContainer = new ContainerHorseInventory(this.inventory, inventoryIn, horse, this);
+        this.openContainer = container; // Akarin
         this.openContainer.windowId = this.currentWindowId;
         this.openContainer.addListener(this);
     }
@@ -988,6 +1352,11 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     {
         this.connection.sendPacket(new SPacketWindowItems(containerToSend.windowId, itemsList));
         this.connection.sendPacket(new SPacketSetSlot(-1, -1, this.inventory.getItemStack()));
+        // Akarin start
+        if (java.util.EnumSet.of(InventoryType.CRAFTING,InventoryType.WORKBENCH).contains(containerToSend.getBukkitView().getType())) {
+            this.connection.sendPacket(new SPacketSetSlot(containerToSend.windowId, 0, containerToSend.getSlot(0).getStack()));
+        }
+        // Akarin end
     }
 
     public void sendWindowProperty(Container containerIn, int varToUpdate, int newValue)
@@ -1005,6 +1374,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     public void closeScreen()
     {
+        CraftEventFactory.handleInventoryCloseEvent(this); // Akarin
         this.connection.sendPacket(new SPacketCloseWindow(this.openContainer.windowId));
         this.closeContainer();
     }
@@ -1080,6 +1450,12 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
         for (ResourceLocation resourcelocation : p_193102_1_)
         {
+            // Akarin start
+            if (CraftingManager.getRecipe(resourcelocation) == null) {
+                Bukkit.getLogger().warning("Ignoring grant of non existent recipe " + resourcelocation);
+                continue;
+            }
+            // Akarin end
             list.add(CraftingManager.getRecipe(resourcelocation));
         }
 
@@ -1110,7 +1486,16 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     public void setPlayerHealthUpdated()
     {
         this.lastHealth = -1.0E8F;
+        // Akarin start
+        this.lastExperience = -1;
     }
+
+    public void sendMessage(ITextComponent[] ichatbasecomponent) {
+        for (ITextComponent component : ichatbasecomponent) {
+            this.sendMessage(component);
+        }
+    }
+    // Akarin end
 
     public void sendStatusMessage(ITextComponent chatComponent, boolean actionBar)
     {
@@ -1246,6 +1631,17 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     public void setGameType(GameType gameType)
     {
+        // Akarin start
+        if (gameType == this.interactionManager.getGameType()) {
+            return;
+        }
+
+        PlayerGameModeChangeEvent event = new PlayerGameModeChangeEvent(getBukkitEntity(), GameMode.getByValue(gameType.getID()));
+        world.getServer().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+        // Akarin end
         this.interactionManager.setGameType(gameType);
         this.connection.sendPacket(new SPacketChangeGameState(3, (float)gameType.getID()));
 
@@ -1280,6 +1676,16 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     public boolean canUseCommand(int permLevel, String commandName)
     {
+        // Akarin start
+        if ("@".equals(commandName)) {
+            return getBukkitEntity().hasPermission("minecraft.command.selector");
+        }
+        if ("".equals(commandName)) {
+            return getBukkitEntity().isOp();
+        }
+        return getBukkitEntity().hasPermission("minecraft.command." + commandName);
+        
+        /*
         if ("seed".equals(commandName) && !this.mcServer.isDedicatedServer())
         {
             return true;
@@ -1308,6 +1714,8 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         {
             return true;
         }
+        */
+        // Akarin end
     }
 
     public String getPlayerIP()
@@ -1320,6 +1728,16 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     public void handleClientSettings(CPacketClientSettings packetIn)
     {
+        // Akarin start
+        if (getPrimaryHand() != packetIn.getMainHand()) {
+            PlayerChangedMainHandEvent event = new PlayerChangedMainHandEvent(this.getBukkitEntity(), this.getPrimaryHand() == EnumHandSide.LEFT ? MainHand.LEFT : MainHand.RIGHT);
+            this.mcServer.server.getPluginManager().callEvent(event);
+        }
+        if (!this.language.equals(packetIn.getLang())) {
+            PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(this.getBukkitEntity(), packetIn.getLang());
+            this.mcServer.server.getPluginManager().callEvent(event);
+        }
+        // Akarin end
         this.language = packetIn.getLang();
         this.chatVisibility = packetIn.getChatVisibility();
         this.chatColours = packetIn.isColorsEnabled();
@@ -1402,7 +1820,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         if (entity != this.spectatingEntity)
         {
             this.connection.sendPacket(new SPacketCamera(this.spectatingEntity));
-            this.setPositionAndUpdate(this.spectatingEntity.posX, this.spectatingEntity.posY, this.spectatingEntity.posZ);
+            this.connection.setPlayerLocation(this.spectatingEntity.posX, this.spectatingEntity.posY, this.spectatingEntity.posZ, this.rotationYaw, this.rotationPitch, TeleportCause.SPECTATE); // Akarin
         }
     }
 
@@ -1434,7 +1852,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     @Nullable
     public ITextComponent getTabListDisplayName()
     {
-        return null;
+        return this.listName; // Akarin
     }
 
     public void swingArm(EnumHand hand)
@@ -1455,11 +1873,13 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     public void setElytraFlying()
     {
+        if (CraftEventFactory.callToggleGlideEvent(this, true).isCancelled()) continue; // Akarin
         this.setFlag(7, true);
     }
 
     public void clearElytraFlying()
     {
+        if (CraftEventFactory.callToggleGlideEvent(this, false).isCancelled()) continue; // Akarin
         this.setFlag(7, true);
         this.setFlag(7, false);
     }

@@ -10,14 +10,16 @@
  */
 package org.bukkit.craftbukkit.v1_12_R1.entity;
 
-import catserver.server.PlayerDataFixer;
-import catserver.server.entity.CraftCustomEntity;
-import catserver.server.entity.CraftCustomProjectile;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
+
+import io.akarin.forge.PlayerDataFixer;
+import io.akarin.forge.entity.CraftCustomEntity;
+import io.akarin.forge.entity.CraftCustomProjectile;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

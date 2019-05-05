@@ -7,7 +7,6 @@
  */
 package org.bukkit.plugin.java;
 
-import catserver.server.executor.ReflectionExecutor;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -53,6 +52,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.PluginClassLoader;
 import org.spigotmc.CustomTimingsHandler;
 import org.yaml.snakeyaml.error.YAMLException;
+
+import io.akarin.forge.executor.ReflectionExecutor;
 
 public final class JavaPluginLoader
 implements PluginLoader {

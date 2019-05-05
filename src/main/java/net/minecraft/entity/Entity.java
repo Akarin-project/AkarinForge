@@ -137,7 +137,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     public float entityCollisionReduction;
     protected Random rand;
     public int ticksExisted;
-    private int fire;
+    protected int fire; // Akarin
     protected boolean inWater;
     public int hurtResistantTime;
     protected boolean firstUpdate;

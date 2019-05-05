@@ -3,7 +3,6 @@
  */
 package org.bukkit.entity;
 
-import catserver.server.entity.CraftCustomEntity;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -99,6 +98,8 @@ import org.bukkit.entity.minecart.PoweredMinecart;
 import org.bukkit.entity.minecart.RideableMinecart;
 import org.bukkit.entity.minecart.SpawnerMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
+
+import io.akarin.forge.entity.CraftCustomEntity;
 
 public enum EntityType {
     DROPPED_ITEM("item", Item.class, 1, false),

@@ -8,9 +8,11 @@
  */
 package org.bukkit.craftbukkit.v1_12_R1.event;
 
-import catserver.server.CatServer;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+
+import io.akarin.forge.CatServer;
+
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.EnumMap;

@@ -7,8 +7,10 @@
  */
 package org.bukkit.plugin;
 
-import catserver.server.CatServer;
 import com.google.common.collect.ImmutableSet;
+
+import io.akarin.forge.CatServer;
+
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;

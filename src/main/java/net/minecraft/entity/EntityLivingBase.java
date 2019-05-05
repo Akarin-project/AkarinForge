@@ -89,7 +89,7 @@ public abstract class EntityLivingBase extends Entity
     private static final DataParameter<Boolean> HIDE_PARTICLES = EntityDataManager.<Boolean>createKey(EntityLivingBase.class, DataSerializers.BOOLEAN);
     private static final DataParameter<Integer> ARROW_COUNT_IN_ENTITY = EntityDataManager.<Integer>createKey(EntityLivingBase.class, DataSerializers.VARINT);
     private AbstractAttributeMap attributeMap;
-    private final CombatTracker _combatTracker = new CombatTracker(this);
+    protected final CombatTracker _combatTracker = new CombatTracker(this); // Akarin
     private final Map<Potion, PotionEffect> activePotionsMap = Maps.<Potion, PotionEffect>newHashMap();
     private final NonNullList<ItemStack> handInventory = NonNullList.<ItemStack>withSize(2, ItemStack.EMPTY);
     private final NonNullList<ItemStack> armorArray = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
@@ -139,8 +139,8 @@ public abstract class EntityLivingBase extends Entity
     protected double interpTargetZ;
     protected double interpTargetYaw;
     protected double interpTargetPitch;
-    private boolean potionsNeedUpdate = true;
-    private EntityLivingBase revengeTarget;
+    protected boolean potionsNeedUpdate = true; // Akarin
+    protected EntityLivingBase revengeTarget; // Akarin
     private int revengeTimer;
     private EntityLivingBase lastAttackedEntity;
     private int lastAttackedEntityTime;

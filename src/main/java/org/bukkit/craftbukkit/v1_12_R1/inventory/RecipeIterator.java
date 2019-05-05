@@ -3,7 +3,6 @@
  */
 package org.bukkit.craftbukkit.v1_12_R1.inventory;
 
-import catserver.server.inventory.CustomModRecipe;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +10,8 @@ import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftFurnaceRecipe;
 import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
+
+import io.akarin.forge.inventory.CustomModRecipe;
 
 public class RecipeIterator
 implements Iterator<Recipe> {

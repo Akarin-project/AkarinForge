@@ -14,11 +14,6 @@
  */
 package org.bukkit.plugin.java;
 
-import catserver.server.CatServer;
-import catserver.server.remapper.CatServerRemapper;
-import catserver.server.remapper.ClassInheritanceProvider;
-import catserver.server.remapper.MappingLoader;
-import catserver.server.remapper.ReflectionTransformer;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,6 +47,12 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.JavaPluginLoader;
+
+import io.akarin.forge.CatServer;
+import io.akarin.forge.remapper.CatServerRemapper;
+import io.akarin.forge.remapper.ClassInheritanceProvider;
+import io.akarin.forge.remapper.MappingLoader;
+import io.akarin.forge.remapper.ReflectionTransformer;
 
 final class PluginClassLoader
 extends URLClassLoader {

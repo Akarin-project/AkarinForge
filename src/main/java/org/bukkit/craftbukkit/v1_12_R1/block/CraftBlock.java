@@ -6,8 +6,10 @@
  */
 package org.bukkit.craftbukkit.v1_12_R1.block;
 
-import catserver.server.inventory.CraftCustomContainer;
 import com.mojang.authlib.GameProfile;
+
+import io.akarin.forge.inventory.CraftCustomContainer;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

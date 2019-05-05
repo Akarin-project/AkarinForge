@@ -6,9 +6,6 @@
  */
 package org.bukkit.command;
 
-import catserver.server.command.ChunkStats;
-import catserver.server.command.CommandPlugin;
-import catserver.server.command.PermissionCommand;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,6 +34,10 @@ import org.bukkit.command.defaults.TimingsCommand;
 import org.bukkit.command.defaults.VersionCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
+
+import io.akarin.forge.command.ChunkStats;
+import io.akarin.forge.command.CommandPlugin;
+import io.akarin.forge.command.PermissionCommand;
 
 public class SimpleCommandMap
 implements CommandMap {

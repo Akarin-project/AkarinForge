@@ -3,7 +3,6 @@
  */
 package org.bukkit.craftbukkit.v1_12_R1.entity;
 
-import catserver.server.CatServer;
 import java.util.List;
 import net.minecraftforge.common.util.FakePlayer;
 import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
@@ -11,6 +10,8 @@ import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
+
+import io.akarin.forge.CatServer;
 
 public class CraftFuckPlayer
 extends CraftPlayer {

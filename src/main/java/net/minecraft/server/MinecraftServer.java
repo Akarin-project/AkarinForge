@@ -10,11 +10,11 @@ import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 
-import catserver.api.bukkit.I18nManager;
-import catserver.server.BukkitInjector;
-import catserver.server.Metrics;
-import catserver.server.threads.AsyncKeepaliveThread;
-import catserver.server.threads.WatchCatThread;
+import io.akarin.forge.BukkitInjector;
+import io.akarin.forge.Metrics;
+import io.akarin.forge.api.bukkit.I18nManager;
+import io.akarin.forge.threads.AsyncKeepaliveThread;
+import io.akarin.forge.threads.WatchCatThread;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
