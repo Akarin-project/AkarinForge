@@ -682,7 +682,7 @@ implements Server {
         return new ArrayList<World>(this.worlds.values());
     }
 
-    public ny getHandle() {
+    public PlayerList getHandle() {
         return this.playerList;
     }
 

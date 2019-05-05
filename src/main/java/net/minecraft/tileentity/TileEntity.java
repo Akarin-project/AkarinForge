@@ -26,7 +26,7 @@ public abstract class TileEntity implements net.minecraftforge.common.capabiliti
     private static final Logger LOGGER = LogManager.getLogger();
     private static final RegistryNamespaced < ResourceLocation, Class <? extends TileEntity >> REGISTRY = new RegistryNamespaced < ResourceLocation, Class <? extends TileEntity >> ();
     protected World world;
-    protected BlockPos pos = BlockPos.ORIGIN;
+    public BlockPos pos = BlockPos.ORIGIN; // Akarin
     protected boolean tileEntityInvalid;
     private int blockMetadata = -1;
     protected Block blockType;

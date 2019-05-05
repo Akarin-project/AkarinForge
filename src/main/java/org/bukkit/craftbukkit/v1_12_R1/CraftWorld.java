@@ -27,6 +27,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import org.apache.commons.lang3.Validate;
@@ -186,7 +187,7 @@ import org.spigotmc.AsyncCatcher;
 public class CraftWorld
 implements World {
     public static final int CUSTOM_DIMENSION_OFFSET = 10;
-    private final oo world;
+    private final WorldServer world;
     private WorldBorder worldBorder;
     private World.Environment environment;
     private final CraftServer server = (CraftServer)Bukkit.getServer();
@@ -202,7 +203,7 @@ implements World {
     private static final Random rand = new Random();
     private final World.Spigot spigot;
 
-    public CraftWorld(oo world, ChunkGenerator gen, World.Environment env) {
+    public CraftWorld(WorldServer world, ChunkGenerator gen, World.Environment env) {
         this.blockMetadata = new BlockMetadataStore(this);
         this.monsterSpawn = -1;
         this.animalSpawn = -1;
