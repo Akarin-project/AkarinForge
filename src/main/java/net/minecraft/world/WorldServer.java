@@ -247,9 +247,7 @@ public class WorldServer extends World implements IThreadListener
         // Akarin start
         long time = this.worldInfo.getWorldTotalTime();
         if (this.getGameRules().getBoolean("doMobSpawning") && this.worldInfo.getTerrainType() != WorldType.DEBUG_ALL_BLOCK_STATES && (this.spawnHostileMobs || this.spawnPeacefulMobs) && (this instanceof WorldServer && this.playerEntities.size() > 0)) {
-            timings.mobSpawn.startTiming();
             this.entitySpawner.findChunksForSpawning(this, this.spawnHostileMobs && (this.ticksPerMonsterSpawns != 0 && time % this.ticksPerMonsterSpawns == 0L), this.spawnPeacefulMobs && (this.ticksPerAnimalSpawns != 0 && time % this.ticksPerAnimalSpawns == 0L), this.worldInfo.getWorldTotalTime() % 400L == 0L);
-            timings.mobSpawn.stopTiming();
         }
         // Akarin end
 
@@ -287,9 +285,7 @@ public class WorldServer extends World implements IThreadListener
         this.profiler.endSection();
         this.sendQueuedBlockEvents();
         // Akarin start
-        timings.doChunkGC.startTiming();
         this.getWorld().processChunkGC();
-        timings.doChunkGC.stopTiming();
         // Akarin end
     }
 
@@ -399,7 +395,7 @@ public class WorldServer extends World implements IThreadListener
         this.worldInfo.setSpawnZ(j);
     }
 
-    protected boolean isChunkLoaded(int x, int z, boolean allowEmpty)
+    public boolean isChunkLoaded(int x, int z, boolean allowEmpty)
     {
         return this.getChunkProvider().chunkExists(x, z);
     }

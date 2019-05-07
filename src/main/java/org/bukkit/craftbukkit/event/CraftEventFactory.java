@@ -44,6 +44,7 @@ import org.bukkit.entity.ThrownExpBottle;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFormEvent;
@@ -249,13 +250,13 @@ public class CraftEventFactory {
     private static PlayerEvent getPlayerBucketEvent(boolean isFilling, EntityPlayer who, int clickedX, int clickedY, int clickedZ, EnumFacing clickedFace, ItemStack itemstack, net.minecraft.item.Item item) {
         Player player = (who == null) ? null : (Player) who.getBukkitEntity();
         CraftItemStack itemInHand = CraftItemStack.asNewCraftStack(item);
-        Material bucket = CraftMagicNumbers.getMaterial(itemstack.getItem());
+        Material bucket = org.bukkit.craftbukkit.util.CraftMagicNumbers.getMaterial(itemstack.getItem());
 
         CraftWorld craftWorld = (CraftWorld) player.getWorld();
         CraftServer craftServer = (CraftServer) player.getServer();
 
         Block blockClicked = craftWorld.getBlockAt(clickedX, clickedY, clickedZ);
-        BlockFace blockFace = CraftBlock.notchToBlockFace(clickedFace);
+        BlockFace blockFace = org.bukkit.craftbukkit.block.CraftBlock.notchToBlockFace(clickedFace);
 
         PlayerEvent event = null;
         if (isFilling) {
@@ -817,14 +818,6 @@ public class CraftEventFactory {
         return event;
     }
 
-    // Paper start
-    public static com.destroystokyo.paper.event.entity.EntityZapEvent callEntityZapEvent (Entity entity, Entity lightning, Entity changedEntity) {
-        com.destroystokyo.paper.event.entity.EntityZapEvent event = new com.destroystokyo.paper.event.entity.EntityZapEvent(entity.getBukkitEntity(), (LightningStrike) lightning.getBukkitEntity(), changedEntity.getBukkitEntity());
-        entity.getBukkitEntity().getServer().getPluginManager().callEvent(event);
-        return event;
-    }
-    // Paper end
-
     public static HorseJumpEvent callHorseJumpEvent(Entity horse, float power) {
         HorseJumpEvent event = new HorseJumpEvent((AbstractHorse) horse.getBukkitEntity(), power);
         horse.getBukkitEntity().getServer().getPluginManager().callEvent(event);
@@ -1054,12 +1047,8 @@ public class CraftEventFactory {
      * Incase plugins hooked into this or Spigot adds a new inventory close event. Prefer to pass a reason
      * @param human
      */
-    @Deprecated
     public static void handleInventoryCloseEvent(EntityPlayer human) {
-        handleInventoryCloseEvent(human, org.bukkit.event.inventory.InventoryCloseEvent.Reason.UNKNOWN);
-    }
-    public static void handleInventoryCloseEvent(EntityPlayer human, org.bukkit.event.inventory.InventoryCloseEvent.Reason reason) {
-        InventoryCloseEvent event = new InventoryCloseEvent(human.openContainer.getBukkitView(), reason);
+        InventoryCloseEvent event = new InventoryCloseEvent(human.openContainer.getBukkitView());
         // Paper end
         human.world.getServer().getPluginManager().callEvent(event);
         human.openContainer.transferTo(human.inventoryContainer, human.getBukkitEntity());
@@ -1162,10 +1151,10 @@ public class CraftEventFactory {
             if (stat.getType() == Type.UNTYPED) {
                 event = new PlayerStatisticIncrementEvent(player, stat, current, current + incrementation);
             } else if (stat.getType() == Type.ENTITY) {
-                EntityType entityType = CraftStatistic.getEntityTypeFromStatistic(statistic);
+                EntityType entityType = org.bukkit.craftbukkit.CraftStatistic.getEntityTypeFromStatistic(statistic);
                 event = new PlayerStatisticIncrementEvent(player, stat, current, current + incrementation, entityType);
             } else {
-                Material material = CraftStatistic.getMaterialFromStatistic(statistic);
+                Material material = org.bukkit.craftbukkit.CraftStatistic.getMaterialFromStatistic(statistic);
                 event = new PlayerStatisticIncrementEvent(player, stat, current, current + incrementation, material);
             }
         }
@@ -1238,7 +1227,7 @@ public class CraftEventFactory {
 
     public static boolean handleBlockFormEvent(World world, BlockPos pos, IBlockState block, @Nullable Entity entity) {
         BlockState blockState = world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()).getState();
-        blockState.setType(CraftMagicNumbers.getMaterial(block.getBlock()));
+        blockState.setType(org.bukkit.craftbukkit.util.CraftMagicNumbers.getMaterial(block.getBlock()));
         blockState.setRawData((byte) block.getBlock().getMetaFromState(block));
 
         BlockFormEvent event = (entity == null) ? new BlockFormEvent(blockState.getBlock(), blockState) : new EntityBlockFormEvent(entity.getBukkitEntity(), blockState.getBlock(), blockState);

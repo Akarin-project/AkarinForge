@@ -13,7 +13,6 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import io.akarin.forge.BukkitInjector;
 import io.akarin.forge.Metrics;
 import io.akarin.forge.api.bukkit.I18nManager;
-import io.akarin.forge.threads.AsyncKeepaliveThread;
 import io.akarin.forge.threads.WatchCatThread;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
@@ -124,7 +123,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 {
     public static final Logger LOGGER = LogManager.getLogger(); // Akarin
     public static final File USER_CACHE_FILE = new File("usercache.json");
-    protected final ISaveFormat anvilConverterForAnvilFile; // Akarin
+    protected ISaveFormat anvilConverterForAnvilFile; // Akarin
     private final Snooper usageSnooper = new Snooper("server", this, getCurrentTimeMillis());
     public File anvilFile; // Akarin
     private final List<ITickable> tickables = Lists.<ITickable>newArrayList();
@@ -579,7 +578,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         }
         
         this.server.enablePlugins(PluginLoadOrder.POSTWORLD);
-        AsyncKeepaliveThread.startThread();
         WatchCatThread.startThread();
         new Metrics();
         // Akarin end

@@ -117,7 +117,6 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
     public Chunk(World worldIn, int x, int z)
     {
         this.bukkitChunk = new org.bukkit.craftbukkit.CraftChunk(this);
-        this.chunkKey = ChunkPos.asLong(this.x, this.z);
         // Akarin end
         this.storageArrays = new ExtendedBlockStorage[16];
         this.blockBiomeArray = new byte[256];
@@ -130,6 +129,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
         this.world = worldIn;
         this.x = x;
         this.z = z;
+        this.chunkKey = ChunkPos.asLong(this.x, this.z); // Akarin
         this.heightMap = new int[256];
 
         for (int i = 0; i < this.entityLists.length; ++i)

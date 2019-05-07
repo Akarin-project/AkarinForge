@@ -2402,7 +2402,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             // Akarin start
             com.google.common.base.Preconditions.checkState(!passenger.riddenByEntities.contains(this), "Circular entity riding! %s %s", this, passenger);
 
-            CraftEntity craft = (CraftEntity) entity.getBukkitEntity().getVehicle();
+            CraftEntity craft = (CraftEntity) passenger.getBukkitEntity().getVehicle();
             Entity orig = craft == null ? null : craft.getHandle();
             if (getBukkitEntity() instanceof Vehicle && passenger.getBukkitEntity() instanceof LivingEntity && passenger.world.isChunkLoaded((int) passenger.posX >> 4, (int) passenger.posZ >> 4, false)) { // Boolean not used
                 VehicleEnterEvent event = new VehicleEnterEvent(
@@ -2410,7 +2410,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                         passenger.getBukkitEntity()
                 );
                 Bukkit.getPluginManager().callEvent(event);
-                CraftEntity craftn = (CraftEntity) entity.getBukkitEntity().getVehicle();
+                CraftEntity craftn = (CraftEntity) passenger.getBukkitEntity().getVehicle();
                 Entity n = craftn == null ? null : craftn.getHandle();
                 if (event.isCancelled() || n != orig) {
                     return;
@@ -2681,7 +2681,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     public void setAir(int air)
     {
         // Akarin start
-        EntityAirChangeEvent event = new EntityAirChangeEvent(this.getBukkitEntity(), i);
+        EntityAirChangeEvent event = new EntityAirChangeEvent(this.getBukkitEntity(), air);
         event.getEntity().getServer().getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             return;
@@ -2930,12 +2930,12 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 if (blockposition != null) {
                     exit = new Location(exitWorld.getWorld(), blockposition.getX(), blockposition.getY(), blockposition.getZ());
                 } else {
-                    exit = minecraftserver.getPlayerList().calculateTarget(enter, minecraftserver.getWorld(i));
+                    exit = minecraftserver.getPlayerList().calculateTarget(enter, minecraftserver.getWorld(dimensionIn));
                 }
             } else {
                 exit = null;
             }
-            boolean useTravelAgent = exitWorld != null && (this.am != 1 || exitWorld.dimension != 1);
+            boolean useTravelAgent = exitWorld != null && (this.dimension != 1 || exitWorld.dimension != 1);
             TravelAgent agent = exit != null ? (TravelAgent)(((CraftWorld)exit.getWorld()).getHandle().getDefaultTeleporter()) : CraftTravelAgent.DEFAULT;
             
             boolean oldCanCreate = agent.getCanCreatePortal();

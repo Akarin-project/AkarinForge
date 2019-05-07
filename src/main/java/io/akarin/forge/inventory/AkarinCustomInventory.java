@@ -57,7 +57,7 @@ implements InventoryHolder {
             return new AkarinCustomInventory((ItemStackHandler)handler);
         }
         if (handler instanceof SlotItemHandler) {
-            return new AkarinCustomInventory(((SlotItemHandler)handler).d);
+            return new AkarinCustomInventory(((SlotItemHandler)handler).inventory);
         }
         if (handler instanceof InvWrapper) {
             return new AkarinCustomInventory(((InvWrapper)handler).getInv());

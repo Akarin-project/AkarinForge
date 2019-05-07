@@ -147,7 +147,7 @@ public class ChunkProviderServer implements IChunkProvider
                 {
                 this.id2ChunkMap.put(ChunkPos.asLong(x, z), chunk);
                 chunk.onLoad();
-                chunk.populate(this, this.chunkGenerator, false); // Akarin
+                chunk.loadNearby(this, this.chunkGenerator, false); // Akarin
                 }
 
                 loadingChunks.remove(pos);
@@ -195,7 +195,7 @@ public class ChunkProviderServer implements IChunkProvider
 
             this.id2ChunkMap.put(i, chunk);
             chunk.onLoad();
-            chunk.populate(this, this.chunkGenerator, true); // Akarin
+            chunk.loadNearby(this, this.chunkGenerator, true); // Akarin
         }
 
         return chunk;

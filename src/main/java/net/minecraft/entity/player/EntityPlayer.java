@@ -172,6 +172,10 @@ public abstract class EntityPlayer extends EntityLivingBase
     public CraftHumanEntity getBukkitEntity() {
         return (CraftHumanEntity) super.getBukkitEntity();
     }
+    
+    public World getWorld() {
+        return world;
+    }
     // Akarin end
 
     protected CooldownTracker createCooldownTracker()

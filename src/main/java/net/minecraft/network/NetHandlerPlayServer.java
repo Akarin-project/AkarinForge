@@ -86,7 +86,6 @@ import net.minecraft.network.play.client.CPacketUseEntity;
 import net.minecraft.network.play.client.CPacketVehicleMove;
 import net.minecraft.network.play.server.SPacketBlockChange;
 import net.minecraft.network.play.server.SPacketChat;
-import net.minecraft.network.play.server.SPacketCombatEvent.Event;
 import net.minecraft.network.play.server.SPacketConfirmTransaction;
 import net.minecraft.network.play.server.SPacketDisconnect;
 import net.minecraft.network.play.server.SPacketEntityAttach;
@@ -896,7 +895,7 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
 
     public void setPlayerLocation(double x, double y, double z, float yaw, float pitch, Set<SPacketPlayerPosLook.EnumFlags> relativeSet)
     {
-        this.a(x, y, z, yaw, pitch, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        this.setPlayerLocation(x, y, z, yaw, pitch, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
     public void setPlayerLocation(double x, double y, double z, float yaw, float pitch, Set<SPacketPlayerPosLook.EnumFlags> set, PlayerTeleportEvent.TeleportCause cause) {
@@ -1189,7 +1188,7 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
                     cancelled = player.interactionManager.interactResult;
                 } else {
                     org.bukkit.event.player.PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, movingobjectposition.getBlockPos(), movingobjectposition.sideHit, itemstack, true, enumhand);
-                    cancelled = event.useItemInHand() == Event.Result.DENY;
+                    cancelled = event.useItemInHand() == Result.DENY;
                 }
             }
 
