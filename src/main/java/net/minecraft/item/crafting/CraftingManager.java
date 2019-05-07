@@ -180,7 +180,7 @@ public class CraftingManager
     }
 
     //Forge: Made private use GameData/Registry events!
-    private static void register(ResourceLocation name, IRecipe recipe)
+    public static void register(ResourceLocation name, IRecipe recipe) // Akarin
     {
         if (REGISTRY.containsKey(name))
         {

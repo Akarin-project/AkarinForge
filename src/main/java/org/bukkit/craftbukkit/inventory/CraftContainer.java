@@ -94,8 +94,8 @@ public class CraftContainer extends Container {
             String type = getNotchInventoryType(cachedType);
             IInventory top = ((CraftInventory) view.getTopInventory()).getInventory();
             InventoryPlayer bottom = (InventoryPlayer) ((CraftInventory) view.getBottomInventory()).getInventory();
-            this.items.clear();
-            this.slots.clear();
+            this.inventoryItemStacks.clear();
+            this.inventorySlots.clear();
             if (typeChanged) {
                 setupSlots(top, bottom, player.getHandle());
             }
@@ -173,8 +173,8 @@ public class CraftContainer extends Container {
         }
 
         if (delegate != null) {
-            this.items = delegate.items;
-            this.slots = delegate.slots;
+            this.inventoryItemStacks = delegate.inventoryItemStacks;
+            this.inventorySlots = delegate.inventorySlots;
         }
     }
 
@@ -204,12 +204,12 @@ public class CraftContainer extends Container {
     }
 
     @Override
-    public ItemStack shiftClick(EntityPlayer entityhuman, int i) {
-        return (delegate != null) ? delegate.shiftClick(entityhuman, i) : super.shiftClick(entityhuman, i);
+    public ItemStack transferStackInSlot(EntityPlayer entityhuman, int i) {
+        return (delegate != null) ? delegate.transferStackInSlot(entityhuman, i) : super.transferStackInSlot(entityhuman, i);
     }
 
     @Override
-    public boolean canUse(EntityPlayer entity) {
+    public boolean canInteractWith(EntityPlayer entity) {
         return true;
     }
 }

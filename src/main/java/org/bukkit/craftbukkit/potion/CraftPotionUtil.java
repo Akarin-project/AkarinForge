@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableBiMap;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.potion.Potion;
 
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.potion.PotionData;
@@ -95,18 +94,18 @@ public class CraftPotionUtil {
         return new PotionData(PotionType.UNCRAFTABLE, false, false);
     }
 
-    public static PotionEffect fromBukkit(PotionEffect effect) {
+    public static PotionEffect fromBukkit(org.bukkit.potion.PotionEffect effect) {
         Potion type = Potion.getPotionById(effect.getType().getId());
         return new PotionEffect(type, effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.hasParticles());
     }
 
-    public static PotionEffect toBukkit(PotionEffect effect) {
+    public static org.bukkit.potion.PotionEffect toBukkit(PotionEffect effect) {
         PotionEffectType type = PotionEffectType.getById(Potion.getIdFromPotion(effect.getPotion()));
         int amp = effect.getAmplifier();
         int duration = effect.getDuration();
         boolean ambient = effect.getIsAmbient();
         boolean particles = effect.doesShowParticles();
-        return new PotionEffect(type, duration, amp, ambient, particles);
+        return new org.bukkit.potion.PotionEffect(type, duration, amp, ambient, particles);
     }
 
     public static boolean equals(Potion mobEffect, PotionEffectType type) {

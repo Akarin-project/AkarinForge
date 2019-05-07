@@ -26,7 +26,7 @@ implements PotionBrewer {
         if (cache.containsKey((Object)damage)) {
             return cache.get((Object)damage);
         }
-        List<net.minecraft.potion.PotionEffect> mcEffects = PotionType.getPotionTypeForName(CraftPotionUtil.fromBukkit(new PotionData(damage, extended, upgraded))).a();
+        List<net.minecraft.potion.PotionEffect> mcEffects = net.minecraft.potion.PotionType.getPotionTypeForName(CraftPotionUtil.fromBukkit(new PotionData(damage, extended, upgraded))).getEffects();
         ImmutableList.Builder builder = new ImmutableList.Builder();
         for (net.minecraft.potion.PotionEffect effect : mcEffects) {
             builder.add(CraftPotionUtil.toBukkit(effect));

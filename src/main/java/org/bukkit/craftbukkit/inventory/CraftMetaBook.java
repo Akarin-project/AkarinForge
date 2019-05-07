@@ -34,7 +34,6 @@ import org.bukkit.inventory.meta.BookMeta.Generation;
 import static org.spigotmc.ValidateUtils.*;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
-import net.minecraft.server.ChatBaseComponent;
 // Spigot end
 
 @DelegateDeserialization(SerializableMeta.class)

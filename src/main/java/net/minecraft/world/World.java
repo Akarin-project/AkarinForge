@@ -6,10 +6,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 
-import co.aikar.timings.WorldTimingsHandler;
 import io.akarin.forge.AkarinForge;
 import io.akarin.forge.WorldCapture;
-import io.akarin.forge.utils.HopperTask;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -31,6 +29,7 @@ import org.bukkit.World.Environment;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.SpigotTimings;
+import org.bukkit.craftbukkit.SpigotTimings.WorldTimingsHandler;
 import org.bukkit.craftbukkit.block.CraftBlockState;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
@@ -78,7 +77,6 @@ import net.minecraft.pathfinding.PathWorldListener;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.v1_12_R1.BlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.EnumFacing;
@@ -171,7 +169,6 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     private net.minecraftforge.common.util.WorldCapabilityData capabilityData;
 
     // Akarin start
-    private LinkedBlockingQueue<HopperTask> hopperQueue = new LinkedBlockingQueue<>();
     private final ExecutorService entityThreadPool = new ThreadPoolExecutor(1, AkarinForge.entityPoolNum, 30, TimeUnit.SECONDS, Queues.newLinkedBlockingQueue());
     private final CraftWorld world;
     public boolean pvpMode;
@@ -191,6 +188,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     private TickLimiter tileLimiter;
     private int tileTickPosition;
     public WorldCapture worldCapture;
+    public final com.destroystokyo.paper.PaperWorldConfig paperConfig; // Paper
 
     public CraftWorld getWorld() {
         return this.world;
@@ -221,7 +219,6 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();
         this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns();
         
-        timings = new co.aikar.timings.WorldTimingsHandler(this);
         this.keepSpawnInMemory = this.paperConfig.keepSpawnInMemory;
         this.entityLimiter = new org.spigotmc.TickLimiter(spigotConfig.entityMaxTickTime);
         this.tileLimiter = new org.spigotmc.TickLimiter(spigotConfig.tileMaxTickTime);

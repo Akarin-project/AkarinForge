@@ -1,6 +1,5 @@
 package org.bukkit.craftbukkit.inventory;
 
-import com.destroystokyo.paper.inventory.meta.ArmorStandMeta;
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.util.datafix.FixTypes;
 import net.minecraft.server.MinecraftServer;
@@ -15,7 +14,7 @@ import java.util.Map;
 
 // Paper - Created entire class
 @DelegateDeserialization(CraftMetaItem.SerializableMeta.class)
-public class CraftMetaArmorStand extends CraftMetaItem implements ArmorStandMeta {
+public class CraftMetaArmorStand extends CraftMetaItem {
 
     static final ItemMetaKey ENTITY_TAG = new ItemMetaKey("EntityTag", "entity-tag");
     static final ItemMetaKey INVISIBLE = new ItemMetaKey("Invisible", "invisible");
@@ -176,7 +175,7 @@ public class CraftMetaArmorStand extends CraftMetaItem implements ArmorStandMeta
 
         if (tag.hasKey(ENTITY_TAG.NBT)) {
             entityTag = tag.getCompoundTag(ENTITY_TAG.NBT);
-            MinecraftServer.getServer().dataFixer.process(FixTypes.ENTITY, entityTag); // PAIL: convert
+            MinecraftServer.getServerInst().dataFixer.process(FixTypes.ENTITY, entityTag); // PAIL: convert
 
             if (entityTag.hasKey(INVISIBLE.NBT)) {
                 invisible = entityTag.getBoolean(INVISIBLE.NBT);
@@ -229,52 +228,42 @@ public class CraftMetaArmorStand extends CraftMetaItem implements ArmorStandMeta
         }
     }
 
-    @Override
     public boolean isInvisible() {
         return invisible;
     }
 
-    @Override
     public boolean hasNoBasePlate() {
         return noBasePlate;
     }
 
-    @Override
     public boolean shouldShowArms() {
         return showArms;
     }
 
-    @Override
     public boolean isSmall() {
         return small;
     }
 
-    @Override
     public boolean isMarker() {
         return marker;
     }
 
-    @Override
     public void setInvisible(boolean invisible) {
         this.invisible = invisible;
     }
 
-    @Override
     public void setNoBasePlate(boolean noBasePlate) {
         this.noBasePlate = noBasePlate;
     }
 
-    @Override
     public void setShowArms(boolean showArms) {
         this.showArms = showArms;
     }
 
-    @Override
     public void setSmall(boolean small) {
         this.small = small;
     }
 
-    @Override
     public void setMarker(boolean marker) {
         this.marker = marker;
     }

@@ -98,7 +98,7 @@ public class SpigotWorldConfig {
         return this.config.getDouble("world-settings." + this.worldName + "." + path, this.config.getDouble("world-settings.default." + path));
     }
 
-    private int getInt(String path, int def) {
+    public int getInt(String path, int def) { // Akarin
         this.config.addDefault("world-settings.default." + path, def);
         return this.config.getInt("world-settings." + this.worldName + "." + path, this.config.getInt("world-settings.default." + path));
     }

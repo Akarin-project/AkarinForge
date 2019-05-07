@@ -53,8 +53,6 @@ import org.bukkit.inventory.meta.ItemMeta.Spigot;
 
 // Spigot start
 import static org.spigotmc.ValidateUtils.*;
-import net.minecraft.server.GenericAttributes;
-import net.minecraft.server.IAttribute;
 // Spigot end
 
 /**
@@ -200,32 +198,32 @@ class CraftMetaItem implements ItemMeta, Repairable {
 
     static final ItemMetaKey NAME = new ItemMetaKey("Name", "display-name");
     static final ItemMetaKey LOCNAME = new ItemMetaKey("LocName", "loc-name");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey DISPLAY = new ItemMetaKey("display");
     static final ItemMetaKey LORE = new ItemMetaKey("Lore", "lore");
     static final ItemMetaKey ENCHANTMENTS = new ItemMetaKey("ench", "enchants");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey ENCHANTMENTS_ID = new ItemMetaKey("id");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey ENCHANTMENTS_LVL = new ItemMetaKey("lvl");
     static final ItemMetaKey REPAIR = new ItemMetaKey("RepairCost", "repair-cost");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey ATTRIBUTES = new ItemMetaKey("AttributeModifiers");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey ATTRIBUTES_IDENTIFIER = new ItemMetaKey("AttributeName");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey ATTRIBUTES_NAME = new ItemMetaKey("Name");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey ATTRIBUTES_VALUE = new ItemMetaKey("Amount");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey ATTRIBUTES_TYPE = new ItemMetaKey("Operation");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey ATTRIBUTES_UUID_HIGH = new ItemMetaKey("UUIDMost");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey ATTRIBUTES_UUID_LOW = new ItemMetaKey("UUIDLeast");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey HIDEFLAGS = new ItemMetaKey("HideFlags", "ItemFlags");
-    @Specific(Specific.To.NBT)
+
     static final ItemMetaKey UNBREAKABLE = new ItemMetaKey("Unbreakable");
 
     private String displayName;

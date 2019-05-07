@@ -2,9 +2,8 @@ package org.bukkit.craftbukkit.inventory;
 
 import java.util.Map;
 
-import com.destroystokyo.paper.profile.CraftPlayerProfile;
-import com.destroystokyo.paper.profile.PlayerProfile;
 import net.minecraft.nbt.NBTUtil;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntitySkull;
@@ -85,7 +84,7 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
         if (profile != null) {
             // Fill in textures
             // Must be done sync due to way client handles textures
-            profile = com.google.common.util.concurrent.Futures.getUnchecked(TileEntitySkull.b(profile, com.google.common.base.Predicates.alwaysTrue(), true)); // Spigot
+            profile = TileEntitySkull.updateGameprofile(profile);
 
             NBTTagCompound owner = new NBTTagCompound();
             NBTUtil.writeGameProfile(owner, profile);
@@ -125,19 +124,6 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
         return hasOwner() ? profile.getName() : null;
     }
 
-    // Paper start
-    @Override
-    public void setPlayerProfile(@Nullable PlayerProfile profile) {
-        this.profile = (profile == null) ? null : CraftPlayerProfile.asAuthlibCopy(profile);
-    }
-
-    @Nullable
-    @Override
-    public PlayerProfile getPlayerProfile() {
-        return profile != null ? CraftPlayerProfile.asBukkitCopy(profile) : null;
-    }
-    // Paper end
-
     @Override
     public OfflinePlayer getOwningPlayer() {
         if (hasOwner()) {
@@ -163,7 +149,7 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
         } else {
             // Paper start - Use Online Players Skull
             GameProfile newProfile = null;
-            EntityPlayerMP player = MinecraftServer.getServer().getPlayerList().getPlayerByUsername(name);
+            EntityPlayerMP player = MinecraftServer.getServerInst().getPlayerList().getPlayerByUsername(name);
             if (player != null) newProfile = player.getGameProfile();
             if (newProfile == null) newProfile = new GameProfile(null, name);
             profile = newProfile;

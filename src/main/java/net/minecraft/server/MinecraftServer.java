@@ -132,7 +132,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     private final NetworkSystem networkSystem;
     private final ServerStatusResponse statusResponse = new ServerStatusResponse();
     private final Random random = new Random();
-    protected final DataFixer dataFixer; // Akarin
+    public final DataFixer dataFixer; // Akarin
     @SideOnly(Side.SERVER)
     private String hostname;
     private int serverPort = -1;

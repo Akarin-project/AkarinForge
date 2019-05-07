@@ -16,7 +16,7 @@ public class InventoryMerchant implements IInventory
     private final NonNullList<ItemStack> slots = NonNullList.<ItemStack>withSize(3, ItemStack.EMPTY);
     private final EntityPlayer player;
     private MerchantRecipe currentRecipe;
-    private int currentRecipeIndex;
+    public int currentRecipeIndex; // Akarin
 
     public InventoryMerchant(EntityPlayer thePlayerIn, IMerchant theMerchantIn)
     {

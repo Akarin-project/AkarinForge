@@ -96,7 +96,7 @@ public class RestartCommand extends Command
         } else
         {
             // Mark the server to shutdown at the end of the tick
-            MinecraftServer.getServerInst().safeShutdown(isRestarting);
+            MinecraftServer.getServerInst().stopServer();
 
 
             // wait 10 seconds to see if we're actually going to try shutdown
@@ -121,7 +121,7 @@ public class RestartCommand extends Command
     // Paper - Split from moved code
     private static void closeSocket() {
         // Close the socket so we can rebind with the new process
-        MinecraftServer.getServerInst().getServerConnection().terminateEndpoints();
+        MinecraftServer.getServerInst().getNetworkSystem().terminateEndpoints();
 
         // Give time for it to kick in
         try

@@ -214,12 +214,10 @@ public class ActivationRange
             }
             if ( entity instanceof EntityCreature )
             {
-                // Paper start
                 EntityCreature creature = (EntityCreature) entity;
-                if (creature.getAttackTarget() != null || creature.getMovingTarget() != null) {
+                if (creature.getAttackTarget() != null) {
                     return true;
                 }
-                // Paper end
             }
             if ( entity instanceof EntityVillager && ( (EntityVillager) entity ).isMating() )
             {
@@ -248,49 +246,5 @@ public class ActivationRange
             }
         }
         return false;
-    }
-
-    /**
-     * Checks if the entity is active for this tick.
-     *
-     * @param entity
-     * @return
-     */
-    public static boolean checkIfActive(Entity entity)
-    {
-        // Never safe to skip fireworks or entities not yet added to chunk
-        // PAIL: inChunk - boolean under datawatchers
-        if ( !entity.isAddedToChunk() || entity instanceof EntityFireworkRocket ) { // Paper (use obf helper)
-            return true;
-        }
-
-        boolean isActive = entity.activatedTick >= MinecraftServer.currentTick || entity.defaultActivationState;
-
-        // Should this entity tick?
-        if ( !isActive )
-        {
-            if ( ( MinecraftServer.currentTick - entity.activatedTick - 1 ) % 20 == 0 )
-            {
-                // Check immunities every 20 ticks.
-                if ( checkEntityImmunities( entity ) )
-                {
-                    // Triggered some sort of immunity, give 20 full ticks before we check again.
-                    entity.activatedTick = MinecraftServer.currentTick + 20;
-                }
-                isActive = true;
-            }
-            // Add a little performance juice to active entities. Skip 1/4 if not immune.
-        } else if ( !entity.defaultActivationState && entity.ticksExisted % 4 == 0 && !checkEntityImmunities( entity ) )
-        {
-            isActive = false;
-        }
-        Chunk chunk = entity.getChunkAtLocation();
-        if ( isActive && !( chunk != null && chunk.areNeighborsLoaded( 1 ) ) )
-        {
-            isActive = false;
-        }
-        if ((chunk == null || chunk.isUnloading() || chunk.scheduledForUnload != null))
-            isActive = false;
-        return isActive;
     }
 }

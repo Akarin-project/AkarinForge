@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableMap.Builder;
 class CraftMetaLeatherArmor extends CraftMetaItem implements LeatherArmorMeta {
     static final ItemMetaKey COLOR = new ItemMetaKey("color");
 
-    private Color color = DEFAULT_LEATHER_COLOR;
+    private Color color = CraftItemFactory.DEFAULT_LEATHER_COLOR;
 
     CraftMetaLeatherArmor(CraftMetaItem meta) {
         super(meta);
@@ -87,11 +87,11 @@ class CraftMetaLeatherArmor extends CraftMetaItem implements LeatherArmorMeta {
     }
 
     public void setColor(Color color) {
-        this.color = color == null ? DEFAULT_LEATHER_COLOR : color;
+        this.color = color == null ? CraftItemFactory.DEFAULT_LEATHER_COLOR : color;
     }
 
     boolean hasColor() {
-        return !DEFAULT_LEATHER_COLOR.equals(color);
+        return !CraftItemFactory.DEFAULT_LEATHER_COLOR.equals(color);
     }
 
     @Override
