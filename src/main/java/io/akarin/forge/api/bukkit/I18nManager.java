@@ -1,5 +1,5 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  * 
  * Could not load the following classes:
  *  com.google.common.collect.Maps
@@ -15,6 +15,9 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import net.minecraft.util.text.translation.I18n;
+import net.minecraft.util.text.translation.LanguageMap;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 
@@ -26,7 +29,7 @@ public class I18nManager {
         if (initialized) {
             return;
         }
-        fu.parseLangFile(I18nManager.class.getResourceAsStream("/assets/minecraft/lang/zh_cn.lang")).forEach((k2, v2) -> {
+        LanguageMap.parseLangFile(I18nManager.class.getResourceAsStream("/assets/minecraft/lang/zh_cn.lang")).forEach((k2, v2) -> {
             i18n.put(k2, v2);
         }
         );
@@ -46,7 +49,7 @@ public class I18nManager {
                 }
                 InputStream stream = zip.getInputStream(entry);
                 if (stream == null) continue;
-                fu.parseLangFile(stream).forEach((k2, v2) -> {
+                LanguageMap.parseLangFile(stream).forEach((k2, v2) -> {
                     i18n.put(k2, v2);
                 }
                 );
@@ -59,7 +62,7 @@ public class I18nManager {
     public static String getI18nLocal(String i18n) {
         String text = I18nManager.i18n.get(i18n);
         if (text == null) {
-            text = ft.a(i18n);
+            text = I18n.translateToLocal(i18n);
         }
         return text;
     }

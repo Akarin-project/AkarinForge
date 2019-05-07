@@ -2,6 +2,8 @@ package org.spigotmc;
 
 import java.util.List;
 
+import io.akarin.forge.utils.MCUtil;
+import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.entity.Entity;
@@ -98,7 +100,6 @@ public class ActivationRange
      */
     public static void activateEntities(World world)
     {
-        MinecraftTimings.entityActivationCheckTimer.startTiming();
         final int miscActivationRange = world.spigotConfig.miscActivationRange;
         final int animalActivationRange = world.spigotConfig.animalActivationRange;
         final int monsterActivationRange = world.spigotConfig.monsterActivationRange;
@@ -133,7 +134,6 @@ public class ActivationRange
                 }
             }
         }
-        MinecraftTimings.entityActivationCheckTimer.stopTiming();
     }
 
     /**
@@ -143,7 +143,7 @@ public class ActivationRange
      */
     private static void activateChunkEntities(Chunk chunk)
     {
-        for ( List<Entity> slice : chunk.entityLists )
+        for ( ClassInheritanceMultiMap<Entity> slice : chunk.entityLists )
         {
             for ( Entity entity : slice )
             {

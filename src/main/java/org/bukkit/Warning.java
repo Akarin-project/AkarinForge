@@ -18,7 +18,7 @@ import java.util.Map;
 @Target(value={ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.TYPE})
 @Retention(value=RetentionPolicy.RUNTIME)
 public @interface Warning {
-    public boolean value() default 0;
+    public boolean value() default false;
 
     public String reason() default "";
 
@@ -27,7 +27,7 @@ public @interface Warning {
         OFF,
         DEFAULT;
         
-        private static final Map<String, WarningState> values;
+        private static final Map<Object, Object> values;
 
         private WarningState() {
         }
@@ -43,7 +43,7 @@ public @interface Warning {
             if (value == null) {
                 return DEFAULT;
             }
-            WarningState state = values.get(value.toLowerCase());
+            WarningState state = (WarningState) values.get(value.toLowerCase());
             if (state == null) {
                 return DEFAULT;
             }
@@ -51,7 +51,7 @@ public @interface Warning {
         }
 
         static {
-            values = ImmutableMap.builder().put((Object)"off", (Object)OFF).put((Object)"false", (Object)OFF).put((Object)"f", (Object)OFF).put((Object)"no", (Object)OFF).put((Object)"n", (Object)OFF).put((Object)"on", (Object)ON).put((Object)"true", (Object)ON).put((Object)"t", (Object)ON).put((Object)"yes", (Object)ON).put((Object)"y", (Object)ON).put((Object)"", (Object)DEFAULT).put((Object)"d", (Object)DEFAULT).put((Object)"default", (Object)DEFAULT).build();
+            values = ImmutableMap.builder().put("off", OFF).put("false", OFF).put("f", OFF).put("no", OFF).put("n", OFF).put("on", ON).put("true", ON).put("t", ON).put("yes", ON).put("y", ON).put("", DEFAULT).put("d", DEFAULT).put("default", DEFAULT).build();
         }
     }
 

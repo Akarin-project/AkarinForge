@@ -1,5 +1,5 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  * 
  * Could not load the following classes:
  *  net.md_5.specialsource.JarMapping
@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.akarin.forge.AkarinForge;
-import io.akarin.forge.remapper.CatServerRemapper;
+import io.akarin.forge.remapper.AkarinServerRemapper;
 import io.akarin.forge.remapper.ReflectionTransformer;
 import io.akarin.forge.remapper.ReflectionUtils;
 import io.akarin.forge.remapper.RemapUtils;

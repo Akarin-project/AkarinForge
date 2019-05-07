@@ -11,7 +11,6 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
 @Deprecated
-@Warning(value=0)
 public class PlayerPickupItemEvent
 extends PlayerEvent
 implements Cancellable {

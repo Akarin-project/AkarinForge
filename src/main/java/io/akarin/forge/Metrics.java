@@ -1,5 +1,5 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  * 
  * Could not load the following classes:
  *  joptsimple.OptionSet
@@ -105,8 +105,8 @@ public class Metrics {
 
     public JSONObject getPluginData() {
         JSONObject data = new JSONObject();
-        data.put((Object)"pluginName", (Object)"CatServer");
-        data.put((Object)"pluginVersion", (Object)"1.12.2-pro");
+        data.put((Object)"pluginName", (Object)"AkarinForge");
+        data.put((Object)"pluginVersion", (Object)"1.12.2-R0.1-SNAPSHOT");
         JSONArray customCharts = new JSONArray();
         for (CustomChart customChart : this.charts) {
             JSONObject chart = customChart.getRequestJsonObject();
@@ -161,7 +161,7 @@ public class Metrics {
                     }
                     catch (Exception e2) {
                         if (!logFailedRequests) break block2;
-                        Bukkit.getLogger().log(Level.WARNING, "Could not submit plugin stats of CatServer", e2);
+                        Bukkit.getLogger().log(Level.WARNING, "Could not submit plugin stats of AkarinForge", e2);
                     }
                 }
             }

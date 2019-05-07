@@ -90,7 +90,7 @@ public abstract class EntityLivingBase extends Entity
     private static final DataParameter<Integer> ARROW_COUNT_IN_ENTITY = EntityDataManager.<Integer>createKey(EntityLivingBase.class, DataSerializers.VARINT);
     private AbstractAttributeMap attributeMap;
     protected final CombatTracker _combatTracker = new CombatTracker(this); // Akarin
-    private final Map<Potion, PotionEffect> activePotionsMap = Maps.<Potion, PotionEffect>newHashMap();
+    public final Map<Potion, PotionEffect> activePotionsMap = Maps.<Potion, PotionEffect>newHashMap(); // Akarin
     private final NonNullList<ItemStack> handInventory = NonNullList.<ItemStack>withSize(2, ItemStack.EMPTY);
     private final NonNullList<ItemStack> armorArray = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
     public boolean isSwingInProgress;
@@ -118,7 +118,7 @@ public abstract class EntityLivingBase extends Entity
     public float prevRotationYawHead;
     public float jumpMovementFactor = 0.02F;
     protected EntityPlayer attackingPlayer;
-    protected int recentlyHit;
+    public int recentlyHit; // Akarin
     protected boolean dead;
     protected int idleTime;
     protected float prevOnGroundSpeedFactor;

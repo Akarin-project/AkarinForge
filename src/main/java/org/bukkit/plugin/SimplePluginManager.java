@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
@@ -36,7 +37,7 @@ import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommandYamlParser;
 import org.bukkit.command.SimpleCommandMap;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftFuckPlayer;
+import org.bukkit.craftbukkit.entity.CraftFuckPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
@@ -189,7 +190,7 @@ implements PluginManager {
             boolean missingDependency = true;
             Iterator pluginIterator = plugins.entrySet().iterator();
             while (pluginIterator.hasNext()) {
-                Map.Entry entry = pluginIterator.next();
+                Map.Entry entry = (Entry) pluginIterator.next();
                 plugin = (String)entry.getKey();
                 if (dependencies.containsKey(plugin)) {
                     Iterator dependencyIterator = ((Collection)dependencies.get(plugin)).iterator();
@@ -237,7 +238,7 @@ implements PluginManager {
             if (!missingDependency) continue;
             pluginIterator = plugins.entrySet().iterator();
             while (pluginIterator.hasNext()) {
-                Map.Entry entry = pluginIterator.next();
+                Map.Entry entry = (Entry) pluginIterator.next();
                 plugin = (String)entry.getKey();
                 if (dependencies.containsKey(plugin)) continue;
                 softDependencies.remove(plugin);

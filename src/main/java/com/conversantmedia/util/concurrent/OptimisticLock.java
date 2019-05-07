@@ -1,23 +1,58 @@
-/*
- * Decompiled with CFR 0_119.
- */
 package com.conversantmedia.util.concurrent;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Created by jcairns on 2/12/16.
+ */
 public interface OptimisticLock {
-    public long readLock();
 
-    public boolean readLockHeld(long var1);
+    /**
+     * Aquire a lock token for reading
+     *
+     * @return long - the token indicating the lock state
+     */
+    long readLock();
 
-    public long writeLock();
+    /**
+     * check if optimistic locking succeeded
+     *
+     * @param lockToken - the value returned from tryLock
+     * @return boolean - true if lock was held
+     */
+    boolean readLockHeld(long lockToken);
 
-    public long tryWriteLockInterruptibly() throws InterruptedException;
+    /**
+     *  Acquire the lock for writing, waiting if needed
+     *
+     * @return long - the token indicating the lock state
+     */
+    long writeLock();
 
-    public long tryWriteLock();
+    /**
+     * @return long - the token indicating the lock state
+     *
+     * @throws InterruptedException - on interrupt
+     */
+    long tryWriteLockInterruptibly() throws InterruptedException;
 
-    public long tryWriteLock(long var1, TimeUnit var3) throws InterruptedException;
+    /**
+     * @return long - the token indicating the lock state, or 0 if not available
+     */
+    long tryWriteLock();
 
-    public void unlock(long var1);
+    /**
+     * @return long - the token indicating the lock state, or 0 if not available
+     *
+     * @throws InterruptedException on interrupt
+     */
+    long tryWriteLock(long time, TimeUnit unit) throws InterruptedException;
+
+    /**
+     * "commit" or unlock the sequence when the write lock is held
+     *
+     * @param sequence - lock sequence to unlock
+     */
+    void unlock(final long sequence);
+
 }
-

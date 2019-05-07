@@ -211,10 +211,10 @@ public final class PluginDescriptionFile {
         if (map.get("commands") != null) {
             ImmutableMap.Builder commandsBuilder = ImmutableMap.builder();
             try {
-                for (Map.Entry command : ((Map)map.get("commands")).entrySet()) {
+                for (Map.Entry command : ((Map<?, ?>)map.get("commands")).entrySet()) {
                     ImmutableMap.Builder commandBuilder = ImmutableMap.builder();
                     if (command.getValue() != null) {
-                        for (Map.Entry commandEntry : ((Map)command.getValue()).entrySet()) {
+                        for (Map.Entry commandEntry : ((Map<?, ?>)command.getValue()).entrySet()) {
                             if (commandEntry.getValue() instanceof Iterable) {
                                 ImmutableList.Builder commandSubList = ImmutableList.builder();
                                 for (Object commandSubListItem : (Iterable)commandEntry.getValue()) {
@@ -277,7 +277,7 @@ public final class PluginDescriptionFile {
             }
             this.authors = authorsBuilder.build();
         } else {
-            this.authors = map.get("author") != null ? ImmutableList.of((Object)map.get("author").toString()) : ImmutableList.of();
+            this.authors = map.get("author") != null ? ImmutableList.of(map.get("author").toString()) : ImmutableList.of();
         }
         if (map.get("default-permission") != null) {
             try {

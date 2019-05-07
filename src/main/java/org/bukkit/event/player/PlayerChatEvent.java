@@ -6,19 +6,15 @@
  */
 package org.bukkit.event.player;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.lang.Validate;
-import org.bukkit.Server;
-import org.bukkit.Warning;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
 @Deprecated
-@Warning(reason="Listening to this event forces chat to wait for the main thread, delaying chat messages.")
 public class PlayerChatEvent
 extends PlayerEvent
 implements Cancellable {

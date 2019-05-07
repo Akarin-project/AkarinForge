@@ -1,58 +1,42 @@
-/*
- * Akarin Forge
- * 
- * Could not load the following classes:
- *  com.google.common.base.Charsets
- *  com.google.common.collect.ImmutableList
- *  com.google.common.io.Resources
- *  org.apache.commons.lang.Validate
- *  org.json.simple.JSONObject
- *  org.json.simple.parser.JSONParser
- *  org.json.simple.parser.ParseException
- */
 package org.bukkit.command.defaults;
 
 import com.google.common.base.Charsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.util.StringUtil;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
-import net.minecraftforge.common.ForgeVersion;
-import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.defaults.BukkitCommand;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.util.StringUtil;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-public class VersionCommand
-extends BukkitCommand {
-    private final ReentrantLock versionLock = new ReentrantLock();
-    private boolean hasVersion = false;
-    private String versionMessage = null;
-    private final Set<CommandSender> versionWaiters = new HashSet<CommandSender>();
-    private boolean versionTaskStarted = false;
-    private long lastCheck = 0;
+// Paper start
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+// Paper end
 
+public class VersionCommand extends BukkitCommand {
     public VersionCommand(String name) {
         super(name);
+
         this.description = "Gets the version of this server including any plugins in use";
         this.usageMessage = "/version [plugin name]";
         this.setPermission("bukkit.command.version");
@@ -61,32 +45,39 @@ extends BukkitCommand {
 
     @Override
     public boolean execute(CommandSender sender, String currentAlias, String[] args) {
-        if (!this.testPermission(sender)) {
-            return true;
-        }
+        if (!testPermission(sender)) return true;
+
         if (args.length == 0) {
-            sender.sendMessage("This server is running " + Bukkit.getName() + " version " + Bukkit.getVersion() + " (Implementing API version " + Bukkit.getBukkitVersion() + ", Forge version " + ForgeVersion.getVersion() + ")");
+            sender.sendMessage("This server is running " + Bukkit.getName() + " version " + Bukkit.getVersion() + " (Implementing API version " + Bukkit.getBukkitVersion() + ")");
+            tellHistory(sender); // Paper
+            sendVersion(sender);
         } else {
             StringBuilder name = new StringBuilder();
-            for (String arg2 : args) {
+
+            for (String arg : args) {
                 if (name.length() > 0) {
                     name.append(' ');
                 }
-                name.append(arg2);
+
+                name.append(arg);
             }
+
             String pluginName = name.toString();
             Plugin exactPlugin = Bukkit.getPluginManager().getPlugin(pluginName);
             if (exactPlugin != null) {
-                this.describeToSender(exactPlugin, sender);
+                describeToSender(exactPlugin, sender);
                 return true;
             }
+
             boolean found = false;
-            pluginName = pluginName.toLowerCase(Locale.ENGLISH);
+            pluginName = pluginName.toLowerCase(java.util.Locale.ENGLISH);
             for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
-                if (!plugin.getName().toLowerCase(Locale.ENGLISH).contains(pluginName)) continue;
-                this.describeToSender(plugin, sender);
-                found = true;
+                if (plugin.getName().toLowerCase(java.util.Locale.ENGLISH).contains(pluginName)) {
+                    describeToSender(plugin, sender);
+                    found = true;
+                }
             }
+
             if (!found) {
                 sender.sendMessage("This server is not running any plugin by that name.");
                 sender.sendMessage("Use /plugins to get a list of plugins.");
@@ -95,175 +86,253 @@ extends BukkitCommand {
         return true;
     }
 
+    // Paper start - show version history
+    private void tellHistory(final CommandSender sender) {
+        final io.akarin.forge.utils.VersionHistoryManager.VersionData data = io.akarin.forge.utils.VersionHistoryManager.INSTANCE.getVersionData();
+        if (data == null) {
+            return;
+        }
+
+        final String oldVersion = data.getOldVersion();
+        if (oldVersion == null) {
+            return;
+        }
+
+        sender.sendMessage("Previous version: " + oldVersion);
+    }
+    // Paper end
+
     private void describeToSender(Plugin plugin, CommandSender sender) {
         PluginDescriptionFile desc = plugin.getDescription();
-        sender.sendMessage((Object)((Object)ChatColor.GREEN) + desc.getName() + (Object)((Object)ChatColor.WHITE) + " version " + (Object)((Object)ChatColor.GREEN) + desc.getVersion());
+        sender.sendMessage(ChatColor.GREEN + desc.getName() + ChatColor.WHITE + " version " + ChatColor.GREEN + desc.getVersion());
+
         if (desc.getDescription() != null) {
             sender.sendMessage(desc.getDescription());
         }
+
         if (desc.getWebsite() != null) {
-            sender.sendMessage("Website: " + (Object)((Object)ChatColor.GREEN) + desc.getWebsite());
+            sender.sendMessage("Website: " + ChatColor.GREEN + desc.getWebsite());
         }
+
         if (!desc.getAuthors().isEmpty()) {
             if (desc.getAuthors().size() == 1) {
-                sender.sendMessage("Author: " + this.getAuthors(desc));
+                sender.sendMessage("Author: " + getAuthors(desc));
             } else {
-                sender.sendMessage("Authors: " + this.getAuthors(desc));
+                sender.sendMessage("Authors: " + getAuthors(desc));
             }
         }
     }
 
-    private String getAuthors(PluginDescriptionFile desc) {
+    private String getAuthors(final PluginDescriptionFile desc) {
         StringBuilder result = new StringBuilder();
         List<String> authors = desc.getAuthors();
-        for (int i2 = 0; i2 < authors.size(); ++i2) {
+
+        for (int i = 0; i < authors.size(); i++) {
             if (result.length() > 0) {
-                result.append((Object)ChatColor.WHITE);
-                if (i2 < authors.size() - 1) {
+                result.append(ChatColor.WHITE);
+
+                if (i < authors.size() - 1) {
                     result.append(", ");
                 } else {
                     result.append(" and ");
                 }
             }
-            result.append((Object)ChatColor.GREEN);
-            result.append(authors.get(i2));
+
+            result.append(ChatColor.GREEN);
+            result.append(authors.get(i));
         }
+
         return result.toString();
     }
 
     @Override
     public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
-        Validate.notNull((Object)sender, (String)"Sender cannot be null");
-        Validate.notNull((Object)args, (String)"Arguments cannot be null");
-        Validate.notNull((Object)alias, (String)"Alias cannot be null");
+        Validate.notNull(sender, "Sender cannot be null");
+        Validate.notNull(args, "Arguments cannot be null");
+        Validate.notNull(alias, "Alias cannot be null");
+
         if (args.length == 1) {
-            ArrayList<String> completions = new ArrayList<String>();
-            String toComplete = args[0].toLowerCase(Locale.ENGLISH);
+            List<String> completions = new ArrayList<String>();
+            String toComplete = args[0].toLowerCase(java.util.Locale.ENGLISH);
             for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
-                if (!StringUtil.startsWithIgnoreCase(plugin.getName(), toComplete)) continue;
-                completions.add(plugin.getName());
+                if (StringUtil.startsWithIgnoreCase(plugin.getName(), toComplete)) {
+                    completions.add(plugin.getName());
+                }
             }
             return completions;
         }
         return ImmutableList.of();
     }
 
+    private final ReentrantLock versionLock = new ReentrantLock();
+    private boolean hasVersion = false;
+    private String versionMessage = null;
+    private final Set<CommandSender> versionWaiters = new HashSet<CommandSender>();
+    private boolean versionTaskStarted = false;
+    private long lastCheck = 0;
+
     private void sendVersion(CommandSender sender) {
-        if (this.hasVersion) {
-            if (System.currentTimeMillis() - this.lastCheck > 21600000) {
-                this.lastCheck = System.currentTimeMillis();
-                this.hasVersion = false;
+        if (hasVersion) {
+            if (System.currentTimeMillis() - lastCheck > 7200000) { // Paper - Lower to 2 hours
+                lastCheck = System.currentTimeMillis();
+                hasVersion = false;
             } else {
-                sender.sendMessage(this.versionMessage);
+                sender.sendMessage(versionMessage);
                 return;
             }
         }
-        this.versionLock.lock();
+        versionLock.lock();
         try {
-            if (this.hasVersion) {
-                sender.sendMessage(this.versionMessage);
+            if (hasVersion) {
+                sender.sendMessage(versionMessage);
                 return;
             }
-            this.versionWaiters.add(sender);
+            versionWaiters.add(sender);
             sender.sendMessage("Checking version, please wait...");
-            if (!this.versionTaskStarted) {
-                this.versionTaskStarted = true;
-                new Thread(new Runnable(){
+            if (!versionTaskStarted) {
+                versionTaskStarted = true;
+                new Thread(new Runnable() {
 
                     @Override
                     public void run() {
-                        VersionCommand.this.obtainVersion();
+                        obtainVersion();
                     }
                 }).start();
             }
-        }
-        finally {
-            this.versionLock.unlock();
+        } finally {
+            versionLock.unlock();
         }
     }
 
+    // Paper start
     private void obtainVersion() {
         String version = Bukkit.getVersion();
-        if (version == null) {
-            version = "Custom";
-        }
-        if (version.startsWith("git-Spigot-")) {
-            String[] parts = version.substring("git-Spigot-".length()).split("-");
-            int cbVersions = VersionCommand.getDistance("craftbukkit", parts[1].substring(0, parts[1].indexOf(32)));
-            int spigotVersions = VersionCommand.getDistance("spigot", parts[0]);
-            if (cbVersions == -1 || spigotVersions == -1) {
-                this.setVersionMessage("Error obtaining version information");
-            } else if (cbVersions == 0 && spigotVersions == 0) {
-                this.setVersionMessage("You are running the latest version");
-            } else {
-                this.setVersionMessage("You are " + (cbVersions + spigotVersions) + " version(s) behind");
+        if (version == null) version = "Custom";
+        if (version.startsWith("git-Paper-")) {
+            String[] parts = version.substring("git-Paper-".length()).split("[-\\s]");
+            int distance = getDistance(null, parts[0]);
+            switch (distance) {
+                case -1:
+                    setVersionMessage("Error obtaining version information");
+                    break;
+                case 0:
+                    setVersionMessage("You are running the latest version");
+                    break;
+                case -2:
+                    setVersionMessage("Unknown version");
+                    break;
+                default:
+                    setVersionMessage("You are " + distance + " version(s) behind");
             }
         } else if (version.startsWith("git-Bukkit-")) {
-            int cbVersions = VersionCommand.getDistance("craftbukkit", (version = version.substring("git-Bukkit-".length())).substring(0, version.indexOf(32)));
+            // Paper end
+            version = version.substring("git-Bukkit-".length());
+            int cbVersions = getDistance("craftbukkit", version.substring(0, version.indexOf(' ')));
             if (cbVersions == -1) {
-                this.setVersionMessage("Error obtaining version information");
-            } else if (cbVersions == 0) {
-                this.setVersionMessage("You are running the latest version");
+                setVersionMessage("Error obtaining version information");
             } else {
-                this.setVersionMessage("You are " + cbVersions + " version(s) behind");
+                if (cbVersions == 0) {
+                    setVersionMessage("You are running the latest version");
+                } else {
+                    setVersionMessage("You are " + cbVersions + " version(s) behind");
+                }
             }
         } else {
-            this.setVersionMessage("Unknown version, custom build?");
+            setVersionMessage("Unknown version, custom build?");
         }
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
-     */
     private void setVersionMessage(String msg) {
-        this.lastCheck = System.currentTimeMillis();
-        this.versionMessage = msg;
-        this.versionLock.lock();
+        lastCheck = System.currentTimeMillis();
+        versionMessage = msg;
+        versionLock.lock();
         try {
-            this.hasVersion = true;
-            this.versionTaskStarted = false;
-            for (CommandSender sender : this.versionWaiters) {
-                sender.sendMessage(this.versionMessage);
+            hasVersion = true;
+            versionTaskStarted = false;
+            for (CommandSender sender : versionWaiters) {
+                sender.sendMessage(versionMessage);
             }
-            this.versionWaiters.clear();
-        }
-        finally {
-            this.versionLock.unlock();
+            versionWaiters.clear();
+        } finally {
+            versionLock.unlock();
         }
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
-     */
-    private static int getDistance(String repo, String hash) {
-        int n2;
-        BufferedReader reader = Resources.asCharSource((URL)new URL("https://hub.spigotmc.org/stash/rest/api/1.0/projects/SPIGOT/repos/" + repo + "/commits?since=" + URLEncoder.encode(hash, "UTF-8") + "&withCounts=true"), (Charset)Charsets.UTF_8).openBufferedStream();
+    // Paper start
+    private static int getDistance(String repo, String verInfo) {
         try {
-            JSONObject obj = (JSONObject)new JSONParser().parse((Reader)reader);
-            n2 = ((Number)obj.get((Object)"totalCount")).intValue();
+            int currentVer = Integer.decode(verInfo);
+            return getFromJenkins(currentVer);
+        } catch (NumberFormatException ex) {
+            verInfo = verInfo.replace("\"", "");
+            return getFromRepo("PaperMC/Paper", verInfo);
         }
-        catch (ParseException ex2) {
-            int n3;
+            /*
+            BufferedReader reader = Resources.asCharSource(
+                    new URL("https://hub.spigotmc.org/stash/rest/api/1.0/projects/SPIGOT/repos/" + repo + "/commits?since=" + URLEncoder.encode(hash, "UTF-8") + "&withCounts=true"),
+                    Charsets.UTF_8
+            ).openBufferedStream();
             try {
-                ex2.printStackTrace();
-                n3 = -1;
+                JSONObject obj = (JSONObject) new JSONParser().parse(reader);
+                return ((Number) obj.get("totalCount")).intValue();
+            } catch (ParseException ex) {
+                ex.printStackTrace();
+                return -1;
+            } finally {
+                reader.close();
             }
-            catch (Throwable throwable) {
-                try {
-                    reader.close();
-                    throw throwable;
-                }
-                catch (IOException e2) {
-                    e2.printStackTrace();
-                    return -1;
-                }
-            }
-            reader.close();
-            return n3;
-        }
-        reader.close();
-        return n2;
+            */
     }
 
-}
+    private static int getFromJenkins(int currentVer) {
+        try {
+            BufferedReader reader = Resources.asCharSource(
+                    new URL("https://ci.destroystokyo.com/job/Paper/lastSuccessfulBuild/buildNumber"), // Paper
+                    Charsets.UTF_8
+            ).openBufferedStream();
+            try {
+                int newVer = Integer.decode(reader.readLine());
+                return newVer - currentVer;
+            } catch (NumberFormatException ex) {
+                ex.printStackTrace();
+                return -2;
+            } finally {
+                reader.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
 
+    // Contributed by Techcable <Techcable@outlook.com> in GH PR #65
+    private static final String BRANCH = "ver/1.12.2";
+    private static int getFromRepo(String repo, String hash) {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) new URL("https://api.github.com/repos/" + repo + "/compare/" + BRANCH + "..." + hash).openConnection();
+            connection.connect();
+            if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_FOUND) return -2; // Unknown commit
+            try (
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8))
+            ) {
+                JSONObject obj = (JSONObject) new JSONParser().parse(reader);
+                String status = (String) obj.get("status");
+                switch (status) {
+                    case "identical":
+                        return 0;
+                    case "behind":
+                        return ((Number) obj.get("behind_by")).intValue();
+                    default:
+                        return -1;
+                }
+            } catch (ParseException | NumberFormatException e) {
+                e.printStackTrace();
+                return -1;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+    // Paper end
+}

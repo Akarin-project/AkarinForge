@@ -73,9 +73,9 @@ public abstract class EntityLiving extends EntityLivingBase
     private EntityLivingBase attackTarget;
     private final EntitySenses senses;
     private final NonNullList<ItemStack> inventoryHands = NonNullList.<ItemStack>withSize(2, ItemStack.EMPTY);
-    protected float[] inventoryHandsDropChances = new float[2];
+    public float[] inventoryHandsDropChances = new float[2]; // Akarin
     private final NonNullList<ItemStack> inventoryArmor = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
-    protected float[] inventoryArmorDropChances = new float[4];
+    public float[] inventoryArmorDropChances = new float[4]; // Akarin
     private boolean canPickUpLoot;
     public boolean persistenceRequired; // Akarin
     private final Map<PathNodeType, Float> mapPathPriority = Maps.newEnumMap(PathNodeType.class);

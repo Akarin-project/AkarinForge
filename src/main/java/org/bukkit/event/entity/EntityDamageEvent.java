@@ -27,7 +27,7 @@ extends EntityEvent
 implements Cancellable {
     private static final HandlerList handlers = new HandlerList();
     private static final DamageModifier[] MODIFIERS = DamageModifier.values();
-    private static final Function<? super Double, Double> ZERO = Functions.constant((Object)-0.0);
+    private static final Function<? super Double, Double> ZERO = Functions.constant(-0.0);
     private final Map<DamageModifier, Double> modifiers;
     private final Map<DamageModifier, ? extends Function<? super Double, Double>> modifierFunctions;
     private final Map<DamageModifier, Double> originals;
@@ -36,7 +36,7 @@ implements Cancellable {
 
     @Deprecated
     public EntityDamageEvent(Entity damagee, DamageCause cause, double damage) {
-        this(damagee, cause, new EnumMap<DamageModifier, Double>((Map<DamageModifier, Double>)ImmutableMap.of((Object)((Object)DamageModifier.BASE), (Object)damage)), new EnumMap(ImmutableMap.of((Object)((Object)DamageModifier.BASE), ZERO)));
+        this(damagee, cause, new EnumMap<DamageModifier, Double>((Map<DamageModifier, Double>)ImmutableMap.of((DamageModifier.BASE), damage)), new EnumMap(ImmutableMap.of((Object)((Object)DamageModifier.BASE), ZERO)));
     }
 
     public EntityDamageEvent(Entity damagee, DamageCause cause, Map<DamageModifier, Double> modifiers, Map<DamageModifier, ? extends Function<? super Double, Double>> modifierFunctions) {
@@ -109,8 +109,8 @@ implements Cancellable {
         for (DamageModifier modifier : MODIFIERS) {
             if (!this.isApplicable(modifier)) continue;
             Function<? super Double, Double> modifierFunction = this.modifierFunctions.get((Object)modifier);
-            double newVanilla = (Double)modifierFunction.apply((Object)remaining);
-            double oldVanilla = (Double)modifierFunction.apply((Object)oldRemaining);
+            double newVanilla = (Double)modifierFunction.apply(remaining);
+            double oldVanilla = (Double)modifierFunction.apply(oldRemaining);
             double difference = oldVanilla - newVanilla;
             double old = this.getDamage(modifier);
             if (old > 0.0) {

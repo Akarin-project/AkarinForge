@@ -142,7 +142,7 @@ implements ConfigurationSerializable {
 
     @Override
     public Map<String, Object> serialize() {
-        return ImmutableMap.of((Object)"RED", (Object)this.getRed(), (Object)"BLUE", (Object)this.getBlue(), (Object)"GREEN", (Object)this.getGreen());
+        return ImmutableMap.of("RED", this.getRed(), "BLUE", this.getBlue(), "GREEN", this.getGreen());
     }
 
     public static Color deserialize(Map<String, Object> map) {

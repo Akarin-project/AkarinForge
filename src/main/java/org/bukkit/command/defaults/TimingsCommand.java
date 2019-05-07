@@ -42,7 +42,7 @@ import org.spigotmc.CustomTimingsHandler;
 
 public class TimingsCommand
 extends BukkitCommand {
-    private static final List<String> TIMINGS_SUBCOMMANDS = ImmutableList.of((Object)"merged", (Object)"reset", (Object)"separate");
+    private static final List<String> TIMINGS_SUBCOMMANDS = ImmutableList.of("merged", "reset", "separate");
     public static long timingStart = 0;
 
     public TimingsCommand(String name) {

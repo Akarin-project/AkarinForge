@@ -1,9 +1,3 @@
-/*
- * Decompiled with CFR 0_119.
- * 
- * Could not load the following classes:
- *  com.google.common.collect.Lists
- */
 package io.akarin.forge.command;
 
 import com.google.common.collect.Lists;
@@ -12,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.bukkit.Bukkit;
@@ -109,7 +104,7 @@ extends Command {
             Iterator it2 = knownCommands.entrySet().iterator();
             while (it2.hasNext()) {
                 PluginCommand command;
-                Map.Entry entry = it2.next();
+                Map.Entry entry = (Entry) it2.next();
                 if (!(entry.getValue() instanceof PluginCommand) || (command = (PluginCommand)entry.getValue()).getPlugin() != plugin) continue;
                 command.unregister(commandMap);
                 it2.remove();

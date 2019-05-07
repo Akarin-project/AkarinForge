@@ -1,5 +1,5 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  * 
  * Could not load the following classes:
  *  com.google.common.collect.Lists
@@ -9,6 +9,7 @@ package io.akarin.forge;
 import com.google.common.collect.Lists;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
@@ -57,17 +58,17 @@ public class WorldCapture {
     }
 
     public void restore() {
-        this.curPlayer.a(this.curHand, this.curItemStack);
+        this.curPlayer.setHeldItem(this.curHand, this.curItemStack);
     }
 
-    public void addEntitySnap(vg entity, CreatureSpawnEvent.SpawnReason reason) {
+    public void addEntitySnap(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
         if (this.world.restoringBlockSnapshots) {
             return;
         }
         this.entitySnap.add(new EntitySnap(entity, reason));
     }
 
-    public void addItemSnap(aed player, aip stack) {
+    public void addItemSnap(EntityPlayerMP player, ItemStack stack) {
         if (this.world.restoringBlockSnapshots) {
             return;
         }
@@ -86,8 +87,8 @@ public class WorldCapture {
 
         public void apply() {
             if (!this.isApply) {
-                if (this.player.bv.e(this.stack)) {
-                    this.player.l.a(new acl(this.player.l, this.player.p, this.player.q, this.player.r, this.stack));
+                if (this.player.inventory.addItemStackToInventory(this.stack)) {
+                    this.player.world.spawnEntity(new EntityItem(this.player.world, this.player.posX, this.player.posY, this.player.posZ, this.stack));
                 }
                 this.isApply = true;
             }

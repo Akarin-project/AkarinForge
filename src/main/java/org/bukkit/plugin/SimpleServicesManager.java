@@ -1,259 +1,306 @@
-/*
- * Akarin Forge
- * 
- * Could not load the following classes:
- *  com.google.common.collect.ImmutableList
- *  com.google.common.collect.ImmutableList$Builder
- *  com.google.common.collect.ImmutableSet
- */
 package org.bukkit.plugin;
+
+import org.bukkit.Bukkit;
+import org.bukkit.event.server.ServiceRegisterEvent;
+import org.bukkit.event.server.ServiceUnregisterEvent;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import org.bukkit.Bukkit;
-import org.bukkit.event.Event;
-import org.bukkit.event.server.ServiceRegisterEvent;
-import org.bukkit.event.server.ServiceUnregisterEvent;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.ServicePriority;
-import org.bukkit.plugin.ServicesManager;
 
-public class SimpleServicesManager
-implements ServicesManager {
-    private final Map<Class<?>, List<RegisteredServiceProvider<?>>> providers = new HashMap();
+/**
+ * A simple services manager.
+ */
+public class SimpleServicesManager implements ServicesManager {
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * Map of providers.
      */
-    @Override
+    private final Map<Class<?>, List<RegisteredServiceProvider<?>>> providers = new HashMap<Class<?>, List<RegisteredServiceProvider<?>>>();
+
+    /**
+     * Register a provider of a service.
+     *
+     * @param <T> Provider
+     * @param service service class
+     * @param provider provider to register
+     * @param plugin plugin with the provider
+     * @param priority priority of the provider
+     */
     public <T> void register(Class<T> service, T provider, Plugin plugin, ServicePriority priority) {
         RegisteredServiceProvider<T> registeredProvider = null;
-        Map map = this.providers;
-        synchronized (map) {
-            int position;
-            List registered = this.providers.get(service);
+        synchronized (providers) {
+            List<RegisteredServiceProvider<?>> registered = providers.get(service);
             if (registered == null) {
-                registered = new ArrayList();
-                this.providers.put(service, registered);
+                registered = new ArrayList<RegisteredServiceProvider<?>>();
+                providers.put(service, registered);
             }
-            if ((position = Collections.binarySearch(registered, registeredProvider = new RegisteredServiceProvider<T>(service, provider, priority, plugin))) < 0) {
-                registered.add(- position + 1, registeredProvider);
+
+            registeredProvider = new RegisteredServiceProvider<T>(service, provider, priority, plugin);
+
+            // Insert the provider into the collection, much more efficient big O than sort
+            int position = Collections.binarySearch(registered, registeredProvider);
+            if (position < 0) {
+                registered.add(-(position + 1), registeredProvider);
             } else {
                 registered.add(position, registeredProvider);
             }
+
         }
         Bukkit.getServer().getPluginManager().callEvent(new ServiceRegisterEvent(registeredProvider));
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * Unregister all the providers registered by a particular plugin.
+     *
+     * @param plugin The plugin
      */
-    @Override
     public void unregisterAll(Plugin plugin) {
         ArrayList<ServiceUnregisterEvent> unregisteredEvents = new ArrayList<ServiceUnregisterEvent>();
-        Map map = this.providers;
-        synchronized (map) {
-            Iterator it2 = this.providers.entrySet().iterator();
+        synchronized (providers) {
+            Iterator<Map.Entry<Class<?>, List<RegisteredServiceProvider<?>>>> it = providers.entrySet().iterator();
+
             try {
-                while (it2.hasNext()) {
-                    Map.Entry entry = it2.next();
-                    Iterator it22 = entry.getValue().iterator();
+                while (it.hasNext()) {
+                    Map.Entry<Class<?>, List<RegisteredServiceProvider<?>>> entry = it.next();
+                    Iterator<RegisteredServiceProvider<?>> it2 = entry.getValue().iterator();
+
                     try {
-                        while (it22.hasNext()) {
-                            RegisteredServiceProvider registered = it22.next();
-                            if (!registered.getPlugin().equals(plugin)) continue;
-                            it22.remove();
-                            unregisteredEvents.add(new ServiceUnregisterEvent(registered));
+                        // Removed entries that are from this plugin
+
+                        while (it2.hasNext()) {
+                            RegisteredServiceProvider<?> registered = it2.next();
+
+                            if (registered.getPlugin().equals(plugin)) {
+                                it2.remove();
+                                unregisteredEvents.add(new ServiceUnregisterEvent(registered));
+                            }
                         }
+                    } catch (NoSuchElementException e) { // Why does Java suck
                     }
-                    catch (NoSuchElementException registered) {
-                        // empty catch block
+
+                    // Get rid of the empty list
+                    if (entry.getValue().size() == 0) {
+                        it.remove();
                     }
-                    if (entry.getValue().size() != 0) continue;
-                    it2.remove();
                 }
-            }
-            catch (NoSuchElementException entry) {
-                // empty catch block
-            }
+            } catch (NoSuchElementException e) {}
         }
         for (ServiceUnregisterEvent event : unregisteredEvents) {
             Bukkit.getServer().getPluginManager().callEvent(event);
         }
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * Unregister a particular provider for a particular service.
+     *
+     * @param service The service interface
+     * @param provider The service provider implementation
      */
-    @Override
     public void unregister(Class<?> service, Object provider) {
         ArrayList<ServiceUnregisterEvent> unregisteredEvents = new ArrayList<ServiceUnregisterEvent>();
-        Map map = this.providers;
-        synchronized (map) {
-            Iterator it2 = this.providers.entrySet().iterator();
+        synchronized (providers) {
+            Iterator<Map.Entry<Class<?>, List<RegisteredServiceProvider<?>>>> it = providers.entrySet().iterator();
+
             try {
-                while (it2.hasNext()) {
-                    Map.Entry entry = it2.next();
-                    if (entry.getKey() != service) continue;
-                    Iterator it22 = entry.getValue().iterator();
+                while (it.hasNext()) {
+                    Map.Entry<Class<?>, List<RegisteredServiceProvider<?>>> entry = it.next();
+
+                    // We want a particular service
+                    if (entry.getKey() != service) {
+                        continue;
+                    }
+
+                    Iterator<RegisteredServiceProvider<?>> it2 = entry.getValue().iterator();
+
                     try {
-                        while (it22.hasNext()) {
-                            RegisteredServiceProvider registered = it22.next();
-                            if (registered.getProvider() != provider) continue;
-                            it22.remove();
-                            unregisteredEvents.add(new ServiceUnregisterEvent(registered));
+                        // Removed entries that are from this plugin
+
+                        while (it2.hasNext()) {
+                            RegisteredServiceProvider<?> registered = it2.next();
+
+                            if (registered.getProvider() == provider) {
+                                it2.remove();
+                                unregisteredEvents.add(new ServiceUnregisterEvent(registered));
+                            }
                         }
+                    } catch (NoSuchElementException e) { // Why does Java suck
                     }
-                    catch (NoSuchElementException registered) {
-                        // empty catch block
+
+                    // Get rid of the empty list
+                    if (entry.getValue().size() == 0) {
+                        it.remove();
                     }
-                    if (entry.getValue().size() != 0) continue;
-                    it2.remove();
                 }
-            }
-            catch (NoSuchElementException entry) {
-                // empty catch block
-            }
+            } catch (NoSuchElementException e) {}
         }
         for (ServiceUnregisterEvent event : unregisteredEvents) {
             Bukkit.getServer().getPluginManager().callEvent(event);
         }
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * Unregister a particular provider.
+     *
+     * @param provider The service provider implementation
      */
-    @Override
     public void unregister(Object provider) {
         ArrayList<ServiceUnregisterEvent> unregisteredEvents = new ArrayList<ServiceUnregisterEvent>();
-        Map map = this.providers;
-        synchronized (map) {
-            Iterator it2 = this.providers.entrySet().iterator();
+        synchronized (providers) {
+            Iterator<Map.Entry<Class<?>, List<RegisteredServiceProvider<?>>>> it = providers.entrySet().iterator();
+
             try {
-                while (it2.hasNext()) {
-                    Map.Entry entry = it2.next();
-                    Iterator it22 = entry.getValue().iterator();
+                while (it.hasNext()) {
+                    Map.Entry<Class<?>, List<RegisteredServiceProvider<?>>> entry = it.next();
+                    Iterator<RegisteredServiceProvider<?>> it2 = entry.getValue().iterator();
+
                     try {
-                        while (it22.hasNext()) {
-                            RegisteredServiceProvider registered = it22.next();
-                            if (!registered.getProvider().equals(provider)) continue;
-                            it22.remove();
-                            unregisteredEvents.add(new ServiceUnregisterEvent(registered));
+                        // Removed entries that are from this plugin
+
+                        while (it2.hasNext()) {
+                            RegisteredServiceProvider<?> registered = it2.next();
+
+                            if (registered.getProvider().equals(provider)) {
+                                it2.remove();
+                                unregisteredEvents.add(new ServiceUnregisterEvent(registered));
+                            }
                         }
+                    } catch (NoSuchElementException e) { // Why does Java suck
                     }
-                    catch (NoSuchElementException registered) {
-                        // empty catch block
+
+                    // Get rid of the empty list
+                    if (entry.getValue().size() == 0) {
+                        it.remove();
                     }
-                    if (entry.getValue().size() != 0) continue;
-                    it2.remove();
                 }
-            }
-            catch (NoSuchElementException entry) {
-                // empty catch block
-            }
+            } catch (NoSuchElementException e) {}
         }
         for (ServiceUnregisterEvent event : unregisteredEvents) {
             Bukkit.getServer().getPluginManager().callEvent(event);
         }
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * Queries for a provider. This may return if no provider has been
+     * registered for a service. The highest priority provider is returned.
+     *
+     * @param <T> The service interface
+     * @param service The service interface
+     * @return provider or null
      */
-    @Override
     public <T> T load(Class<T> service) {
-        Map map = this.providers;
-        synchronized (map) {
-            List registered = this.providers.get(service);
+        synchronized (providers) {
+            List<RegisteredServiceProvider<?>> registered = providers.get(service);
+
             if (registered == null) {
                 return null;
             }
+
+            // This should not be null!
             return service.cast(registered.get(0).getProvider());
         }
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * Queries for a provider registration. This may return if no provider
+     * has been registered for a service.
+     *
+     * @param <T> The service interface
+     * @param service The service interface
+     * @return provider registration or null
      */
-    @Override
+    @SuppressWarnings("unchecked")
     public <T> RegisteredServiceProvider<T> getRegistration(Class<T> service) {
-        Map map = this.providers;
-        synchronized (map) {
-            List registered = this.providers.get(service);
+        synchronized (providers) {
+            List<RegisteredServiceProvider<?>> registered = providers.get(service);
+
             if (registered == null) {
                 return null;
             }
-            return registered.get(0);
+
+            // This should not be null!
+            return (RegisteredServiceProvider<T>) registered.get(0);
         }
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * Get registrations of providers for a plugin.
+     *
+     * @param plugin The plugin
+     * @return provider registrations
      */
-    @Override
     public List<RegisteredServiceProvider<?>> getRegistrations(Plugin plugin) {
-        ImmutableList.Builder ret = ImmutableList.builder();
-        Map map = this.providers;
-        synchronized (map) {
-            for (List registered : this.providers.values()) {
-                for (RegisteredServiceProvider provider : registered) {
-                    if (!provider.getPlugin().equals(plugin)) continue;
-                    ret.add(provider);
+        ImmutableList.Builder<RegisteredServiceProvider<?>> ret = ImmutableList.<RegisteredServiceProvider<?>>builder();
+        synchronized (providers) {
+            for (List<RegisteredServiceProvider<?>> registered : providers.values()) {
+                for (RegisteredServiceProvider<?> provider : registered) {
+                    if (provider.getPlugin().equals(plugin)) {
+                        ret.add(provider);
+                    }
                 }
             }
         }
         return ret.build();
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * Get registrations of providers for a service. The returned list is
+     * an unmodifiable copy.
+     *
+     * @param <T> The service interface
+     * @param service The service interface
+     * @return a copy of the list of registrations
      */
+    @SuppressWarnings("unchecked")
     public <T> List<RegisteredServiceProvider<T>> getRegistrations(Class<T> service) {
-        ImmutableList.Builder ret;
-        Map map = this.providers;
-        synchronized (map) {
-            List registered = this.providers.get(service);
+        ImmutableList.Builder<RegisteredServiceProvider<T>> ret;
+        synchronized (providers) {
+            List<RegisteredServiceProvider<?>> registered = providers.get(service);
+
             if (registered == null) {
-                return ImmutableList.of();
+                return ImmutableList.<RegisteredServiceProvider<T>>of();
             }
-            ret = ImmutableList.builder();
-            for (RegisteredServiceProvider provider : registered) {
-                ret.add(provider);
+
+            ret = ImmutableList.<RegisteredServiceProvider<T>>builder();
+
+            for (RegisteredServiceProvider<?> provider : registered) {
+                ret.add((RegisteredServiceProvider<T>) provider);
             }
+
         }
         return ret.build();
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * Get a list of known services. A service is known if it has registered
+     * providers for it.
+     *
+     * @return a copy of the set of known services
      */
     public Set<Class<?>> getKnownServices() {
-        Map map = this.providers;
-        synchronized (map) {
-            return ImmutableSet.copyOf(this.providers.keySet());
+        synchronized (providers) {
+            return ImmutableSet.<Class<?>>copyOf(providers.keySet());
         }
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * Returns whether a provider has been registered for a service.
+     *
+     * @param <T> service
+     * @param service service to check
+     * @return true if and only if there are registered providers
      */
-    @Override
     public <T> boolean isProvidedFor(Class<T> service) {
-        Map map = this.providers;
-        synchronized (map) {
-            return this.providers.containsKey(service);
+        synchronized (providers) {
+            return providers.containsKey(service);
         }
     }
 }
-

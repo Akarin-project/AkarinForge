@@ -84,7 +84,7 @@ public abstract class PlayerList
     private final UserListWhitelist whiteListedPlayers;
     private final Map<UUID, StatisticsManagerServer> playerStatFiles;
     private final Map<UUID, PlayerAdvancements> advancements;
-    private IPlayerFileData playerDataManager;
+    public IPlayerFileData playerDataManager; // Akarin
     private boolean whiteListEnforced;
     protected int maxPlayers;
     private int viewDistance;
@@ -219,7 +219,7 @@ public abstract class PlayerList
         net.minecraftforge.fml.common.FMLCommonHandler.instance().firePlayerLoggedIn(playerIn);
     }
 
-    protected void sendScoreboard(ServerScoreboard scoreboardIn, EntityPlayerMP playerIn)
+    public void sendScoreboard(ServerScoreboard scoreboardIn, EntityPlayerMP playerIn) // Akarin
     {
         Set<ScoreObjective> set = Sets.<ScoreObjective>newHashSet();
 

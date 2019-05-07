@@ -85,7 +85,7 @@ implements ConfigurationSerializable {
 
     @Override
     public Map<String, Object> serialize() {
-        return ImmutableMap.of((Object)"effect", (Object)this.type.getId(), (Object)"duration", (Object)this.duration, (Object)"amplifier", (Object)this.amplifier, (Object)"ambient", (Object)this.ambient, (Object)"has-particles", (Object)this.particles);
+        return ImmutableMap.of("effect", this.type.getId(), "duration", this.duration, "amplifier", this.amplifier, "ambient", this.ambient, "has-particles", this.particles);
     }
 
     public boolean apply(LivingEntity entity) {

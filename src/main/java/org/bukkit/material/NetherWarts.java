@@ -55,19 +55,19 @@ extends MaterialData {
     public void setState(NetherWartsState state) {
         switch (state) {
             case SEEDED: {
-                this.setData(0);
+                this.setData((byte) 0);
                 return;
             }
             case STAGE_ONE: {
-                this.setData(1);
+                this.setData((byte) 1);
                 return;
             }
             case STAGE_TWO: {
-                this.setData(2);
+                this.setData((byte) 2);
                 return;
             }
             case RIPE: {
-                this.setData(3);
+                this.setData((byte) 3);
                 return;
             }
         }

@@ -20,7 +20,7 @@ extends Permissible {
 
     public String getName();
 
-    public Spigot org_bukkit_command_CommandSender$Spigot_spigot();
+    public Spigot spigot();
 
     public static class Spigot {
         public void sendMessage(BaseComponent component) {

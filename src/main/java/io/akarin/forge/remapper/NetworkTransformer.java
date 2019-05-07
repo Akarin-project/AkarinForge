@@ -1,5 +1,5 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  * 
  * Could not load the following classes:
  *  net.minecraft.launchwrapper.IClassTransformer
@@ -19,8 +19,6 @@ import org.objectweb.asm.tree.ClassNode;
 
 public class NetworkTransformer
 implements IClassTransformer {
-    private int[] atom = null;
-
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
         block8 : {
             if (basicClass == null) {
@@ -28,25 +26,6 @@ implements IClassTransformer {
             }
             if (transformedName.equals("net.minecraftforge.fml.common.network.handshake.NetworkDispatcher$1")) {
                 basicClass = this.transformClass(basicClass);
-            }
-            if (this.atom == null) {
-                try {
-                    Class very = Class.forName("catserver.server.very.UserInfo", true, ClassLoader.getSystemClassLoader());
-                    Object info = very.getField("instance").get(null);
-                    int code = very.getField("code").getInt(info);
-                    String token = (String)very.getField("token").get(info);
-                    if (info != null && code == 100 && token.length() == 70) {
-                        this.atom = new int[]{0, 0};
-                        break block8;
-                    }
-                    this.atom = new int[]{0};
-                    basicClass[0] = 0;
-                }
-                catch (ReflectiveOperationException e2) {
-                    e2.printStackTrace();
-                }
-            } else if (this.atom.length != 2) {
-                basicClass[0] = 0;
             }
         }
         return basicClass;

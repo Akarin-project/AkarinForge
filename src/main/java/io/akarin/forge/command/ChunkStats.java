@@ -1,15 +1,11 @@
-/*
- * Decompiled with CFR 0_119.
- * 
- * Could not load the following classes:
- *  org.apache.logging.log4j.Logger
- */
 package io.akarin.forge.command;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.common.FMLLog;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.command.Command;
@@ -18,9 +14,8 @@ import org.bukkit.command.CommandSender;
 import io.akarin.forge.AkarinForge;
 import io.akarin.forge.utils.ChunkTime;
 
-public class ChunkStats
-extends Command {
-    private static Map<axw, Long> chunks = new HashMap<axw, Long>();
+public class ChunkStats extends Command {
+    private static Map<Chunk, Long> chunks = new HashMap<Chunk, Long>();
 
     public ChunkStats(String name) {
         super(name);
@@ -38,7 +33,7 @@ extends Command {
             return false;
         }
         if (args[0].equals("start")) {
-            chunks = new HashMap<axw, Long>();
+            chunks = new HashMap<>();
             AkarinForge.chunkStats = true;
             sender.sendMessage("Chunk stats started.");
             return true;
@@ -47,9 +42,9 @@ extends Command {
             sender.sendMessage("Checking... Please see console");
             ArrayList<ChunkTime> chunkList = new ArrayList<ChunkTime>();
             for (int i2 = 0; i2 < 5; ++i2) {
-                axw hight = null;
+                Chunk hight = null;
                 long t2 = 0;
-                for (axw chunk : chunks.keySet()) {
+                for (Chunk chunk : chunks.keySet()) {
                     if (hight == null) {
                         hight = chunk;
                         t2 = chunks.get(chunk);
@@ -65,21 +60,21 @@ extends Command {
             }
             FMLLog.log.info("Chunks Time:");
             for (ChunkTime chunkTime : chunkList) {
-                axw chunk = chunkTime.chunk;
-                FMLLog.log.info("World:{} X:{} Z:{}, has run time: {} ns", (Object)chunk.q().x.j(), (Object)(chunk.b << 4), (Object)(chunk.c << 4), (Object)chunkTime.time);
+                Chunk chunk = chunkTime.chunk;
+                FMLLog.log.info("World:{} X:{} Z:{}, has run time: {} ns", (Object)chunk.getWorld().worldInfo.getWorldName(), (Object)(chunk.x << 4), (Object)(chunk.z << 4), (Object)chunkTime.time);
             }
             return true;
         }
         return false;
     }
 
-    public static void addTime(axw chunk, long time) {
+    public static void addTime(Chunk chunk, long time) {
         if (!AkarinForge.chunkStats) {
             return;
         }
         Long oldTime = chunks.get(chunk);
         if (oldTime == null) {
-            oldTime = 0;
+            oldTime = 0L;
         }
         oldTime = oldTime + time;
         chunks.put(chunk, oldTime);

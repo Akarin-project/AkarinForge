@@ -87,13 +87,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.World.Environment;
-import org.bukkit.craftbukkit.v1_12_R1.CraftTravelAgent;
-import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v1_12_R1.generator.CustomChunkGenerator;
-import org.bukkit.craftbukkit.v1_12_R1.generator.InternalChunkGenerator;
-import org.bukkit.craftbukkit.v1_12_R1.generator.NetherChunkGenerator;
-import org.bukkit.craftbukkit.v1_12_R1.generator.NormalChunkGenerator;
-import org.bukkit.craftbukkit.v1_12_R1.generator.SkyLandsChunkGenerator;
+import org.bukkit.craftbukkit.CraftTravelAgent;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.generator.CustomChunkGenerator;
+import org.bukkit.craftbukkit.generator.InternalChunkGenerator;
+import org.bukkit.craftbukkit.generator.NetherChunkGenerator;
+import org.bukkit.craftbukkit.generator.NormalChunkGenerator;
+import org.bukkit.craftbukkit.generator.SkyLandsChunkGenerator;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.weather.LightningStrikeEvent;
@@ -104,7 +104,7 @@ public class WorldServer extends World implements IThreadListener
 {
     private static final Logger LOGGER = LogManager.getLogger();
     private final MinecraftServer mcServer;
-    private final EntityTracker entityTracker;
+    public final EntityTracker entityTracker; // Akarin
     private final PlayerChunkMap playerChunkMap;
     private final Set<NextTickListEntry> pendingTickListEntriesHashSet = Sets.<NextTickListEntry>newHashSet();
     private final TreeSet<NextTickListEntry> pendingTickListEntriesTreeSet = new TreeSet<NextTickListEntry>();

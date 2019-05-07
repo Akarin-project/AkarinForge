@@ -1,39 +1,41 @@
-/*
- * Decompiled with CFR 0_119.
- */
 package com.conversantmedia.util.concurrent;
 
-import com.conversantmedia.util.concurrent.Condition;
+/**
+ * Created by jcairns on 2/18/16.
+ */
+public abstract class AbstractSpinningCondition implements Condition {
 
-public abstract class AbstractSpinningCondition
-implements Condition {
     @Override
-    public void awaitNanos(long timeout) throws InterruptedException {
+    public void awaitNanos(final long timeout) throws InterruptedException {
         long timeNow = System.nanoTime();
-        long expires = timeNow + timeout;
-        Thread t2 = Thread.currentThread();
-        while (this.test() && expires > timeNow && !t2.isInterrupted()) {
+        final long expires = timeNow+timeout;
+
+        final Thread t = Thread.currentThread();
+
+        while(test() && expires>timeNow && !t.isInterrupted()) {
             timeNow = System.nanoTime();
-            Condition.onSpinWait();
         }
-        if (t2.isInterrupted()) {
+
+        if(t.isInterrupted()) {
             throw new InterruptedException();
         }
     }
 
     @Override
     public void await() throws InterruptedException {
-        Thread t2 = Thread.currentThread();
-        while (this.test() && !t2.isInterrupted()) {
-            Condition.onSpinWait();
+        final Thread t = Thread.currentThread();
+
+        while(test() && !t.isInterrupted()) {
+            ;
         }
-        if (t2.isInterrupted()) {
+
+        if(t.isInterrupted()) {
             throw new InterruptedException();
         }
     }
 
     @Override
     public void signal() {
+
     }
 }
-

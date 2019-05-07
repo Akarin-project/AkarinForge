@@ -1,6 +1,9 @@
 package net.minecraft.entity;
 
 import java.util.UUID;
+
+import org.bukkit.event.entity.EntityUnleashEvent;
+
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.pathfinding.PathNodeType;
@@ -93,6 +96,7 @@ public abstract class EntityCreature extends EntityLiving
             {
                 if (f > 10.0F)
                 {
+                    this.world.getServer().getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE)); // Akarin
                     this.clearLeashed(true, true);
                 }
 
@@ -103,6 +107,7 @@ public abstract class EntityCreature extends EntityLiving
 
             if (f > 10.0F)
             {
+                this.world.getServer().getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), EntityUnleashEvent.UnleashReason.DISTANCE)); // Akarin
                 this.clearLeashed(true, true);
                 this.tasks.disableControlFlag(1);
             }

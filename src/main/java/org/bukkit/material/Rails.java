@@ -106,19 +106,19 @@ extends MaterialData {
                 break;
             }
             case NORTH_WEST: {
-                this.setData(6);
+                this.setData((byte) 6);
                 break;
             }
             case NORTH_EAST: {
-                this.setData(7);
+                this.setData((byte) 7);
                 break;
             }
             case SOUTH_EAST: {
-                this.setData(8);
+                this.setData((byte) 8);
                 break;
             }
             case SOUTH_WEST: {
-                this.setData(9);
+                this.setData((byte) 9);
             }
         }
     }

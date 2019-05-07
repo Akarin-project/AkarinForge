@@ -97,8 +97,8 @@ public enum DyeColor {
         DyeColor[] arrdyeColor = DyeColor.values();
         int n2 = arrdyeColor.length;
         for (int i2 = 0; i2 < n2; ++i2) {
-            DyeColor color;
-            DyeColor.BY_WOOL_DATA[color.woolData & 255] = color = arrdyeColor[i2];
+            DyeColor color = arrdyeColor[i2];
+            DyeColor.BY_WOOL_DATA[color.woolData & 255] = color;
             DyeColor.BY_DYE_DATA[color.dyeData & 255] = color;
             byColor.put((Object)color.getColor(), (Object)color);
             byFirework.put((Object)color.getFireworkColor(), (Object)color);

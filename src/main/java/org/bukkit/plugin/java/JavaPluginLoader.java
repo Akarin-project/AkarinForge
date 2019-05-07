@@ -181,7 +181,7 @@ implements PluginLoader {
         if (!this.classes.containsKey(name)) {
             this.classes.put(name, clazz);
             if (ConfigurationSerializable.class.isAssignableFrom(clazz)) {
-                Class<ConfigurationSerializable> serializable = clazz.asSubclass(ConfigurationSerializable.class);
+                Class<? extends ConfigurationSerializable> serializable = clazz.asSubclass(ConfigurationSerializable.class);
                 ConfigurationSerialization.registerClass(serializable);
             }
         }
@@ -238,7 +238,7 @@ implements PluginLoader {
                 eventSet = new HashSet<RegisteredListener>();
                 ret.put(eventClass, eventSet);
             }
-            Class<Event> clazz = eventClass;
+            Class<? super Event> clazz = eventClass;
             while (Event.class.isAssignableFrom(clazz)) {
                 if (clazz.getAnnotation(Deprecated.class) != null) {
                     Warning warning = clazz.getAnnotation(Warning.class);

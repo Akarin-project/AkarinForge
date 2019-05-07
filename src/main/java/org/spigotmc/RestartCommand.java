@@ -1,110 +1,166 @@
-/*
- * Akarin Forge
- */
 package org.spigotmc;
 
 import java.io.File;
-import java.io.PrintStream;
-import java.util.List;
-import java.util.Locale;
-import java.util.Queue;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.spigotmc.AsyncCatcher;
-import org.spigotmc.SpigotConfig;
-import org.spigotmc.WatchdogThread;
 
-public class RestartCommand
-extends Command {
-    public RestartCommand(String name) {
-        super(name);
+public class RestartCommand extends Command
+{
+
+    public RestartCommand(String name)
+    {
+        super( name );
         this.description = "Restarts the server";
         this.usageMessage = "/restart";
-        this.setPermission("bukkit.command.restart");
+        this.setPermission( "bukkit.command.restart" );
     }
 
     @Override
-    public boolean execute(CommandSender sender, String currentAlias, String[] args) {
-        if (this.testPermission(sender)) {
-            MinecraftServer.getServerInst().processQueue.add(()new Runnable(){
-
+    public boolean execute(CommandSender sender, String currentAlias, String[] args)
+    {
+        if ( testPermission( sender ) )
+        {
+            MinecraftServer.getServerInst().processQueue.add( new Runnable()
+            {
                 @Override
-                public void run() {
-                    RestartCommand.restart();
+                public void run()
+                {
+                    restart();
                 }
-            });
+            } );
         }
         return true;
     }
 
-    public static void restart() {
-        RestartCommand.restart(new File(SpigotConfig.restartScript));
+    public static void restart()
+    {
+        restart( new File( SpigotConfig.restartScript ) );
     }
 
-    public static void restart(final File script) {
-        AsyncCatcher.enabled = false;
-        try {
-            if (script.isFile()) {
+    public static void restart(final File script)
+    {
+        AsyncCatcher.enabled = false; // Disable async catcher incase it interferes with us
+        try
+        {
+            // Paper - extract method and cleanup
+            boolean isRestarting = addShutdownHook(script);
+            if (isRestarting) {
                 System.out.println("Attempting to restart with " + SpigotConfig.restartScript);
-                WatchdogThread.doStop();
-                for (oq p2 : MinecraftServer.getServerInst().am().i) {
-                    p2.a.disconnect(SpigotConfig.restartMessage);
-                }
-                try {
-                    Thread.sleep(100);
-                }
-                catch (InterruptedException interruptedException) {
-                    // empty catch block
-                }
-                MinecraftServer.getServerInst().an().b();
-                try {
-                    Thread.sleep(100);
-                }
-                catch (InterruptedException interruptedException) {
-                    // empty catch block
-                }
-                try {
-                    MinecraftServer.getServerInst().u();
-                }
-                catch (Throwable throwable) {
-                    // empty catch block
-                }
-                Thread shutdownHook = new Thread(){
-
-                    @Override
-                    public void run() {
-                        try {
-                            String os2 = System.getProperty("os.name").toLowerCase(Locale.ENGLISH);
-                            if (os2.contains("win")) {
-                                Runtime.getRuntime().exec("cmd /c start " + script.getPath());
-                            } else {
-                                Runtime.getRuntime().exec(new String[]{"sh", script.getPath()});
-                            }
-                        }
-                        catch (Exception e2) {
-                            e2.printStackTrace();
-                        }
-                    }
-                };
-                shutdownHook.setDaemon(true);
-                Runtime.getRuntime().addShutdownHook(shutdownHook);
             } else {
-                System.out.println("Startup script '" + SpigotConfig.restartScript + "' does not exist! Stopping server.");
-                try {
-                    MinecraftServer.getServerInst().u();
-                }
-                catch (Throwable shutdownHook) {
-                    // empty catch block
-                }
+                System.out.println( "Startup script '" + SpigotConfig.restartScript + "' does not exist! Stopping server." );
             }
-            FMLCommonHandler.instance().exitJava(0, false);
-        }
-        catch (Exception ex2) {
-            ex2.printStackTrace();
+
+            // Stop the watchdog
+            WatchdogThread.doStop();
+
+            shutdownServer(isRestarting);
+        } catch ( Exception ex )
+        {
+            ex.printStackTrace();
         }
     }
 
-}
+    // Paper start - sync copied from above with minor changes, async added
+    private static void shutdownServer(boolean isRestarting)
+    {
+        if (MinecraftServer.getServerInst().isCallingFromMinecraftThread())
+        {
+            // Kick all players
+            for ( EntityPlayerMP p : com.google.common.collect.ImmutableList.copyOf( MinecraftServer.getServerInst().getPlayerList().playerEntityList ) )
+            {
+                p.connection.disconnect(SpigotConfig.restartMessage);
+            }
+            // Give the socket a chance to send the packets
+            try
+            {
+                Thread.sleep( 100 );
+            } catch ( InterruptedException ex )
+            {
+            }
 
+            closeSocket();
+
+            // Actually shutdown
+            try
+            {
+                MinecraftServer.getServerInst().stopServer();
+            } catch ( Throwable t )
+            {
+            }
+
+            // Actually stop the JVM
+            System.exit(0);
+
+        } else
+        {
+            // Mark the server to shutdown at the end of the tick
+            MinecraftServer.getServerInst().safeShutdown(isRestarting);
+
+
+            // wait 10 seconds to see if we're actually going to try shutdown
+            try
+            {
+                Thread.sleep(10000);
+            }
+            catch (InterruptedException ignored)
+            {
+            }
+
+            // Check if we've actually hit a state where the server is going to safely shutdown
+            // if we have, let the server stop as usual
+            if (MinecraftServer.getServerInst().isServerStopped()) return;
+
+            // If the server hasn't stopped by now, assume worse case and kill
+            closeSocket();
+            System.exit( 0 );
+        }
+    }
+
+    // Paper - Split from moved code
+    private static void closeSocket() {
+        // Close the socket so we can rebind with the new process
+        MinecraftServer.getServerInst().getServerConnection().terminateEndpoints();
+
+        // Give time for it to kick in
+        try
+        {
+            Thread.sleep( 100 );
+        } catch ( InterruptedException ex )
+        {
+        }
+    }
+    // Paper end
+
+    // Paper - copied from above and modified to return if the hook registered
+    private static boolean addShutdownHook(final File script) {
+
+        if (script.isFile()) {
+            Thread shutdownHook = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        String os = System.getProperty("os.name").toLowerCase(java.util.Locale.ENGLISH);
+                        if (os.contains("win")) {
+                            Runtime.getRuntime().exec("cmd /c start " + script.getPath());
+                        } else {
+                            Runtime.getRuntime().exec(new String[]
+                                    {
+                                            "sh", script.getPath()
+                                    });
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+            shutdownHook.setDaemon(true);
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+            return true;
+        } else {
+            return false;
+        }
+    }
+}

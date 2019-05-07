@@ -1,22 +1,14 @@
-/*
- * Akarin Forge
- * 
- * Could not load the following classes:
- *  joptsimple.OptionSet
- */
 package org.spigotmc;
 
 import java.io.File;
-import joptsimple.OptionSet;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.WorldServer;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.spigotmc.SpigotConfig;
-import org.spigotmc.SpigotWorldConfig;
 
-public class SpigotCommand
-extends Command {
+public class SpigotCommand extends Command {
+
     public SpigotCommand(String name) {
         super(name);
         this.description = "Spigot related commands";
@@ -26,25 +18,27 @@ extends Command {
 
     @Override
     public boolean execute(CommandSender sender, String commandLabel, String[] args) {
-        if (!this.testPermission(sender)) {
-            return true;
-        }
+        if (!testPermission(sender)) return true;
+
         if (args.length != 1) {
-            sender.sendMessage((Object)((Object)ChatColor.RED) + "Usage: " + this.usageMessage);
+            sender.sendMessage(ChatColor.RED + "Usage: " + usageMessage);
             return false;
         }
+
         if (args[0].equals("reload")) {
-            Command.broadcastCommandMessage(sender, (Object)((Object)ChatColor.RED) + "Please note that this command is not supported and may cause issues.");
-            Command.broadcastCommandMessage(sender, (Object)((Object)ChatColor.RED) + "If you encounter any issues please use the /stop command to restart your server.");
+            Command.broadcastCommandMessage(sender, ChatColor.RED + "Please note that this command is not supported and may cause issues.");
+            Command.broadcastCommandMessage(sender, ChatColor.RED + "If you encounter any issues please use the /stop command to restart your server.");
+
             MinecraftServer console = MinecraftServer.getServerInst();
-            SpigotConfig.init((File)console.options.valueOf("spigot-settings"));
-            for (oo world : console.d) {
+            org.spigotmc.SpigotConfig.init((File) console.options.valueOf("spigot-settings"));
+            for (WorldServer world : console.worlds) {
                 world.spigotConfig.init();
             }
-            ++console.server.reloadCount;
-            Command.broadcastCommandMessage(sender, (Object)((Object)ChatColor.GREEN) + "Reload complete.");
+            console.server.reloadCount++;
+
+            Command.broadcastCommandMessage(sender, ChatColor.GREEN + "Reload complete.");
         }
+
         return true;
     }
 }
-

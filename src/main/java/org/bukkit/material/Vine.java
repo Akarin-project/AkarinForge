@@ -37,7 +37,7 @@ extends MaterialData {
     }
 
     public Vine(EnumSet<BlockFace> faces) {
-        this(0);
+        this((byte) 0);
         faces.retainAll(possibleFaces);
         byte data = 0;
         if (faces.contains((Object)BlockFace.WEST)) {

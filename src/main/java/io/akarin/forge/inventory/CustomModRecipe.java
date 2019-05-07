@@ -1,29 +1,32 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  */
 package io.akarin.forge.inventory;
 
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_12_R1.util.CraftNamespacedKey;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
+
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.util.ResourceLocation;
 
 public class CustomModRecipe
 implements Recipe,
 Keyed {
-    private final akt iRecipe;
+    private final IRecipe iRecipe;
     private final ItemStack output;
     private NamespacedKey key;
 
-    public CustomModRecipe(akt iRecipe) {
+    public CustomModRecipe(IRecipe iRecipe) {
         this(iRecipe, null);
     }
 
-    public CustomModRecipe(akt iRecipe, nf key) {
+    public CustomModRecipe(IRecipe iRecipe, ResourceLocation key) {
         this.iRecipe = iRecipe;
-        this.output = CraftItemStack.asCraftMirror(iRecipe.b());
+        this.output = CraftItemStack.asCraftMirror(iRecipe.getRecipeOutput());
         try {
             this.key = key != null ? CraftNamespacedKey.fromMinecraft(key) : NamespacedKey.randomKey();
         }
@@ -42,7 +45,7 @@ Keyed {
         return this.key;
     }
 
-    public akt getHandle() {
+    public IRecipe getHandle() {
         return this.iRecipe;
     }
 }

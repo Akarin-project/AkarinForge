@@ -879,4 +879,13 @@ public class WorldInfo
     {
         return this.versionName;
     }
+    // Akarin start
+    public void setDimension(int dim) {
+        this.dimension = dim;
+    }
+
+    public int getDimension() {
+        return this.dimension;
+    }
+    // Akarin end
 }

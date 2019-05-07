@@ -42,7 +42,7 @@ implements ConfigurationSerializable {
 
     @Override
     public Map<String, Object> serialize() {
-        return ImmutableMap.of((Object)"color", (Object)this.color.toString(), (Object)"pattern", (Object)this.pattern.getIdentifier());
+        return ImmutableMap.of("color", this.color.toString(), "pattern", this.pattern.getIdentifier());
     }
 
     public DyeColor getColor() {

@@ -1,5 +1,5 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  * 
  * Could not load the following classes:
  *  com.google.common.collect.ArrayListMultimap
@@ -25,8 +25,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
-import io.akarin.forge.remapper.CatHandleLookup;
-import io.akarin.forge.remapper.CatServerRemapper;
+import io.akarin.forge.remapper.AkarinHandleLookup;
+import io.akarin.forge.remapper.AkarinServerRemapper;
 import io.akarin.forge.remapper.ClassInheritanceProvider;
 import io.akarin.forge.remapper.MappingLoader;
 import io.akarin.forge.remapper.ReflectionMethods;
@@ -36,7 +36,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import net.md_5.specialsource.JarMapping;
@@ -55,9 +57,9 @@ import org.objectweb.asm.tree.TypeInsnNode;
 
 public class ReflectionTransformer {
     public static final String DESC_ReflectionMethods = Type.getInternalName(ReflectionMethods.class);
-    public static final String DESC_RemapMethodHandle = Type.getInternalName(CatHandleLookup.class);
+    public static final String DESC_RemapMethodHandle = Type.getInternalName(AkarinHandleLookup.class);
     public static JarMapping jarMapping;
-    public static CatServerRemapper remapper;
+    public static AkarinServerRemapper remapper;
     public static final HashMap<String, String> classDeMapping;
     public static final Multimap<String, String> methodDeMapping;
     public static final Multimap<String, String> fieldDeMapping;
@@ -76,25 +78,25 @@ public class ReflectionTransformer {
         JointProvider provider = new JointProvider();
         provider.add((InheritanceProvider)new ClassInheritanceProvider());
         jarMapping.setFallbackInheritanceProvider((InheritanceProvider)provider);
-        remapper = new CatServerRemapper(jarMapping);
+        remapper = new AkarinServerRemapper(jarMapping);
         ReflectionTransformer.jarMapping.classes.forEach((k2, v2) -> {
             classDeMapping.put(v2, k2);
         }
         );
         ReflectionTransformer.jarMapping.methods.forEach((k2, v2) -> {
-            methodDeMapping.put((Object)v2, (Object)k2);
+            methodDeMapping.put(v2, k2);
         }
         );
         ReflectionTransformer.jarMapping.fields.forEach((k2, v2) -> {
-            fieldDeMapping.put((Object)v2, (Object)k2);
+            fieldDeMapping.put(v2, k2);
         }
         );
         ReflectionTransformer.jarMapping.methods.forEach((k2, v2) -> {
-            methodFastMapping.put((Object)k2.split("\\s+")[0], (Object)k2);
+            methodFastMapping.put(k2.split("\\s+")[0], k2);
         }
         );
         try {
-            Class.forName("catserver.server.remapper.CatHandleLookup");
+            Class.forName("io.akarin.forge.remapper.AkarinHandleLookup");
         }
         catch (ClassNotFoundException e3) {
             e3.printStackTrace();
@@ -107,18 +109,20 @@ public class ReflectionTransformer {
         reader.accept((ClassVisitor)node, 0);
         boolean remapCL = false;
         if (node.superName.equals("java/net/URLClassLoader")) {
-            node.superName = "catserver/server/remapper/CatURLClassLoader";
+            node.superName = "io/akarin/forge/remapper/AkarinURLClassLoader";
             remapCL = true;
         }
         for (MethodNode method : node.methods) {
-            for (AbstractInsnNode next : method.instructions) {
-                TypeInsnNode insn;
-                if (next instanceof TypeInsnNode && (insn = (TypeInsnNode)next).getOpcode() == 187 && insn.desc.equals("java/net/URLClassLoader")) {
-                    insn.desc = "catserver/server/remapper/CatURLClassLoader";
+            ListIterator<AbstractInsnNode> iterator = method.instructions.iterator();
+            while (iterator.hasNext()) {
+                AbstractInsnNode next = iterator.next();
+                MethodInsnNode insn;
+                if (next instanceof TypeInsnNode && (insn = (MethodInsnNode) next).getOpcode() == 187 && insn.desc.equals("java/net/URLClassLoader")) {
+                    insn.desc = "io/akarin/forge/remapper/AkarinURLClassLoader";
                     remapCL = true;
                 }
                 if (!(next instanceof MethodInsnNode)) continue;
-                insn = (MethodInsnNode)next;
+                insn = (MethodInsnNode) next;
                 switch (insn.getOpcode()) {
                     case 182: {
                         ReflectionTransformer.remapVirtual((AbstractInsnNode)insn);
@@ -196,7 +200,7 @@ public class ReflectionTransformer {
         if (!method.owner.equals("java/net/URLClassLoader") || !method.name.equals("<init>")) {
             return;
         }
-        method.owner = "catserver/server/remapper/CatURLClassLoader";
+        method.owner = "io/akarin/forge/remapper/AkarinURLClassLoader";
     }
 
     private static void virtualToStatic(MethodInsnNode method, String desc) {
@@ -206,7 +210,7 @@ public class ReflectionTransformer {
         args.addAll(Arrays.asList(Type.getArgumentTypes((String)method.desc)));
         method.setOpcode(184);
         method.owner = desc;
-        method.desc = Type.getMethodDescriptor((Type)returnType, (Type[])args.toArray((T[])new Type[0]));
+        method.desc = Type.getMethodDescriptor(returnType, args.toArray(new Type[0]));
     }
 
     static {

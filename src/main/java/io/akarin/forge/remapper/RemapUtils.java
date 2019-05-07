@@ -1,5 +1,5 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  * 
  * Could not load the following classes:
  *  com.google.common.collect.Multimap
@@ -51,9 +51,9 @@ public class RemapUtils {
     }
 
     public static /* varargs */ String mapMethodInternal(Class<?> inst, String name, Class<?> ... parameterTypes) {
-        Object superMethodName;
+        String superMethodName;
         String match = RemapUtils.reverseMap(inst) + "/" + name;
-        Collection colls = ReflectionTransformer.methodFastMapping.get((Object)match);
+        Collection<String> colls = ReflectionTransformer.methodFastMapping.get(match);
         for (String value : colls) {
             String[] str = value.split("\\s+");
             int i2 = 0;
@@ -103,7 +103,7 @@ public class RemapUtils {
     public static String demapFieldName(Field field) {
         String name = field.getName();
         String match = RemapUtils.reverseMap(field.getDeclaringClass()) + "/";
-        Collection colls = ReflectionTransformer.fieldDeMapping.get((Object)name);
+        Collection<String> colls = ReflectionTransformer.fieldDeMapping.get(name);
         for (String value : colls) {
             if (!value.startsWith(match)) continue;
             String[] matched = value.split("\\/");
@@ -116,7 +116,7 @@ public class RemapUtils {
     public static String demapMethodName(Method method) {
         String name = method.getName();
         String match = RemapUtils.reverseMap(method.getDeclaringClass()) + "/";
-        Collection colls = ReflectionTransformer.methodDeMapping.get((Object)name);
+        Collection<String> colls = ReflectionTransformer.methodDeMapping.get(name);
         for (String value : colls) {
             if (!value.startsWith(match)) continue;
             String[] matched = value.split("\\s+")[0].split("\\/");

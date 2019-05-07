@@ -93,12 +93,12 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.TravelAgent;
 import org.bukkit.block.BlockFace;
-import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_12_R1.CraftTravelAgent;
-import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftTravelAgent;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Vehicle;
@@ -125,7 +125,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     private static int nextEntityID;
     private int entityId;
     public boolean preventEntitySpawning;
-    private final List<Entity> riddenByEntities;
+    public final List<Entity> riddenByEntities; // Akarin
     protected int rideCooldown;
     private Entity ridingEntity;
     public boolean forceSpawn;
@@ -168,12 +168,12 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     public float entityCollisionReduction;
     protected Random rand;
     public int ticksExisted;
-    protected int fire; // Akarin
-    protected boolean inWater;
+    public int fire; // Akarin
+    public boolean inWater; // Akarin
     public int hurtResistantTime;
     protected boolean firstUpdate;
     protected boolean isImmuneToFire;
-    protected EntityDataManager dataManager;
+    public EntityDataManager dataManager; // Akarin
     protected static final DataParameter<Byte> FLAGS = EntityDataManager.<Byte>createKey(Entity.class, DataSerializers.BYTE);
     private static final DataParameter<Integer> AIR = EntityDataManager.<Integer>createKey(Entity.class, DataSerializers.VARINT);
     private static final DataParameter<String> CUSTOM_NAME = EntityDataManager.<String>createKey(Entity.class, DataSerializers.STRING);
@@ -467,7 +467,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     protected void setRotation(float yaw, float pitch)
     {
         // Akarin start
-        if (Float.isNaN(f)) {
+        if (Float.isNaN(yaw)) {
             yaw = 0;
         }
 
@@ -1358,7 +1358,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     protected void dealFireDamage(int amount)
     {
         // Akarin start
-        return burn(amount);
+        burn(amount);
     }
     
     protected void burn(float amount)

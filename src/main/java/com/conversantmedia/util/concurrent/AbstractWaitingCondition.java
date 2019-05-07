@@ -1,166 +1,213 @@
-/*
- * Decompiled with CFR 0_119.
- */
 package com.conversantmedia.util.concurrent;
 
-import com.conversantmedia.util.concurrent.Condition;
-import com.conversantmedia.util.concurrent.ContendedAtomicLong;
+/*
+ * #%L
+ * Conversant Disruptor
+ * ~~
+ * Conversantmedia.com © 2016, Conversant, Inc. Conversant® is a trademark of Conversant, Inc.
+ * ~~
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.LockSupport;
 
-public abstract class AbstractWaitingCondition
-implements Condition {
-    private static final int CACHE_LINE_REFS = ContendedAtomicLong.CACHE_LINE / 8;
-    private static final int MAX_WAITERS = 8;
-    private static final long WAITER_MASK = 7;
-    private static final long WAIT_TIME = 50;
-    private final LongAdder waitCount = new LongAdder();
-    private final AtomicReferenceArray<Thread> waiter = new AtomicReferenceArray(8 + 2 * CACHE_LINE_REFS);
-    long r1;
-    long r2;
-    long r3;
-    long r4;
-    long r5;
-    long r6;
-    long r7;
-    private long waitCache = 0;
-    long c1;
-    long c2;
-    long c3;
-    long c4;
-    long c5;
-    long c6;
-    long c7;
-    long c8;
+/**
+ * Created by jcairns on 12/11/14.
+ */
+// abstract condition supporting common condition code
+abstract class AbstractWaitingCondition implements Condition {
 
+
+    // keep track of whos waiting so we don't have to synchronize
+    // or notify needlessly - when nobody is waiting
+
+    private static final int MAX_WAITERS = 8;
+
+    private static final int WAITER_MASK = MAX_WAITERS-1;
+
+    private static final long WAIT_TIME = PARK_TIMEOUT;
+
+    private final AtomicReferenceArray<Thread> waiter = new AtomicReferenceArray<Thread>(MAX_WAITERS);
+
+    private final AtomicInteger waitCount = new ContendedAtomicInteger(0);
+    private final ContendedInt waitCache = new ContendedInt(0);
+
+    /**
+     * code below will block until test() returns false
+     *
+     * @return boolean - true if condition is not satisfied
+     */
     @Override
     public abstract boolean test();
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
-     */
     @Override
     public void awaitNanos(long timeout) throws InterruptedException {
-        try {
-            long waitCount;
-            long waitSequence = waitCount = this.waitCount.sum();
-            this.waitCount.increment();
-            this.waitCache = waitCount + 1;
-            long timeNow = System.nanoTime();
-            long expires = timeNow + timeout;
-            Thread t2 = Thread.currentThread();
-            if (waitCount == 0) {
-                int spin = 0;
-                while (this.test() && expires > timeNow && !t2.isInterrupted()) {
-                    spin = Condition.progressiveYield(spin);
-                    timeNow = System.nanoTime();
+        for (;;) {
+
+            try {
+                final int waitCount = this.waitCount.get();
+                int waitSequence = waitCount;
+
+                if (this.waitCount.compareAndSet(waitCount, waitCount + 1)) {
+                    waitCache.value = waitCount+1;
+
+                    long timeNow = System.nanoTime();
+                    final long expires = timeNow+timeout;
+
+                    final Thread t = Thread.currentThread();
+
+                    if(waitCount == 0) {
+                        // first thread spins
+
+                        int spin = 0;
+                        while(test() && expires>timeNow && !t.isInterrupted()) {
+                            spin = Condition.progressiveYield(spin);
+                            timeNow = System.nanoTime();
+                        }
+
+                        if(t.isInterrupted()) {
+                            throw new InterruptedException();
+                        }
+
+                        return;
+                    } else {
+                        // wait to become a waiter
+                        int spin = 0;
+                        while(test() && !waiter.compareAndSet(waitSequence++ & WAITER_MASK, null, t) && expires>timeNow) {
+                            if(spin < Condition.MAX_PROG_YIELD) {
+                                spin = Condition.progressiveYield(spin);
+                            } else {
+                                LockSupport.parkNanos(MAX_WAITERS*Condition.PARK_TIMEOUT);
+                            }
+
+                            timeNow = System.nanoTime();
+                        }
+                        // are we a waiter?   wait until we are awakened
+                        while(test() && (waiter.get((waitSequence-1) & WAITER_MASK) == t) && expires>timeNow && !t.isInterrupted()) {
+                            LockSupport.parkNanos((expires-timeNow)>>2);
+                            timeNow = System.nanoTime();
+                        }
+
+                        if(t.isInterrupted()) {
+                            // we are not waiting we are interrupted
+                            while(!waiter.compareAndSet((waitSequence-1) & WAITER_MASK, t, null) && waiter.get(0) == t) {
+                                LockSupport.parkNanos(PARK_TIMEOUT);
+                            }
+
+                            throw new InterruptedException();
+                        }
+
+                        return;
+
+
+                    }
                 }
-                if (t2.isInterrupted()) {
-                    throw new InterruptedException();
-                }
-                return;
+            }finally{
+                waitCache.value = waitCount.decrementAndGet();
             }
-            int spin = 0;
-            while (this.test() && !this.waiter.compareAndSet((int)(waitSequence++ & 7) + CACHE_LINE_REFS, (Thread)null, t2) && expires > timeNow) {
-                if (spin < 2000) {
-                    spin = Condition.progressiveYield(spin);
-                } else {
-                    LockSupport.parkNanos(400);
-                }
-                timeNow = System.nanoTime();
-            }
-            while (this.test() && this.waiter.get((int)(waitSequence - 1 & 7) + CACHE_LINE_REFS) == t2 && expires > timeNow && !t2.isInterrupted()) {
-                LockSupport.parkNanos(expires - timeNow >> 2);
-                timeNow = System.nanoTime();
-            }
-            if (t2.isInterrupted()) {
-                while (!this.waiter.compareAndSet((int)(waitSequence - 1 & 7) + CACHE_LINE_REFS, t2, null) && this.waiter.get(CACHE_LINE_REFS) == t2) {
-                    LockSupport.parkNanos(50);
-                }
-                throw new InterruptedException();
-            }
-            return;
-        }
-        finally {
-            this.waitCount.decrement();
-            this.waitCache = this.waitCount.sum();
         }
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
-     */
     @Override
     public void await() throws InterruptedException {
-        try {
-            long waitCount;
-            long waitSequence = waitCount = this.waitCount.sum();
-            this.waitCount.increment();
-            this.waitCache = waitCount + 1;
-            Thread t2 = Thread.currentThread();
-            if (waitCount == 0) {
-                int spin = 0;
-                while (this.test() && !t2.isInterrupted()) {
-                    spin = Condition.progressiveYield(spin);
+        for(;;) {
+
+            try {
+                final int waitCount = this.waitCount.get();
+                int waitSequence = waitCount;
+
+                if (this.waitCount.compareAndSet(waitCount, waitCount + 1)) {
+                    waitCache.value = waitCount+1;
+
+                    final Thread t = Thread.currentThread();
+
+                    if(waitCount == 0) {
+                        int spin = 0;
+                        // first thread spinning
+                        while(test() && !t.isInterrupted()) {
+                            spin = Condition.progressiveYield(spin);
+                        }
+
+                        if(t.isInterrupted()) {
+                            throw new InterruptedException();
+                        }
+
+                        return;
+                    } else {
+
+                        // wait to become a waiter
+                        int spin = 0;
+                        while(test() && !waiter.compareAndSet(waitSequence++ & WAITER_MASK, null, t) && !t.isInterrupted()) {
+                            if(spin < Condition.MAX_PROG_YIELD) {
+                                spin = Condition.progressiveYield(spin);
+                            } else {
+                                LockSupport.parkNanos(MAX_WAITERS*Condition.PARK_TIMEOUT);
+                            }
+                        }
+
+                        // are we a waiter?   wait until we are awakened
+                        while(test() && (waiter.get((waitSequence-1) & WAITER_MASK) == t) && !t.isInterrupted()) {
+                            LockSupport.parkNanos(1_000_000L);
+                        }
+
+                        if(t.isInterrupted()) {
+                            // we are not waiting we are interrupted
+                            while(!waiter.compareAndSet((waitSequence-1) & WAITER_MASK, t, null) && waiter.get(0) == t) {
+                                LockSupport.parkNanos(WAIT_TIME);
+                            }
+
+                            throw new InterruptedException();
+                        }
+
+                        return;
+
+                    }
+
                 }
-                if (t2.isInterrupted()) {
-                    throw new InterruptedException();
-                }
-                return;
+            } finally {
+                waitCache.value = waitCount.decrementAndGet();
             }
-            int spin = 0;
-            while (this.test() && !this.waiter.compareAndSet((int)(waitSequence++ & 7) + CACHE_LINE_REFS, (Thread)null, t2) && !t2.isInterrupted()) {
-                if (spin < 2000) {
-                    spin = Condition.progressiveYield(spin);
-                    continue;
-                }
-                LockSupport.parkNanos(400);
-            }
-            while (this.test() && this.waiter.get((int)(waitSequence - 1 & 7) + CACHE_LINE_REFS) == t2 && !t2.isInterrupted()) {
-                LockSupport.parkNanos(1000000);
-            }
-            if (t2.isInterrupted()) {
-                while (!this.waiter.compareAndSet((int)(waitSequence - 1 & 7) + CACHE_LINE_REFS, t2, null) && this.waiter.get(CACHE_LINE_REFS) == t2) {
-                    LockSupport.parkNanos(50);
-                }
-                throw new InterruptedException();
-            }
-            return;
-        }
-        finally {
-            this.waitCount.decrement();
-            this.waitCache = this.waitCount.sum();
         }
     }
 
-    /*
-     * Unable to fully structure code
-     * Enabled aggressive block sorting
-     * Lifted jumps to return sites
-     */
     @Override
     public void signal() {
-        if (this.waitCache <= 0) {
-            this.waitCache = this.waitCount.sum();
-            if (this.waitCache <= 0) return;
-        }
-        waitSequence = 0;
-        do lbl-1000: // 3 sources:
-        {
-            if ((t = this.waiter.get((int)(waitSequence++ & 7) + AbstractWaitingCondition.CACHE_LINE_REFS)) == null) ** GOTO lbl15
-            if (this.waiter.compareAndSet((int)(waitSequence - 1 & 7) + AbstractWaitingCondition.CACHE_LINE_REFS, t, null)) {
-                LockSupport.unpark(t);
-            } else {
-                LockSupport.parkNanos(50);
+        // only signal if somebody is blocking for it
+        if (waitCache.value > 0 || (waitCache.value = waitCount.get()) > 0) {
+            int waitSequence = 0;
+            for(;;) {
+                Thread t;
+                while((t = waiter.get(waitSequence++ & WAITER_MASK)) != null) {
+                    if(waiter.compareAndSet((waitSequence-1) & WAITER_MASK, t, null)) {
+                        LockSupport.unpark(t);
+                    } else {
+                        LockSupport.parkNanos(WAIT_TIME);
+                    }
+
+                    // go through all waiters once, or return if we are finished
+                    if(((waitSequence & WAITER_MASK) == WAITER_MASK) || (waitCache.value = waitCount.get()) == 0) {
+                        return;
+                    }
+                }
+
+                // go through all waiters once, or return if we are finished
+                if(((waitSequence & WAITER_MASK) == WAITER_MASK) || (waitCache.value = waitCount.get()) == 0) {
+                    return;
+                }
             }
-            if ((waitSequence & 7) == 7) return;
-            this.waitCache = this.waitCount.sum();
-            if (this.waitCache != 0) ** GOTO lbl-1000
-            return;
-lbl15: // 1 sources:
-            if ((waitSequence & 7) == 7) return;
-        } while ((this.waitCache = this.waitCount.sum()) != 0);
+        }
     }
 }
-

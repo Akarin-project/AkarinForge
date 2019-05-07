@@ -24,18 +24,59 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.IChunkLoader;
+import net.minecraftforge.common.ForgeChunkManager;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.event.world.ChunkUnloadEvent;
 
 public class ChunkProviderServer implements IChunkProvider
 {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final Set<Long> droppedChunksSet = Sets.<Long>newHashSet();
+    public final Set<Long> droppedChunksSet = Sets.<Long>newHashSet(); // Akarin
     public final IChunkGenerator chunkGenerator;
     public final IChunkLoader chunkLoader;
     public final Long2ObjectMap<Chunk> id2ChunkMap = new Long2ObjectOpenHashMap<Chunk>(8192);
     public final WorldServer world;
     private final Set<Long> loadingChunks = com.google.common.collect.Sets.newHashSet();
+    // Akarin start
+    public Chunk getChunkIfLoaded(int x2, int z2) {
+        return this.id2ChunkMap.get(ChunkPos.asLong(x2, z2));
+    }
+    
+    public boolean unloadChunk(Chunk chunk, boolean save) {
+        ChunkUnloadEvent event = new ChunkUnloadEvent(chunk.bukkitChunk, save);
+        this.world.getServer().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return false;
+        }
+        save = event.isSaveChunk();
+
+        // Update neighbor counts
+        for (int x = -2; x < 3; x++) {
+            for (int z = -2; z < 3; z++) {
+                if (x == 0 && z == 0) {
+                    continue;
+                }
+
+                Chunk neighbor = this.getChunkIfLoaded(chunk.x + x, chunk.z + z);
+                if (neighbor != null) {
+                    neighbor.setNeighborUnloaded(-x, -z);
+                    chunk.setNeighborUnloaded(x, z);
+                }
+            }
+        }
+        
+        chunk.onUnload();
+        ForgeChunkManager.putDormantChunk(ChunkPos.asLong(chunk.x, chunk.z), chunk);
+        if (save) {
+            this.saveChunkData(chunk);
+            this.saveChunkExtraData(chunk);
+        }
+        this.id2ChunkMap.remove(chunk.chunkKey);
+        return true;
+    }
+    // Akarin end
 
     public ChunkProviderServer(WorldServer worldObjIn, IChunkLoader chunkLoaderIn, IChunkGenerator chunkGeneratorIn)
     {
@@ -106,7 +147,7 @@ public class ChunkProviderServer implements IChunkProvider
                 {
                 this.id2ChunkMap.put(ChunkPos.asLong(x, z), chunk);
                 chunk.onLoad();
-                chunk.populate(this, this.chunkGenerator);
+                chunk.populate(this, this.chunkGenerator, false); // Akarin
                 }
 
                 loadingChunks.remove(pos);
@@ -154,7 +195,7 @@ public class ChunkProviderServer implements IChunkProvider
 
             this.id2ChunkMap.put(i, chunk);
             chunk.onLoad();
-            chunk.populate(this, this.chunkGenerator);
+            chunk.populate(this, this.chunkGenerator, true); // Akarin
         }
 
         return chunk;
@@ -266,12 +307,10 @@ public class ChunkProviderServer implements IChunkProvider
 
                     if (chunk != null && chunk.unloadQueued)
                     {
-                        chunk.onUnload();
-                        net.minecraftforge.common.ForgeChunkManager.putDormantChunk(ChunkPos.asLong(chunk.x, chunk.z), chunk);
-                        this.saveChunkData(chunk);
-                        this.saveChunkExtraData(chunk);
+                        if (this.unloadChunk(chunk, true)) { // Akarin
                         this.id2ChunkMap.remove(olong);
                         ++i;
+                        } // Akarin
                     }
                 }
             }

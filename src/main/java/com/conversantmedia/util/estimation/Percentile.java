@@ -1,184 +1,285 @@
-/*
- * Decompiled with CFR 0_119.
- */
 package com.conversantmedia.util.estimation;
+
+/*
+ * #%L
+ * Conversant Disruptor
+ * ~~
+ * Conversantmedia.com © 2016, Conversant, Inc. Conversant® is a trademark of Conversant, Inc.
+ * ~~
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
 
 import java.io.PrintStream;
 import java.util.Arrays;
 
+/**
+ * Implementation of "Simulatenous Estimation of Several Persentiles," by Kimmo E. E. Raatikainen
+ *
+ * This is very useful for profiling the performance of timing characteristics
+ *
+ * Created by jcairns on 5/28/14.
+ */
 public class Percentile {
-    private static float[] DEFAULT_PERCENTILE = new float[]{0.05f, 0.5f, 0.683f, 0.75f, 0.85f, 0.954f, 0.99f};
+    private static float[] DEFAULT_PERCENTILE = { 0.05F, 0.5F, 0.683F, 0.75F, 0.85F, 0.954F, 0.99F};
+
     private final float[] quantiles;
+
     private final int m;
-    private final float[] q;
-    private final int[] n;
-    private final float[] f;
-    private final float[] d;
-    private final float[] e;
+
+    private final float[] q; // heights
+    private final int[]   n; // actual positions
+    private final float[] f; // increments of desired positions
+    private final float[] d; // desired positions
+
+    private final float[] e; // estimates
+
     private boolean isInitializing;
-    private int ni;
+
+    private int     ni; // which x is initialized so far
 
     public Percentile() {
         this(DEFAULT_PERCENTILE);
     }
 
-    public Percentile(float[] quantiles) {
-        this.m = quantiles.length;
-        this.quantiles = Arrays.copyOf(quantiles, this.m);
-        int N = 2 * this.m + 3;
-        this.q = new float[N + 1];
-        this.n = new int[N + 1];
-        this.f = new float[N + 1];
-        this.d = new float[N + 1];
-        this.e = new float[this.m];
-        this.clear();
+    public Percentile(final float[] quantiles) {
+
+        m = quantiles.length;
+
+        this.quantiles = Arrays.copyOf(quantiles, m);
+
+        final int N = 2*m+3;
+        q = new float[N+1];
+        n = new int[N+1];
+        f = new float[N+1];
+        d = new float[N+1];
+
+        e = new float[m];
+
+        clear();
     }
 
+
+    /**
+     * clear existing samples
+     */
     public void clear() {
-        int i2;
-        for (i2 = 1; i2 <= 2 * this.m + 3; ++i2) {
-            this.n[i2] = i2 + 1;
+
+        for(int i=1; i<=2*m+3; i++) {
+            n[i] = i+1;
         }
-        this.f[1] = 0.0f;
-        this.f[2 * this.m + 3] = 1.0f;
-        for (i2 = 1; i2 <= this.m; ++i2) {
-            this.f[2 * i2 + 1] = this.quantiles[i2 - 1];
+
+        f[1] = 0F;
+        f[2*m+3] = 1F;
+
+        for(int i=1; i<=m; i++) {
+            f[2*i+1] = quantiles[i-1];
         }
-        for (i2 = 1; i2 <= this.m + 1; ++i2) {
-            this.f[2 * i2] = (this.f[2 * i2 - 1] + this.f[2 * i2 + 1]) / 2.0f;
+
+        for(int i=1; i<=m+1; i++) {
+            f[2*i] = (f[2*i-1] + f[2*i+1])/2F;
         }
-        for (i2 = 1; i2 <= 2 * this.m + 3; ++i2) {
-            this.d[i2] = 1.0f + (float)(2 * (this.m + 1)) * this.f[i2];
+
+        for(int i=1; i<=2*m+3; i++) {
+            d[i] = 1F + 2*(m+1)*f[i];
         }
-        this.isInitializing = true;
-        this.ni = 1;
+        isInitializing = true;
+        ni = 1;
+
     }
 
-    public void add(float x2) {
-        if (this.isInitializing) {
-            this.q[this.ni++] = x2;
-            if (this.ni == 2 * this.m + 3 + 1) {
-                Arrays.sort(this.q);
-                this.isInitializing = false;
+    /**
+     * Add a measurement to estimate
+     *
+     * @param x - the value of the measurement
+     */
+    public void add(final float x) {
+        if(isInitializing) {
+            q[ni++] = x;
+
+            if(ni == 2*m+3+1) {
+                Arrays.sort(q);
+                isInitializing=false;
             }
         } else {
-            this.addMeasurement(x2);
+            addMeasurement(x);
         }
     }
 
+    /**
+     * @return float[] - percentiles requested at initialization
+     */
     public float[] getQuantiles() {
-        return this.quantiles;
+        return quantiles;
     }
 
+    /**
+     * @return boolean - true if sufficient samples have been seen to form an estimate
+     */
     public boolean isReady() {
-        return !this.isInitializing;
+        return !isInitializing;
     }
 
+    /**
+     * @return int - the number of samples in the estimate
+     */
     public int getNSamples() {
-        if (!this.isInitializing) {
-            return this.n[2 * this.m + 3] - 1;
+        if(!isInitializing)
+            return n[2*m+3]-1;
+        else {
+            return ni-1;
         }
-        return this.ni - 1;
     }
 
+    /**
+     * get the estimates based on the last sample
+     *
+     * @return float[]
+     *
+     * @throws InsufficientSamplesException - if no estimate is currently available due to insufficient data
+     */
     public float[] getEstimates() throws InsufficientSamplesException {
-        if (!this.isInitializing) {
-            for (int i2 = 1; i2 <= this.m; ++i2) {
-                this.e[i2 - 1] = this.q[2 * i2 + 1];
+        if(!isInitializing) {
+            for (int i = 1; i <= m; i++) {
+                e[i-1] = q[2*i+1];
             }
-            return this.e;
-        }
-        throw new InsufficientSamplesException();
-    }
-
-    public float getMin() {
-        return this.q[1];
-    }
-
-    public float getMax() {
-        return this.q[2 * this.m + 3];
-    }
-
-    private void addMeasurement(float x2) {
-        int i2;
-        int k2 = 1;
-        if (x2 < this.q[1]) {
-            k2 = 1;
-            this.q[1] = x2;
-        } else if (x2 >= this.q[2 * this.m + 3]) {
-            k2 = 2 * this.m + 2;
-            this.q[2 * this.m + 3] = x2;
+            return e;
         } else {
-            for (i2 = 1; i2 <= 2 * this.m + 2; ++i2) {
-                if (this.q[i2] > x2 || x2 >= this.q[i2 + 1]) continue;
-                k2 = i2;
-                break;
-            }
-        }
-        for (i2 = k2 + 1; i2 <= 2 * this.m + 3; ++i2) {
-            this.n[i2] = this.n[i2] + 1;
-        }
-        for (i2 = 1; i2 <= 2 * this.m + 3; ++i2) {
-            this.d[i2] = this.d[i2] + this.f[i2];
-        }
-        for (i2 = 2; i2 <= 2 * this.m + 2; ++i2) {
-            float qt2;
-            float dval = this.d[i2] - (float)this.n[i2];
-            float dp2 = this.n[i2 + 1] - this.n[i2];
-            float dm2 = this.n[i2 - 1] - this.n[i2];
-            float qp2 = (this.q[i2 + 1] - this.q[i2]) / dp2;
-            float qm2 = (this.q[i2 - 1] - this.q[i2]) / dm2;
-            if (dval >= 1.0f && dp2 > 1.0f) {
-                qt2 = this.q[i2] + ((1.0f - dm2) * qp2 + (dp2 - 1.0f) * qm2) / (dp2 - dm2);
-                this.q[i2] = this.q[i2 - 1] < qt2 && qt2 < this.q[i2 + 1] ? qt2 : this.q[i2] + qp2;
-                this.n[i2] = this.n[i2] + 1;
-                continue;
-            }
-            if (dval > -1.0f || dm2 >= -1.0f) continue;
-            qt2 = this.q[i2] - ((1.0f + dp2) * qm2 - (dm2 + 1.0f) * qp2) / (dp2 - dm2);
-            this.q[i2] = this.q[i2 - 1] < qt2 && qt2 < this.q[i2 + 1] ? qt2 : this.q[i2] - qm2;
-            this.n[i2] = this.n[i2] - 1;
+            throw new InsufficientSamplesException();
         }
     }
 
-    public static void print(PrintStream out, String name, Percentile p2) {
-        if (p2.isReady()) {
-            try {
-                StringBuilder sb2 = new StringBuilder(512);
-                float[] q2 = p2.getQuantiles();
-                float[] e2 = p2.getEstimates();
-                int SCREENWIDTH = 80;
-                sb2.append(name);
-                sb2.append(", min(");
-                sb2.append(p2.getMin());
-                sb2.append("), max(");
-                sb2.append(p2.getMax());
-                sb2.append(')');
-                sb2.append("\n");
-                float max = e2[e2.length - 1];
-                for (int i2 = 0; i2 < q2.length; ++i2) {
-                    sb2.append(String.format("%4.3f", Float.valueOf(q2[i2])));
-                    sb2.append(": ");
-                    int len = (int)(e2[i2] / max * 80.0f);
-                    for (int j2 = 0; j2 < len; ++j2) {
-                        sb2.append('#');
-                    }
-                    sb2.append(" ");
-                    sb2.append(String.format("%4.3f\n", Float.valueOf(e2[i2])));
+    /**
+     * @return float - the minimum sample seen in the distribution
+     */
+    public float getMin() {
+        return q[1];
+    }
+
+    /**
+     * @return float - the maximum sample seen in the distribution
+     */
+    public float getMax() {
+        return q[2*m+3];
+    }
+
+    private final void addMeasurement(final float x) {
+        int k=1;
+
+        if(x < q[1]) {
+            k = 1;
+            q[1] = x;
+        } else if(x >= q[2*m+3]) {
+            k = 2*m+2;
+            q[2*m+3] = x;
+        } else {
+            for(int i=1; i<=2*m+2; i++) {
+                if((q[i] <= x) && (x < q[i+1])) {
+                    k=i;
+                    break;
                 }
-                out.println(sb2.toString());
             }
-            catch (InsufficientSamplesException sb2) {
-                // empty catch block
+        }
+
+        for(int i=k+1; i<=2*m+3; i++) {
+            n[i] = n[i]+1;
+        }
+
+        for(int i=1; i<=2*m+3; i++) {
+            d[i] = d[i] + f[i];
+        }
+
+        for(int i=2; i<=2*m+2; i++) {
+            final float dval = d[i] - n[i];
+            final float dp = n[i+1] - n[i];
+            final float dm = n[i-1] - n[i];
+            final float qp = (q[i+1] - q[i])/dp;
+            final float qm = (q[i-1] - q[i])/dm;
+            if((dval >= 1F) && (dp > 1F)) {
+
+                final float qt = q[i] + ((1F - dm) * qp
+                        +(dp - 1F)*qm)/(dp - dm);
+
+                if((q[i-1] < qt) && (qt < q[i+1])) {
+                    q[i] = qt;
+                } else {
+                    q[i] = q[i] + qp;
+                }
+                n[i] = n[i]+1;
+            } else if((dval <= -1) && dm < -1) {
+                final float qt = q[i] - ((1F + dp)*qm -
+                        (dm + 1F)*qp)/(dp - dm);
+                if((q[i-1] < qt) && (qt < q[i+1])) {
+                    q[i] = qt;
+                } else {
+                    q[i] = q[i] - qm;
+                }
+                n[i] = n[i]-1;
             }
         }
     }
 
-    public class InsufficientSamplesException
-    extends Exception {
+    /**
+     * print a nice histogram of percentiles
+     *
+     * @param out - output stream
+     * @param name - data set name
+     * @param p - percentile
+     *
+     */
+
+    public static void print(final PrintStream out, final String name, final Percentile p) {
+        if(p.isReady()) {
+            try {
+                final StringBuilder sb = new StringBuilder(512);
+                final float[] q = p.getQuantiles();
+                final float[] e = p.getEstimates();
+                final int SCREENWIDTH = 80;
+
+                sb.append(name);
+                sb.append(", min(");
+                sb.append(p.getMin());
+                sb.append("), max(");
+                sb.append(p.getMax());
+                sb.append(')');
+                sb.append("\n");
+
+                final float max = e[e.length-1];
+                for(int i = 0; i<q.length; i++) {
+                    sb.append(String.format("%4.3f", q[i]));
+                    sb.append(": ");
+                    final int len = (int) (e[i]/max*SCREENWIDTH);
+                    for(int j = 0; j<len; j++) {
+                        sb.append('#');
+                    }
+                    sb.append(" ");
+                    sb.append(String.format("%4.3f\n", e[i]));
+                }
+
+                out.println(sb.toString());
+            } catch(InsufficientSamplesException e) {
+                // this can never occur
+            }
+        }
+    }
+
+    /**
+     * Indicates too few measurements have been added to compute the requested
+     * estimation
+     */
+    public class InsufficientSamplesException extends Exception {
         private InsufficientSamplesException() {
         }
     }
 
 }
-

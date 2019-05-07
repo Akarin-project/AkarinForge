@@ -106,12 +106,12 @@ import org.apache.logging.log4j.Logger;
 import org.bukkit.World.Environment;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
-import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_12_R1.Main;
-import org.bukkit.craftbukkit.v1_12_R1.SpigotTimings;
-import org.bukkit.craftbukkit.v1_12_R1.chunkio.ChunkIOExecutor;
-import org.bukkit.craftbukkit.v1_12_R1.scoreboard.CraftScoreboardManager;
-import org.bukkit.craftbukkit.v1_12_R1.util.ServerShutdownThread;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.Main;
+import org.bukkit.craftbukkit.SpigotTimings;
+import org.bukkit.craftbukkit.chunkio.ChunkIOExecutor;
+import org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager;
+import org.bukkit.craftbukkit.util.ServerShutdownThread;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.ChunkGenerator;
@@ -122,7 +122,7 @@ import org.spigotmc.SpigotConfig;
 
 public abstract class MinecraftServer implements ICommandSender, Runnable, IThreadListener, ISnooperInfo
 {
-    private static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger(); // Akarin
     public static final File USER_CACHE_FILE = new File("usercache.json");
     protected final ISaveFormat anvilConverterForAnvilFile; // Akarin
     private final Snooper usageSnooper = new Snooper("server", this, getCurrentTimeMillis());
@@ -555,7 +555,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         for (int m2 = 0; m2 < this.worldServers.size(); ++m2) {
             WorldServer worldserver = this.worldServers.get(m2);
             
-            k.info("Preparing start region for level " + m2 + " (Seed: " + worldserver.Q() + ")");
+            LOGGER.info("Preparing start region for level " + m2 + " (Seed: " + worldserver.getSeed() + ")");
             if (!worldserver.getWorld().getKeepSpawnInMemory()) continue;
             BlockPos blockposition = worldserver.getSpawnPoint();
             
@@ -1047,9 +1047,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
                 try
                 {
-                    worldserver.timings.doTick.startTiming();
                     worldserver.tick();
-                    worldserver.timings.doTick.stopTiming();
                 }
                 catch (Throwable throwable1)
                 {
@@ -1060,9 +1058,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
                 try
                 {
-                    worldserver.timings.tickEntities.startTiming();
                     worldserver.updateEntities();
-                    worldserver.timings.tickEntities.stopTiming();
                 }
                 catch (Throwable throwable)
                 {

@@ -49,7 +49,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.JavaPluginLoader;
 
 import io.akarin.forge.AkarinForge;
-import io.akarin.forge.remapper.CatServerRemapper;
+import io.akarin.forge.remapper.AkarinServerRemapper;
 import io.akarin.forge.remapper.ClassInheritanceProvider;
 import io.akarin.forge.remapper.MappingLoader;
 import io.akarin.forge.remapper.ReflectionTransformer;
@@ -85,7 +85,7 @@ extends URLClassLoader {
         provider.add((InheritanceProvider)new ClassInheritanceProvider());
         provider.add((InheritanceProvider)new ClassLoaderProvider((ClassLoader)this));
         this.jarMapping.setFallbackInheritanceProvider((InheritanceProvider)provider);
-        this.remapper = new CatServerRemapper(this.jarMapping);
+        this.remapper = new AkarinServerRemapper(this.jarMapping);
         try {
             Class jarClass;
             Class<JavaPlugin> pluginClass;

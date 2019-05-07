@@ -47,7 +47,7 @@ public interface EventExecutor {
 
     public void execute(Listener var1, Event var2) throws EventException;
 
-    default public static EventExecutor create(Method m2, final Class<? extends Event> eventClass) {
+    public static EventExecutor create(Method m2, final Class<? extends Event> eventClass) {
         Preconditions.checkNotNull((Object)m2, (Object)"Null method");
         Preconditions.checkArgument((boolean)(m2.getParameterCount() != 0), (String)"Incorrect number of arguments %s", (int)m2.getParameterCount());
         Preconditions.checkArgument((boolean)(m2.getParameterTypes()[0] == eventClass), (String)"First parameter %s doesn't match event class %s", m2.getParameterTypes()[0], eventClass);

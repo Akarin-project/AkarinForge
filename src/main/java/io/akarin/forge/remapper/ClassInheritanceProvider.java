@@ -1,5 +1,5 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  * 
  * Could not load the following classes:
  *  net.md_5.specialsource.provider.InheritanceProvider
@@ -9,7 +9,7 @@ package io.akarin.forge.remapper;
 import java.util.Collection;
 import java.util.HashSet;
 
-import io.akarin.forge.remapper.CatServerRemapper;
+import io.akarin.forge.remapper.AkarinServerRemapper;
 import io.akarin.forge.remapper.ReflectionTransformer;
 import io.akarin.forge.remapper.RemapUtils;
 import net.md_5.specialsource.provider.InheritanceProvider;

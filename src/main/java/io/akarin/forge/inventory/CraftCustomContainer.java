@@ -1,26 +1,28 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  */
 package io.akarin.forge.inventory;
 
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_12_R1.block.CraftBlockState;
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventory;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.inventory.CraftInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+
+import net.minecraft.inventory.IInventory;
 
 public class CraftCustomContainer
 extends CraftBlockState
 implements InventoryHolder {
     private final CraftWorld world;
-    private final tv inventory;
+    private final IInventory inventory;
 
     public CraftCustomContainer(Block block) {
         super(block);
         this.world = (CraftWorld)block.getWorld();
-        this.inventory = (tv)((Object)this.world.getTileEntityAt(this.getX(), this.getY(), this.getZ()));
+        this.inventory = (IInventory)((Object)this.world.getTileEntityAt(this.getX(), this.getY(), this.getZ()));
     }
 
     @Override

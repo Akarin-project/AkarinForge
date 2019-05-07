@@ -128,10 +128,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.WeatherType;
-import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v1_12_R1.util.CraftChatMessage;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.util.CraftChatMessage;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerChangedMainHandEvent;
@@ -144,7 +144,7 @@ import org.bukkit.inventory.MainHand;
 public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 {
     private static final Logger LOGGER = LogManager.getLogger();
-    private String language = "en_us"; // Akarin
+    public String language = "en_us"; // Akarin
     public NetHandlerPlayServer connection;
     public final MinecraftServer mcServer;
     public final PlayerInteractionManager interactionManager;
@@ -163,7 +163,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     private int lastFoodLevel = -99999999;
     private boolean wasHungry = true;
     private int lastExperience = -99999999;
-    private int respawnInvulnerabilityTicks = 60;
+    public int respawnInvulnerabilityTicks = 60; // Akarin
     private EntityPlayer.EnumChatVisibility chatVisibility;
     private boolean chatColours = true;
     private long playerLastActiveTime = System.currentTimeMillis();
@@ -322,7 +322,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     }
 
     @Override
-    protected boolean isMovementBlocked() {
+    public boolean isMovementBlocked() { // Akarin
         return super.isMovementBlocked() || this.getBukkitEntity().isOnline();
     }
 

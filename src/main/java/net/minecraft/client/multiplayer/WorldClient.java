@@ -60,7 +60,7 @@ public class WorldClient extends World
 
     public WorldClient(NetHandlerPlayClient netHandler, WorldSettings settings, int dimension, EnumDifficulty difficulty, Profiler profilerIn)
     {
-        super(new SaveHandlerMP(), new WorldInfo(settings, "MpServer"), net.minecraftforge.common.DimensionManager.createProviderFor(dimension), profilerIn, true);
+        super(new SaveHandlerMP(), new WorldInfo(settings, "MpServer"), net.minecraftforge.common.DimensionManager.createProviderFor(dimension), profilerIn, true, null, null);
         this.ambienceTicks = this.rand.nextInt(12000);
         this.visibleChunks = Sets.<ChunkPos>newHashSet();
         this.connection = netHandler;
@@ -115,7 +115,7 @@ public class WorldClient extends World
         return this.clientChunkProvider;
     }
 
-    protected boolean isChunkLoaded(int x, int z, boolean allowEmpty)
+    public boolean isChunkLoaded(int x, int z, boolean allowEmpty)
     {
         return allowEmpty || !this.getChunkProvider().provideChunk(x, z).isEmpty();
     }

@@ -10,7 +10,6 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 @Deprecated
-@Warning(reason="This event causes a login thread to synchronize with the main thread")
 public class PlayerPreLoginEvent
 extends Event {
     private static final HandlerList handlers = new HandlerList();

@@ -1,28 +1,23 @@
-/*
- * Decompiled with CFR 0_119.
- * 
- * Could not load the following classes:
- *  com.mojang.authlib.GameProfile
- */
 package io.akarin.forge.entity;
 
 import com.mojang.authlib.GameProfile;
 
 import io.akarin.forge.entity.CraftCustomEntity;
+import net.minecraft.entity.Entity;
 
 import java.util.UUID;
-import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
+
+import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.entity.Projectile;
 import org.bukkit.projectiles.ProjectileSource;
 
-public class CraftCustomProjectile
-extends CraftCustomEntity
+public class CraftCustomProjectile extends CraftCustomEntity
 implements Projectile {
     private ProjectileSource shooter = null;
     private boolean doesBounce;
     public static final GameProfile dropper = new GameProfile(UUID.nameUUIDFromBytes("[Dropper]".getBytes()), "[Dropper]");
 
-    public CraftCustomProjectile(CraftServer server, vg entity) {
+    public CraftCustomProjectile(CraftServer server, Entity entity) {
         super(server, entity);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Decompiled with CFR 0_119.
+ * Akarin Forge
  * 
  * Could not load the following classes:
  *  org.apache.logging.log4j.Logger
@@ -31,7 +31,7 @@ extends TimerTask {
             for (StackTraceElement stack : MinecraftServer.getServerInst().primaryThread.getStackTrace()) {
                 FMLLog.log.debug("\t\t" + stack);
             }
-            FMLLog.log.debug("--------------\u8bf7\u6ce8\u610f,\u8fd9\u4e0d\u662f\u62a5\u9519!\u8bf7\u52ff\u53cd\u9988!\u53ef\u5728catserver.yml\u4e2dcheck.threadLag\u5173\u95ed----------------");
+            FMLLog.log.debug("--------------\u8bf7\u6ce8\u610f,\u8fd9\u4e0d\u662f\u62a5\u9519!\u8bf7\u52ff\u53cd\u9988!\u53ef\u5728akarinforge.yml\u4e2dcheck.threadLag\u5173\u95ed----------------");
         }
     }
 

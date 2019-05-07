@@ -49,7 +49,7 @@ public interface Team {
 
     public int getSize() throws IllegalStateException;
 
-    public Scoreboard org_bukkit_scoreboard_Scoreboard_getScoreboard();
+    public Scoreboard getScoreboard();
 
     @Deprecated
     public void addPlayer(OfflinePlayer var1) throws IllegalStateException, IllegalArgumentException;

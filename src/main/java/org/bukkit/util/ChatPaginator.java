@@ -20,12 +20,15 @@ public class ChatPaginator {
     }
 
     public static ChatPage paginate(String unpaginatedString, int pageNumber, int lineLength, int pageHeight) {
-        String[] lines;
-        int totalPages = lines.length / pageHeight + ((lines = ChatPaginator.wordWrap(unpaginatedString, lineLength)).length % pageHeight == 0 ? 0 : 1);
+        String[] lines = wordWrap(unpaginatedString, lineLength);
+
+        int totalPages = lines.length / pageHeight + (lines.length % pageHeight == 0 ? 0 : 1);
         int actualPageNumber = pageNumber <= totalPages ? pageNumber : totalPages;
+
         int from = (actualPageNumber - 1) * pageHeight;
-        int to2 = from + pageHeight <= lines.length ? from + pageHeight : lines.length;
-        String[] selectedLines = Arrays.copyOfRange(lines, from, to2);
+        int to = from + pageHeight <= lines.length ? from + pageHeight : lines.length;
+        String[] selectedLines = Arrays.copyOfRange(lines, from, to);
+
         return new ChatPage(selectedLines, actualPageNumber, totalPages);
     }
 

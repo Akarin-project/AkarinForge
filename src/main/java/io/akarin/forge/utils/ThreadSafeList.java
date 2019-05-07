@@ -206,7 +206,7 @@ public class ThreadSafeList<E> extends Vector<E> {
     }
 
     private void switchPrimaryThread(Runnable runnable) {
-        MinecraftServer.getServerInst().a(runnable);
+        MinecraftServer.getServerInst().addScheduledTask(runnable);
     }
 }
 

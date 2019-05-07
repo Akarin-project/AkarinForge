@@ -42,7 +42,7 @@ ConfigurationSerializable {
 
     @Deprecated
     public ItemStack(int type, int amount) {
-        this(type, amount, 0);
+        this(type, amount, (short) 0);
     }
 
     public ItemStack(Material type, int amount) {
@@ -116,7 +116,7 @@ ConfigurationSerializable {
         if (this.meta != null) {
             this.meta = Bukkit.getItemFactory().asMetaFor(this.meta, this.getType0());
         }
-        this.createData(0);
+        this.createData((byte) 0);
     }
 
     public int getAmount() {
@@ -303,7 +303,7 @@ ConfigurationSerializable {
         if (args.containsKey("enchantments")) {
             Object raw2 = args.get("enchantments");
             if (raw2 instanceof Map) {
-                Map map = (Map)raw2;
+                Map<?, ?> map = (Map<?, ?>) raw2;
                 for (Map.Entry entry : map.entrySet()) {
                     Enchantment enchantment = Enchantment.getByName(entry.getKey().toString());
                     if (enchantment == null || !(entry.getValue() instanceof Integer)) continue;

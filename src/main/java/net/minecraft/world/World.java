@@ -1,10 +1,10 @@
 package net.minecraft.world;
 
-import com.conversantmedia.util.concurrent.NoLockDisruptorBlockingQueue;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
 
 import co.aikar.timings.WorldTimingsHandler;
 import io.akarin.forge.AkarinForge;
@@ -28,12 +28,12 @@ import javax.annotation.Nullable;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World.Environment;
-import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_12_R1.SpigotTimings;
-import org.bukkit.craftbukkit.v1_12_R1.block.CraftBlockState;
-import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.SpigotTimings;
+import org.bukkit.craftbukkit.block.CraftBlockState;
+import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
@@ -145,9 +145,9 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public final WorldProvider provider;
     protected PathWorldListener pathListener = new PathWorldListener();
     protected List<IWorldEventListener> eventListeners;
-    protected IChunkProvider chunkProvider;
+    public IChunkProvider chunkProvider; // Akarin
     protected final ISaveHandler saveHandler;
-    protected WorldInfo worldInfo;
+    public WorldInfo worldInfo; // Akarin
     protected boolean findingSpawnPoint;
     protected MapStorage mapStorage;
     public VillageCollection villageCollection;
@@ -158,8 +158,8 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     private final Calendar calendar;
     protected Scoreboard worldScoreboard;
     public final boolean isRemote;
-    protected boolean spawnHostileMobs;
-    protected boolean spawnPeacefulMobs;
+    public boolean spawnHostileMobs; // Akarin
+    public boolean spawnPeacefulMobs; // Akarin
     private boolean processingLoadedTiles;
     private final WorldBorder worldBorder;
     int[] lightUpdateBlockList;
@@ -172,7 +172,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
     // Akarin start
     private LinkedBlockingQueue<HopperTask> hopperQueue = new LinkedBlockingQueue<>();
-    private final ExecutorService entityThreadPool = new ThreadPoolExecutor(1, AkarinForge.entityPoolNum, 30, TimeUnit.SECONDS, new NoLockDisruptorBlockingQueue<Runnable>(100000));
+    private final ExecutorService entityThreadPool = new ThreadPoolExecutor(1, AkarinForge.entityPoolNum, 30, TimeUnit.SECONDS, Queues.newLinkedBlockingQueue());
     private final CraftWorld world;
     public boolean pvpMode;
     public boolean keepSpawnInMemory = true;

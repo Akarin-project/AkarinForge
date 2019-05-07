@@ -19,7 +19,7 @@ public interface Objective {
 
     public boolean isModifiable() throws IllegalStateException;
 
-    public Scoreboard org_bukkit_scoreboard_Scoreboard_getScoreboard();
+    public Scoreboard getScoreboard();
 
     public void unregister() throws IllegalStateException;
 

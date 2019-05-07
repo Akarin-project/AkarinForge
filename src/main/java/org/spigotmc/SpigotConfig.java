@@ -27,7 +27,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.RangedAttribute;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.stats.StatList;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -41,7 +46,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.file.YamlConfigurationOptions;
-import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
+import org.bukkit.craftbukkit.CraftServer;
 import org.spigotmc.RestartCommand;
 import org.spigotmc.SpigotCommand;
 import org.spigotmc.TicksPerSecondCommand;
@@ -233,11 +238,11 @@ public class SpigotConfig {
         ConfigurationSection section = config.getConfigurationSection("stats.forced-stats");
         for (String name : section.getKeys(true)) {
             if (!section.isInt(name)) continue;
-            if (qs.a(name) == null) {
+            if ( StatList.getOneShotStat(name) == null ) {
                 Bukkit.getLogger().log(java.util.logging.Level.WARNING, "Ignoring non existent stats.forced-stats " + name);
                 continue;
             }
-            forcedStats.put((Object)name, section.getInt(name));
+            forcedStats.put(name, section.getInt(name));
         }
     }
 
@@ -295,9 +300,12 @@ public class SpigotConfig {
     }
 
     private static void attributeMaxes() {
-        ((wj)adh.a).b = SpigotConfig.maxHealth = SpigotConfig.getDouble("settings.attribute.maxHealth.max", maxHealth);
-        ((wj)adh.d).b = SpigotConfig.movementSpeed = SpigotConfig.getDouble("settings.attribute.movementSpeed.max", movementSpeed);
-        ((wj)adh.f).b = SpigotConfig.attackDamage = SpigotConfig.getDouble("settings.attribute.attackDamage.max", attackDamage);
+        maxHealth = getDouble( "settings.attribute.maxHealth.max", maxHealth );
+        ( (RangedAttribute) SharedMonsterAttributes.MAX_HEALTH ).maximumValue = maxHealth;
+        movementSpeed = getDouble( "settings.attribute.movementSpeed.max", movementSpeed );
+        ( (RangedAttribute) SharedMonsterAttributes.MOVEMENT_SPEED ).maximumValue = movementSpeed;
+        attackDamage = getDouble( "settings.attribute.attackDamage.max", attackDamage );
+        ( (RangedAttribute) SharedMonsterAttributes.ATTACK_DAMAGE ).maximumValue = attackDamage;
     }
 
     private static void debug() {

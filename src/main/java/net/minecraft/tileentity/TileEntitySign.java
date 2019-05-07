@@ -24,7 +24,7 @@ public class TileEntitySign extends TileEntity
 {
     public final ITextComponent[] signText = new ITextComponent[] {new TextComponentString(""), new TextComponentString(""), new TextComponentString(""), new TextComponentString("")};
     public int lineBeingEdited = -1;
-    private boolean isEditable = true;
+    public boolean isEditable = true; // Akarin
     private EntityPlayer player;
     private final CommandResultStats stats = new CommandResultStats();
 

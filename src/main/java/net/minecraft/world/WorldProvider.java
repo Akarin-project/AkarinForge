@@ -16,6 +16,7 @@ import net.minecraft.world.gen.ChunkGeneratorFlat;
 import net.minecraft.world.gen.ChunkGeneratorOverworld;
 import net.minecraft.world.gen.FlatGeneratorInfo;
 import net.minecraft.world.gen.IChunkGenerator;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -31,6 +32,11 @@ public abstract class WorldProvider
     protected boolean hasSkyLight;
     protected final float[] lightBrightnessTable = new float[16];
     private final float[] colorsSunriseSunset = new float[4];
+    // Akarin start
+    public static WorldProvider getProviderForDimension(int dimensionId) {
+        return DimensionManager.createProviderFor(dimensionId);
+    }
+    // Akarin end
 
     public final void setWorld(World worldIn)
     {

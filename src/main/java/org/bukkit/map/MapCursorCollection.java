@@ -28,7 +28,7 @@ public final class MapCursorCollection {
     }
 
     public MapCursor addCursor(int x2, int y2, byte direction) {
-        return this.addCursor(x2, y2, direction, 0, true);
+        return this.addCursor(x2, y2, direction, (byte) 0, true);
     }
 
     @Deprecated

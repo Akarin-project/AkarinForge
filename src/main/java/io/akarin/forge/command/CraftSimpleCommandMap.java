@@ -1,10 +1,9 @@
-/*
- * Decompiled with CFR 0_119.
- */
 package io.akarin.forge.command;
 
 import java.util.Arrays;
 import java.util.regex.Pattern;
+
+import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.bukkit.Server;
@@ -13,14 +12,13 @@ import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.SimpleCommandMap;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 import io.akarin.forge.command.ModCustomCommand;
 
-public class CraftSimpleCommandMap
-extends SimpleCommandMap {
+public class CraftSimpleCommandMap extends SimpleCommandMap {
     private static final Pattern PATTERN_ON_SPACE = Pattern.compile(" ", 16);
-    private bn vanillaConsoleSender;
+    private ICommandSender vanillaConsoleSender;
 
     public CraftSimpleCommandMap(Server server) {
         super(server);
@@ -43,9 +41,9 @@ extends SimpleCommandMap {
                     return true;
                 }
                 if (sender instanceof ConsoleCommandSender) {
-                    FMLCommonHandler.instance().getMinecraftServerInstance().N().a(this.vanillaConsoleSender, commandLine);
+                    FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(this.vanillaConsoleSender, commandLine);
                 } else {
-                    FMLCommonHandler.instance().getMinecraftServerInstance().N().a(((CraftPlayer)sender).getHandle(), commandLine);
+                    FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(((CraftPlayer)sender).getHandle(), commandLine);
                 }
             } else {
                 target.execute(sender, sentCommandLabel, Arrays.copyOfRange(args, 1, args.length));
@@ -60,7 +58,7 @@ extends SimpleCommandMap {
         return true;
     }
 
-    public void setVanillaConsoleSender(bn console) {
+    public void setVanillaConsoleSender(ICommandSender console) {
         this.vanillaConsoleSender = console;
     }
 }

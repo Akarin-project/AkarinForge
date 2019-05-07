@@ -50,8 +50,8 @@ public class AdvancementManager
             return Advancement.Builder.deserialize(jsonobject, p_deserialize_3_);
         }
     }).registerTypeAdapter(AdvancementRewards.class, new AdvancementRewards.Deserializer()).registerTypeHierarchyAdapter(ITextComponent.class, new ITextComponent.Serializer()).registerTypeHierarchyAdapter(Style.class, new Style.Serializer()).registerTypeAdapterFactory(new EnumTypeAdapterFactory()).create();
-    private static final AdvancementList ADVANCEMENT_LIST = new AdvancementList();
-    private final File advancementsDir;
+    public static final AdvancementList ADVANCEMENT_LIST = new AdvancementList(); // Akarin
+    public final File advancementsDir; // Akarin
     private boolean hasErrored;
 
     public AdvancementManager(@Nullable File advancementsDirIn)

@@ -52,7 +52,7 @@ public abstract class EntityArrow extends Entity implements IProjectile
     private int zTile;
     private Block inTile;
     private int inData;
-    protected boolean inGround;
+    public boolean inGround; // Akarin
     protected int timeInGround;
     public EntityArrow.PickupStatus pickupStatus;
     public int arrowShake;

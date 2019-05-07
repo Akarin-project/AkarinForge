@@ -1,31 +1,22 @@
 package io.akarin.forge;
 
-import com.conversantmedia.util.concurrent.NoLockDisruptorBlockingQueue;
+import com.conversantmedia.util.concurrent.DisruptorBlockingQueue;
 
 import io.akarin.forge.remapper.ReflectionUtils;
-import io.akarin.forge.very.VeryConfig;
-
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.io.Reader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
-import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.fml.common.FMLLog;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -33,7 +24,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginDescriptionFile;
 
 public class AkarinForge {
-    private static final String version = "2.0.0";
+    private static final String version = "1.0.0";
     private static final String native_verson = "v1_12_R1";
     public static YamlConfiguration config;
     public static File configFile;
@@ -54,11 +45,11 @@ public class AkarinForge {
     public static final ExecutorService fileIOThread;
     
     public static String getVersion() {
-        return "1.0.0";
+        return version;
     }
     
     public static String getNativeVersion() {
-        return "v1_12_R1";
+        return native_verson;
     }
     
     public static boolean isDev() {
@@ -199,7 +190,7 @@ public class AkarinForge {
         chunkStats = false;
         buildTime = 0;
         fakePlayerEventPass = false;
-        fileIOThread = new ThreadPoolExecutor(1, 2, 30, TimeUnit.SECONDS, new NoLockDisruptorBlockingQueue<Runnable>(50000));
+        fileIOThread = new ThreadPoolExecutor(1, 2, 30, TimeUnit.SECONDS, new DisruptorBlockingQueue<Runnable>(50000));
         if (buildTime == 0) {
             buildTime = (int)(System.currentTimeMillis() / 1000);
         }

@@ -4,6 +4,11 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.Random;
+
+import org.bukkit.Location;
+import org.bukkit.event.entity.EntityPortalExitEvent;
+import org.bukkit.util.Vector;
+
 import net.minecraft.block.BlockPortal;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.state.pattern.BlockPattern;
@@ -14,6 +19,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3i;
 
 public class Teleporter implements net.minecraftforge.common.util.ITeleporter
 {
@@ -42,6 +48,18 @@ public class Teleporter implements net.minecraftforge.common.util.ITeleporter
             int i = MathHelper.floor(entityIn.posX);
             int j = MathHelper.floor(entityIn.posY) - 1;
             int k = MathHelper.floor(entityIn.posZ);
+            // Akarin start - Modularize end portal creation
+            BlockPos created = this.createEndPortal(entityIn.posX, entityIn.posY, entityIn.posZ);
+            entityIn.setLocationAndAngles((double) created.getX(), (double) created.getY(), (double) created.getZ(), entityIn.rotationYaw, 0.0F);
+            entityIn.motionX = entityIn.motionY = entityIn.motionZ = 0.0D;
+        }
+    }
+
+    private BlockPos createEndPortal(double x, double y, double z) {
+            int i = MathHelper.floor(x);
+            int j = MathHelper.floor(y) - 1;
+            int k = MathHelper.floor(z);
+            // Akarin end
             int l = 1;
             int i1 = 0;
 
@@ -59,20 +77,64 @@ public class Teleporter implements net.minecraftforge.common.util.ITeleporter
                     }
                 }
             }
-
-            entityIn.setLocationAndAngles((double)i, (double)j, (double)k, entityIn.rotationYaw, 0.0F);
-            entityIn.motionX = 0.0D;
-            entityIn.motionY = 0.0D;
-            entityIn.motionZ = 0.0D;
+            
+            // Akarin start
+            return new BlockPos(i, k, k);
+    }
+    
+    // use logic based on creation to verify end portal
+    private BlockPos findEndPortal(BlockPos portal) {
+        int i = portal.getX();
+        int j = portal.getY() - 1;
+        int k = portal.getZ();
+        byte b0 = 1;
+        byte b1 = 0;
+        
+        for (int l = -2; l <= 2; ++l) {
+            for (int i1 = -2; i1 <= 2; ++i1) {
+                for (int j1 = -1; j1 < 3; ++j1) {
+                    int k1 = i + i1 * b0 + l * b1;
+                    int l1 = j + j1;
+                    int i2 = k + i1 * b1 - l * b0;
+                    boolean flag = j1 < 0;
+                    
+                    if (this.world.getBlockState(new BlockPos(k1, l1, i2)).getBlock() != (flag ? Blocks.OBSIDIAN : Blocks.AIR)) {
+                        return null;
+                    }
+                }
+            }
         }
+        return new BlockPos(i, j, k);
     }
 
-    public boolean placeInExistingPortal(Entity entityIn, float rotationYaw)
+    public boolean placeInExistingPortal(Entity entity, float rotationYaw)
     {
+        BlockPos found = this.findPortal(entity.posX, entity.posY, entity.posZ, 128);
+        if (found == null) {
+            return false;
+        }
+
+        Location exit = new Location(this.world.getWorld(), found.getX(), found.getY(), found.getZ(), rotationYaw, entity.rotationPitch);
+        Vector velocity = entity.getBukkitEntity().getVelocity();
+        this.adjustExit(entity, exit, velocity);
+        entity.setLocationAndAngles(exit.getX(), exit.getY(), exit.getZ(), exit.getYaw(), exit.getPitch());
+        if (entity.motionX != velocity.getX() || entity.motionY != velocity.getY() || entity.motionZ != velocity.getZ()) {
+            entity.getBukkitEntity().setVelocity(velocity);
+        }
+        return true;
+    }
+
+    public BlockPos findPortal(double x, double y, double z, int radius) {
+        if (this.world.getWorld().getEnvironment() == org.bukkit.World.Environment.THE_END) {
+            return this.findEndPortal(this.world.provider.getSpawnCoordinate());
+        }
+        // CraftBukkit end
         int i = 128;
         double d0 = -1.0D;
-        int j = MathHelper.floor(entityIn.posX);
-        int k = MathHelper.floor(entityIn.posZ);
+        // Akarin start
+        int j = MathHelper.floor(x);
+        int k = MathHelper.floor(z);
+        // Akarin end
         boolean flag = true;
         BlockPos blockpos = BlockPos.ORIGIN;
         long l = ChunkPos.asLong(j, k);
@@ -87,13 +149,13 @@ public class Teleporter implements net.minecraftforge.common.util.ITeleporter
         }
         else
         {
-            BlockPos blockpos3 = new BlockPos(entityIn);
+            BlockPos blockpos3 = new BlockPos(x, y, z); // Akarin
 
-            for (int i1 = -128; i1 <= 128; ++i1)
+            for (int i1 = -radius; i1 <= radius; ++i1) // Akarin
             {
                 BlockPos blockpos2;
 
-                for (int j1 = -128; j1 <= 128; ++j1)
+                for (int j1 = -radius; j1 <= radius; ++j1) // Akarin
                 {
                     for (BlockPos blockpos1 = blockpos3.add(i1, this.world.getActualHeight() - 1 - blockpos3.getY(), j1); blockpos1.getY() >= 0; blockpos1 = blockpos2)
                     {
@@ -125,10 +187,29 @@ public class Teleporter implements net.minecraftforge.common.util.ITeleporter
             {
                 this.destinationCoordinateCache.put(l, new Teleporter.PortalPosition(blockpos, this.world.getTotalWorldTime()));
             }
+            // Akarin start - Move entity teleportation logic into exit
+            return (BlockPos) blockpos;
+        } else {
+            return null;
+        }
+    }
 
-            double d5 = (double)blockpos.getX() + 0.5D;
-            double d7 = (double)blockpos.getZ() + 0.5D;
-            BlockPattern.PatternHelper blockpattern$patternhelper = Blocks.PORTAL.createPatternHelper(this.world, blockpos);
+    public void adjustExit(Entity entityIn, Location position, Vector velocity) {
+        Location from = position.clone();
+        Vector before = velocity.clone();
+        BlockPos object = new BlockPos(position.getBlockX(), position.getBlockY(), position.getBlockZ());
+        float rotationYaw = position.getYaw();
+
+        if (this.world.getWorld().getEnvironment() == org.bukkit.World.Environment.THE_END || entityIn.getBukkitEntity().getWorld().getEnvironment() == org.bukkit.World.Environment.THE_END || entityIn.getLastPortalVec() == null) {
+            position.setPitch(0.0F);
+            velocity.setX(0);
+            velocity.setY(0);
+            velocity.setZ(0);
+        } else {
+            // Akarin end
+            double d5 = (double)position.getX() + 0.5D;
+            double d7 = (double)position.getZ() + 0.5D;
+            BlockPattern.PatternHelper blockpattern$patternhelper = Blocks.PORTAL.createPatternHelper(this.world, object); // Akarin
             boolean flag1 = blockpattern$patternhelper.getForwards().rotateY().getAxisDirection() == EnumFacing.AxisDirection.NEGATIVE;
             double d2 = blockpattern$patternhelper.getForwards().getAxis() == EnumFacing.Axis.X ? (double)blockpattern$patternhelper.getFrontTopLeft().getZ() : (double)blockpattern$patternhelper.getFrontTopLeft().getX();
             double d6 = (double)(blockpattern$patternhelper.getFrontTopLeft().getY() + 1) - entityIn.getLastPortalVec().y * (double)blockpattern$patternhelper.getHeight();
@@ -173,36 +254,56 @@ public class Teleporter implements net.minecraftforge.common.util.ITeleporter
                 f3 = 1.0F;
             }
 
-            double d3 = entityIn.motionX;
-            double d4 = entityIn.motionZ;
-            entityIn.motionX = d3 * (double)f + d4 * (double)f3;
-            entityIn.motionZ = d3 * (double)f2 + d4 * (double)f1;
-            entityIn.rotationYaw = rotationYaw - (float)(entityIn.getTeleportDirection().getOpposite().getHorizontalIndex() * 90) + (float)(blockpattern$patternhelper.getForwards().getHorizontalIndex() * 90);
+            // Akarin start
+            double d3 = velocity.getX();
+            double d4 = velocity.getZ();
 
-            if (entityIn instanceof EntityPlayerMP)
-            {
-                ((EntityPlayerMP)entityIn).connection.setPlayerLocation(d5, d6, d7, entityIn.rotationYaw, entityIn.rotationPitch);
-            }
-            else
-            {
-                entityIn.setLocationAndAngles(d5, d6, d7, entityIn.rotationYaw, entityIn.rotationPitch);
-            }
-
-            return true;
+            velocity.setX(d3 * (double) f + d4 * (double) f3);
+            velocity.setZ(d3 * (double) f2 + d4 * (double) f1);
+            f = f - (float) (entityIn.getTeleportDirection().getOpposite().getHorizontalIndex() * 90) + (float) (blockpattern$patternhelper.getForwards().getHorizontalIndex() * 90);
+            position.setX(d2);
+            position.setY(d5);
+            position.setZ(d3);
+            position.setYaw(f);
         }
-        else
-        {
-            return false;
+        EntityPortalExitEvent event = new EntityPortalExitEvent(entityIn.getBukkitEntity(), from, position, before, velocity);
+        this.world.getServer().getPluginManager().callEvent(event);
+        Location to = event.getTo();
+        if (event.isCancelled() || to == null || !entityIn.isEntityAlive()) {
+            position.setX(from.getX());
+            position.setY(from.getY());
+            position.setZ(from.getZ());
+            position.setYaw(from.getYaw());
+            position.setPitch(from.getPitch());
+            velocity.copy(before);
+        } else {
+            position.setX(to.getX());
+            position.setY(to.getY());
+            position.setZ(to.getZ());
+            position.setYaw(to.getYaw());
+            position.setPitch(to.getPitch());
+            velocity.copy(event.getAfter()); // event.getAfter() will never be null, as setAfter() will cause an NPE if null is passed in
         }
     }
 
-    public boolean makePortal(Entity entityIn)
+    public boolean makePortal(Entity entity)
     {
+        return this.createPortal(entity.posX, entity.posY, entity.posZ, 16);
+    }
+
+    public boolean createPortal(double x, double y, double z, int b0) {
+        if (this.world.getWorld().getEnvironment() == org.bukkit.World.Environment.THE_END) {
+            createEndPortal(x, y, z);
+            return true;
+        }
+        // Akarin end
         int i = 16;
         double d0 = -1.0D;
-        int j = MathHelper.floor(entityIn.posX);
-        int k = MathHelper.floor(entityIn.posY);
-        int l = MathHelper.floor(entityIn.posZ);
+        // Akarin start
+        int j = MathHelper.floor(x);
+        int k = MathHelper.floor(y);
+        int l = MathHelper.floor(z);
+        // Akarin end
         int i1 = j;
         int j1 = k;
         int k1 = l;
@@ -212,11 +313,11 @@ public class Teleporter implements net.minecraftforge.common.util.ITeleporter
 
         for (int j2 = j - 16; j2 <= j + 16; ++j2)
         {
-            double d1 = (double)j2 + 0.5D - entityIn.posX;
+            double d1 = (double)j2 + 0.5D - x; // Akarin
 
             for (int l2 = l - 16; l2 <= l + 16; ++l2)
             {
-                double d2 = (double)l2 + 0.5D - entityIn.posZ;
+                double d2 = (double)l2 + 0.5D - z; // Akarin
                 label293:
 
                 for (int j3 = this.world.getActualHeight() - 1; j3 >= 0; --j3)
@@ -258,7 +359,7 @@ public class Teleporter implements net.minecraftforge.common.util.ITeleporter
                                 }
                             }
 
-                            double d5 = (double)j3 + 0.5D - entityIn.posY;
+                            double d5 = (double)j3 + 0.5D - y; // Akarin
                             double d7 = d1 * d1 + d5 * d5 + d2 * d2;
 
                             if (d0 < 0.0D || d7 < d0)
@@ -279,11 +380,11 @@ public class Teleporter implements net.minecraftforge.common.util.ITeleporter
         {
             for (int l5 = j - 16; l5 <= j + 16; ++l5)
             {
-                double d3 = (double)l5 + 0.5D - entityIn.posX;
+                double d3 = (double)l5 + 0.5D - x;// Akarin
 
                 for (int j6 = l - 16; j6 <= l + 16; ++j6)
                 {
-                    double d4 = (double)j6 + 0.5D - entityIn.posZ;
+                    double d4 = (double)j6 + 0.5D - z;// Akarin
                     label231:
 
                     for (int i7 = this.world.getActualHeight() - 1; i7 >= 0; --i7)
@@ -316,7 +417,7 @@ public class Teleporter implements net.minecraftforge.common.util.ITeleporter
                                     }
                                 }
 
-                                double d6 = (double)i7 + 0.5D - entityIn.posY;
+                                double d6 = (double)i7 + 0.5D - y;// Akarin
                                 double d8 = d3 * d3 + d6 * d6 + d4 * d4;
 
                                 if (d0 < 0.0D || d8 < d0)
@@ -427,6 +528,12 @@ public class Teleporter implements net.minecraftforge.common.util.ITeleporter
             super(pos.getX(), pos.getY(), pos.getZ());
             this.lastUpdateTime = lastUpdate;
         }
+        // Akarin start
+        @Override
+        public int compareTo(Vec3i o) {
+            return this.compareTo(o);
+        }
+        // Akarin end
     }
 
     @Override

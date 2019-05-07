@@ -9,14 +9,14 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class CPacketPlayer implements Packet<INetHandlerPlayServer>
 {
-    protected double x;
-    protected double y;
-    protected double z;
-    protected float yaw;
-    protected float pitch;
+    public double x; // Akarin
+    public double y; // Akarin
+    public double z; // Akarin
+    public float yaw; // Akarin
+    public float pitch; // Akarin
     protected boolean onGround;
-    protected boolean moving;
-    protected boolean rotating;
+    public boolean moving; // Akarin
+    public boolean rotating; // Akarin
 
     public CPacketPlayer()
     {

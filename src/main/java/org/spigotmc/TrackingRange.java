@@ -12,7 +12,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 
 public class TrackingRange {
     public static int getEntityTrackingRange(Entity entity, int defaultRange) {
-        SpigotWorldConfig config = entity.l.spigotConfig;
+        SpigotWorldConfig config = entity.world.spigotConfig;
         if (entity instanceof EntityPlayerMP) {
             return config.playerTrackingRange;
         }

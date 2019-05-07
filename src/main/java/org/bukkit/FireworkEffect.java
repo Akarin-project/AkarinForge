@@ -75,7 +75,7 @@ implements ConfigurationSerializable {
 
     @Override
     public Map<String, Object> serialize() {
-        return ImmutableMap.of((Object)"flicker", (Object)this.flicker, (Object)"trail", (Object)this.trail, (Object)"colors", this.colors, (Object)"fade-colors", this.fadeColors, (Object)"type", (Object)this.type.name());
+        return ImmutableMap.of("flicker", this.flicker, "trail", this.trail, "colors", this.colors, "fade-colors", this.fadeColors, "type", this.type.name());
     }
 
     public String toString() {
@@ -149,7 +149,7 @@ implements ConfigurationSerializable {
 
         public Builder withColor(Color color) throws IllegalArgumentException {
             Validate.notNull((Object)color, (String)"Cannot have null color");
-            this.colors.add((Object)color);
+            this.colors.add(color);
             return this;
         }
 
@@ -161,7 +161,7 @@ implements ConfigurationSerializable {
             ImmutableList.Builder<Color> list = this.colors;
             for (Color color : colors) {
                 Validate.notNull((Object)color, (String)"Color cannot be null");
-                list.add((Object)color);
+                list.add(color);
             }
             return this;
         }
@@ -173,7 +173,7 @@ implements ConfigurationSerializable {
                 if (!(color instanceof Color)) {
                     throw new IllegalArgumentException(color + " is not a Color in " + colors);
                 }
-                list.add((Object)((Color)color));
+                list.add(((Color)color));
             }
             return this;
         }
@@ -183,7 +183,7 @@ implements ConfigurationSerializable {
             if (this.fadeColors == null) {
                 this.fadeColors = ImmutableList.builder();
             }
-            this.fadeColors.add((Object)color);
+            this.fadeColors.add(color);
             return this;
         }
 

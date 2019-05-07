@@ -79,30 +79,30 @@ extends MaterialData {
         GrassSpecies species;
         Material mat = materialData.getItemType();
         if (mat == Material.RED_ROSE) {
-            this.setData(1);
+            this.setData((byte) 1);
         } else if (mat == Material.YELLOW_FLOWER) {
-            this.setData(2);
+            this.setData((byte) 2);
         } else if (mat == Material.RED_MUSHROOM) {
-            this.setData(7);
+            this.setData((byte) 7);
         } else if (mat == Material.BROWN_MUSHROOM) {
-            this.setData(8);
+            this.setData((byte) 8);
         } else if (mat == Material.CACTUS) {
-            this.setData(9);
+            this.setData((byte) 9);
         } else if (mat == Material.DEAD_BUSH) {
-            this.setData(10);
+            this.setData((byte) 10);
         } else if (mat == Material.SAPLING) {
             TreeSpecies species2 = ((Tree)materialData).getSpecies();
             if (species2 == TreeSpecies.GENERIC) {
-                this.setData(3);
+                this.setData((byte) 3);
             } else if (species2 == TreeSpecies.REDWOOD) {
-                this.setData(4);
+                this.setData((byte) 4);
             } else if (species2 == TreeSpecies.BIRCH) {
-                this.setData(5);
+                this.setData((byte) 5);
             } else {
-                this.setData(6);
+                this.setData((byte) 6);
             }
         } else if (mat == Material.LONG_GRASS && (species = ((LongGrass)materialData).getSpecies()) == GrassSpecies.FERN_LIKE) {
-            this.setData(11);
+            this.setData((byte) 11);
         }
     }
 

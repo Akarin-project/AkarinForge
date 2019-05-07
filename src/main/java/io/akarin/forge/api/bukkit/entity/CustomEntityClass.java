@@ -1,24 +1,22 @@
-/*
- * Decompiled with CFR 0_119.
- * 
- * Could not load the following classes:
- *  javax.annotation.Nullable
- */
 package io.akarin.forge.api.bukkit.entity;
 
-import java.lang.reflect.Constructor;
 import javax.annotation.Nullable;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
-import org.bukkit.entity.Entity;
+import org.bukkit.craftbukkit.entity.CraftEntity;
 
 import io.akarin.forge.utils.NMSUtils;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.world.WorldServer;
 
 public class CustomEntityClass {
     private final String entityName;
-    private final Class<? extends vg> entityClass;
+    private final Class<? extends Entity> entityClass;
 
-    public CustomEntityClass(String entityName, Class<? extends vg> entityClass) {
+    public CustomEntityClass(String entityName, Class<? extends Entity> entityClass) {
         this.entityName = entityName;
         this.entityClass = entityClass;
     }
@@ -27,15 +25,15 @@ public class CustomEntityClass {
         return this.entityName;
     }
 
-    public Class<? extends vg> getEntityClass() {
+    public Class<? extends Entity> getEntityClass() {
         return this.entityClass;
     }
 
     @Nullable
-    public vg newInstance(oo world) {
-        vg entity = null;
+    public Entity newInstance(WorldServer world) {
+        Entity entity = null;
         try {
-            entity = this.entityClass.getConstructor(amu.class).newInstance(world);
+            entity = this.entityClass.getConstructor(World.class).newInstance(world);
         }
         catch (Throwable e2) {
             e2.printStackTrace();
@@ -44,36 +42,36 @@ public class CustomEntityClass {
     }
 
     @Nullable
-    public vg newInstance(World world) {
+    public Entity newInstance(World world) {
         return this.newInstance(NMSUtils.toNMS(world));
     }
 
     @Nullable
-    public Entity spawn(World world, double x2, double y2, double z2) {
-        oo worldserver = NMSUtils.toNMS(world);
-        vg entity = this.newInstance(worldserver);
+    public CraftEntity spawn(World world, double x2, double y2, double z2) {
+        WorldServer worldserver = NMSUtils.toNMS(world);
+        Entity entity = this.newInstance(worldserver);
         if (entity == null) {
             return null;
         }
-        entity.b(x2, y2, z2);
-        worldserver.a(entity);
+        entity.setPosition(x2, y2, z2);
+        worldserver.spawnEntity(entity);
         return entity.getBukkitEntity();
     }
 
     public boolean isLivingbase() {
-        return vp.class.isAssignableFrom(this.entityClass);
+        return EntityLivingBase.class.isAssignableFrom(this.entityClass);
     }
 
     public boolean isCreature() {
-        return vx.class.isAssignableFrom(this.entityClass);
+        return EntityCreature.class.isAssignableFrom(this.entityClass);
     }
 
     public boolean isAnimal() {
-        return zv.class.isAssignableFrom(this.entityClass);
+        return EntityAnimal.class.isAssignableFrom(this.entityClass);
     }
 
     public boolean isMonster() {
-        return ade.class.isAssignableFrom(this.entityClass);
+        return EntityMob.class.isAssignableFrom(this.entityClass);
     }
 }
 

@@ -1,318 +1,364 @@
-/*
- * Decompiled with CFR 0_119.
- */
 package com.conversantmedia.util.concurrent;
 
-import com.conversantmedia.util.concurrent.AbstractCondition;
-import com.conversantmedia.util.concurrent.AbstractSpinningCondition;
-import com.conversantmedia.util.concurrent.AbstractWaitingCondition;
-import com.conversantmedia.util.concurrent.BlockingStack;
-import com.conversantmedia.util.concurrent.Condition;
-import com.conversantmedia.util.concurrent.ContendedAtomicInteger;
-import com.conversantmedia.util.concurrent.SequenceLock;
-import com.conversantmedia.util.concurrent.SpinPolicy;
+/*
+ * #%L
+ * Conversant Disruptor
+ * ~~
+ * Conversantmedia.com © 2016, Conversant, Inc. Conversant® is a trademark of Conversant, Inc.
+ * ~~
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public final class ConcurrentStack<N>
-implements BlockingStack<N> {
+/**
+ * Concurrent "lock-free" version of a stack.
+ *
+ * @author John Cairns
+ * <p>Date: 7/9/12</p>
+ */
+public final class ConcurrentStack<N> implements BlockingStack<N> {
+
     private final int size;
+
     private final AtomicReferenceArray<N> stack;
-    private final ContendedAtomicInteger stackTop = new ContendedAtomicInteger(0);
-    private final SequenceLock seqLock = new SequenceLock();
+
+    // representing the top of the stack
+    private final AtomicInteger stackTop = new ContendedAtomicInteger(0);
+
+    private final SequenceLock  seqLock = new SequenceLock();
+
     private final Condition stackNotFullCondition;
     private final Condition stackNotEmptyCondition;
 
-    public ConcurrentStack(int size) {
+    public ConcurrentStack(final int size) {
         this(size, SpinPolicy.WAITING);
     }
 
-    public ConcurrentStack(int size, SpinPolicy spinPolicy) {
-        int stackSize;
-        for (stackSize = 1; stackSize < size; stackSize <<= 1) {
-        }
+    /**
+     *   construct a new stack of given capacity
+     *
+     *  @param size - the stack size
+     *  @param spinPolicy - determine the level of cpu aggressiveness in waiting
+     */
+    public ConcurrentStack(final int size, final SpinPolicy spinPolicy) {
+        int stackSize = 1;
+        while(stackSize < size) stackSize <<=1;
         this.size = stackSize;
-        this.stack = new AtomicReferenceArray(stackSize);
-        switch (spinPolicy) {
-            case BLOCKING: {
-                this.stackNotFullCondition = new StackNotFull();
-                this.stackNotEmptyCondition = new StackNotEmpty();
+        stack = new AtomicReferenceArray<N>(stackSize);
+
+        switch(spinPolicy) {
+            case BLOCKING:
+                stackNotFullCondition = new StackNotFull();
+                stackNotEmptyCondition = new StackNotEmpty();
                 break;
-            }
-            case SPINNING: {
-                this.stackNotFullCondition = new SpinningStackNotFull();
-                this.stackNotEmptyCondition = new SpinningStackNotEmpty();
+            case SPINNING:
+                stackNotFullCondition = new SpinningStackNotFull();
+                stackNotEmptyCondition = new SpinningStackNotEmpty();
                 break;
-            }
-            default: {
-                this.stackNotFullCondition = new WaitingStackNotFull();
-                this.stackNotEmptyCondition = new WaitingStackNotEmpty();
-            }
+            case WAITING:
+            default:
+                stackNotFullCondition = new WaitingStackNotFull();
+                stackNotEmptyCondition = new WaitingStackNotEmpty();
         }
     }
 
+
     @Override
-    public final boolean push(N n2, long time, TimeUnit unit) throws InterruptedException {
-        long endDate = System.nanoTime() + unit.toNanos(time);
-        while (!this.push(n2)) {
-            if (endDate - System.nanoTime() < 0) {
+    public final boolean push(final N n, final long time, final TimeUnit unit) throws InterruptedException {
+        final long endDate = System.nanoTime() + unit.toNanos(time);
+        while(!push(n)) {
+            if(endDate - System.nanoTime() < 0) {
                 return false;
             }
-            Condition.waitStatus(time, unit, this.stackNotFullCondition);
+
+            Condition.waitStatus(time, unit, stackNotFullCondition);
         }
-        this.stackNotEmptyCondition.signal();
+        stackNotEmptyCondition.signal();
         return true;
     }
 
     @Override
-    public final void pushInterruptibly(N n2) throws InterruptedException {
-        while (!this.push(n2)) {
-            if (Thread.currentThread().isInterrupted()) {
+    public final void pushInterruptibly(final N n) throws InterruptedException {
+        while(!push(n)) {
+            if(Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            this.stackNotFullCondition.await();
+            stackNotFullCondition.await();
         }
-        this.stackNotEmptyCondition.signal();
+        stackNotEmptyCondition.signal();
     }
 
     @Override
-    public final boolean contains(N n2) {
-        if (n2 != null) {
-            for (int i2 = 0; i2 < this.stackTop.get(); ++i2) {
-                if (!n2.equals(this.stack.get(i2))) continue;
-                return true;
+    public final boolean contains(final N n) {
+        if(n != null) {
+            for(int i = 0; i<stackTop.get(); i++) {
+                if(n.equals(stack.get(i))) return true;
             }
         }
         return false;
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * add an element to the stack, failing if the stack is unable to grow
+     *
+     * @param n - the element to push
+     *
+     * @return boolean - false if stack overflow, true otherwise
      */
     @Override
-    public final boolean push(N n2) {
+    public final boolean push(final N n) {
         int spin = 0;
-        do {
-            long writeLock;
-            if ((writeLock = this.seqLock.tryWriteLock()) > 0) {
+        for(;;) {
+
+            final long writeLock = seqLock.tryWriteLock();
+            if(writeLock>0L) {
                 try {
-                    int stackTop = this.stackTop.get();
-                    if (this.size > stackTop) {
+                    final int stackTop = this.stackTop.get();
+                    if(size>stackTop) {
                         try {
-                            this.stack.set(stackTop, n2);
-                            this.stackNotEmptyCondition.signal();
-                            boolean bl2 = true;
-                            return bl2;
+                            stack.set(stackTop, n);
+                            stackNotEmptyCondition.signal();
+                            return true;
+                        } finally {
+                            this.stackTop.set(stackTop+1);
                         }
-                        finally {
-                            this.stackTop.set(stackTop + 1);
-                        }
+                    } else {
+                        return false;
                     }
-                    boolean bl3 = false;
-                    return bl3;
+                } finally {
+                    seqLock.unlock(writeLock);
                 }
-                finally {
-                    this.seqLock.unlock(writeLock);
-                }
+
             }
-            spin = Condition.progressiveYield(spin);
-        } while (true);
+	        spin = Condition.progressiveYield(spin);
+        }
     }
 
+    /**
+     *  peek at the top of the stack
+     *
+     * @return N - the object at the top of the stack
+     */
     @Override
     public final N peek() {
+        // read the current cursor
         int spin = 0;
-        do {
-            long readLock = this.seqLock.readLock();
-            int stackTop = this.stackTop.get();
-            if (stackTop > 0) {
-                N n2 = this.stack.get(stackTop - 1);
-                if (this.seqLock.readLockHeld(readLock)) {
-                    return n2;
+        for(;;) {
+
+            final long readLock = seqLock.readLock();
+            final int stackTop = this.stackTop.get();
+            final N  n = stack.get(stackTop-1);
+            if(seqLock.readLockHeld(readLock)) {
+                if(stackTop>0) {
+                    return stack.get(stackTop-1);
+                } else {
+                    return null;
                 }
-            } else {
-                return null;
             }
+
             spin = Condition.progressiveYield(spin);
-        } while (true);
+        }
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     * pop the next element off the stack
+     * @return N - The object on the top of the stack
      */
     @Override
     public final N pop() {
+
         int spin = 0;
-        do {
-            long writeLock;
-            if ((writeLock = this.seqLock.tryWriteLock()) > 0) {
-                int stackTop = this.stackTop.get();
-                int lastRef = stackTop - 1;
-                if (stackTop > 0) {
-                    try {
-                        N n2 = this.stack.get(lastRef);
-                        this.stack.set(lastRef, null);
-                        this.stackNotFullCondition.signal();
-                        N n3 = n2;
-                        return n3;
+        // now pop the stack
+        for(;;) {
+            final long writeLock = seqLock.tryWriteLock();
+            if(writeLock > 0) {
+                try {
+                    final int stackTop = this.stackTop.get();
+                    final int lastRef = stackTop-1;
+                    if(stackTop>0) {
+                        try {
+                            // if we can modify the stack - i.e. nobody else is modifying
+                            final N n = stack.get(lastRef);
+                            stack.set(lastRef, null);
+                            stackNotFullCondition.signal();
+                            return n;
+                        } finally {
+                            this.stackTop.set(lastRef);
+                        }
+                    } else {
+                        return null;
                     }
-                    finally {
-                        this.stackTop.set(lastRef);
-                    }
-                }
-                N n2 = null;
-                return n2;
-                finally {
-                    this.seqLock.unlock(writeLock);
+                } finally {
+                    seqLock.unlock(writeLock);
                 }
             }
+
             spin = Condition.progressiveYield(spin);
-        } while (true);
+
+        }
     }
 
     @Override
-    public final N pop(long time, TimeUnit unit) throws InterruptedException {
-        long endTime = System.nanoTime() + unit.toNanos(time);
-        do {
-            N n2;
-            if ((n2 = this.pop()) != null) {
-                this.stackNotFullCondition.signal();
-                return n2;
+    public final N pop(final long time, final TimeUnit unit) throws InterruptedException {
+        final long endTime = System.nanoTime() + unit.toNanos(time);
+        for(;;) {
+            final N n = pop();
+            if(n != null) {
+                stackNotFullCondition.signal();
+                return n;
+            } else {
+                if(endTime - System.nanoTime() < 0) {
+                    return null;
+                }
             }
-            if (endTime - System.nanoTime() < 0) {
-                return null;
-            }
-            Condition.waitStatus(time, unit, this.stackNotEmptyCondition);
-        } while (true);
+            Condition.waitStatus(time, unit, stackNotEmptyCondition);
+        }
     }
 
     @Override
     public final N popInterruptibly() throws InterruptedException {
-        do {
-            N n2;
-            if ((n2 = this.pop()) != null) {
-                this.stackNotFullCondition.signal();
-                return n2;
+        for(;;) {
+            final N n = pop();
+            if(n != null) {
+                stackNotFullCondition.signal();
+                return n;
+            } else {
+                if(Thread.currentThread().isInterrupted()) {
+                    throw new InterruptedException();
+                }
             }
-            if (Thread.currentThread().isInterrupted()) {
-                throw new InterruptedException();
-            }
-            this.stackNotEmptyCondition.await();
-        } while (true);
+            stackNotEmptyCondition.await();
+        }
     }
 
+    /**
+     * Return the size of the stack
+     * @return int - number of elements in the stack
+     */
     @Override
     public final int size() {
-        return this.stackTop.get();
+        return stackTop.get();
     }
 
+    /**
+     * how much available space in the stack
+     */
     @Override
     public final int remainingCapacity() {
-        return this.size - this.stackTop.get();
+        return size - stackTop.get();
     }
 
+    /**
+     * @return boolean - true if stack is currently empty
+     */
     @Override
     public final boolean isEmpty() {
-        return this.stackTop.get() == 0;
+        return stackTop.get()==0;
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
+    /**
+     *  clear the stack - does not null old references
      */
     @Override
     public final void clear() {
         int spin = 0;
-        do {
-            long writeLock;
-            if ((writeLock = this.seqLock.tryWriteLock()) > 0) {
-                int stackTop = this.stackTop.get();
-                if (stackTop > 0) {
+        for(;;) {
+            final long writeLock = seqLock.tryWriteLock();
+            if(writeLock > 0L) {
+                final int stackTop = this.stackTop.get();
+                if(stackTop>0) {
                     try {
-                        for (int i2 = 0; i2 < stackTop; ++i2) {
-                            this.stack.set(i2, null);
+                        for(int i = 0; i<stackTop; i++) {
+                            stack.set(i, null);
                         }
-                        this.stackNotFullCondition.signal();
+                        stackNotFullCondition.signal();
                         return;
-                    }
-                    finally {
+                    } finally {
                         this.stackTop.set(0);
                     }
+                } else {
+                    return;
                 }
-                return;
             }
+
             spin = Condition.progressiveYield(spin);
-        } while (true);
-    }
-
-    private boolean isFull() {
-        return this.size == this.stackTop.get();
-    }
-
-    private final class StackNotEmpty
-    extends AbstractCondition {
-        private StackNotEmpty() {
         }
+    }
+
+    private final boolean isFull() {
+        return size == stackTop.get();
+    }
+
+
+    // condition used for signaling queue is full
+    private final class WaitingStackNotFull extends AbstractWaitingCondition {
 
         @Override
+        // @return boolean - true if the queue is full
         public final boolean test() {
-            return ConcurrentStack.this.isEmpty();
+            return isFull();
         }
     }
 
-    private final class StackNotFull
-    extends AbstractCondition {
-        private StackNotFull() {
-        }
-
+    // condition used for signaling queue is empty
+    private final class WaitingStackNotEmpty extends AbstractWaitingCondition {
         @Override
+        // @return boolean - true if the queue is empty
         public final boolean test() {
-            return ConcurrentStack.this.isFull();
+            return isEmpty();
         }
     }
 
-    private final class SpinningStackNotEmpty
-    extends AbstractSpinningCondition {
-        private SpinningStackNotEmpty() {
-        }
+    // condition used for signaling queue is full
+    private final class SpinningStackNotFull extends AbstractSpinningCondition {
 
         @Override
+        // @return boolean - true if the queue is full
         public final boolean test() {
-            return ConcurrentStack.this.isEmpty();
+            return isFull();
         }
     }
 
-    private final class SpinningStackNotFull
-    extends AbstractSpinningCondition {
-        private SpinningStackNotFull() {
-        }
-
+    // condition used for signaling queue is empty
+    private final class SpinningStackNotEmpty extends AbstractSpinningCondition {
         @Override
+        // @return boolean - true if the queue is empty
         public final boolean test() {
-            return ConcurrentStack.this.isFull();
+            return isEmpty();
         }
     }
 
-    private final class WaitingStackNotEmpty
-    extends AbstractWaitingCondition {
-        private WaitingStackNotEmpty() {
-        }
+    // condition used for signaling queue is full
+    private final class StackNotFull extends AbstractCondition {
 
         @Override
+        // @return boolean - true if the queue is full
         public final boolean test() {
-            return ConcurrentStack.this.isEmpty();
+            return isFull();
         }
     }
 
-    private final class WaitingStackNotFull
-    extends AbstractWaitingCondition {
-        private WaitingStackNotFull() {
-        }
-
+    // condition used for signaling queue is empty
+    private final class StackNotEmpty extends AbstractCondition {
         @Override
+        // @return boolean - true if the queue is empty
         public final boolean test() {
-            return ConcurrentStack.this.isFull();
+            return isEmpty();
         }
     }
 
 }
-
