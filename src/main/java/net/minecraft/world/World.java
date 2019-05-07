@@ -149,7 +149,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     protected final ISaveHandler saveHandler;
     public WorldInfo worldInfo; // Akarin
     protected boolean findingSpawnPoint;
-    protected MapStorage mapStorage;
+    public MapStorage mapStorage; // Akarin
     public VillageCollection villageCollection;
     protected LootTableManager lootTable;
     protected AdvancementManager advancementManager;
@@ -1399,7 +1399,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                     for (Entity e : entities) {
                         if (e instanceof EntityXPOrb) {
                             EntityXPOrb loopItem = (EntityXPOrb) e;
-                            if (!loopItem.isDead && !(maxValue > 0 && loopItem.xpValue >= maxValue) && new com.destroystokyo.paper.event.entity.ExperienceOrbMergeEvent((org.bukkit.entity.ExperienceOrb) entityIn.getBukkitEntity(), (org.bukkit.entity.ExperienceOrb) loopItem.getBukkitEntity()).callEvent()) {
+                            if (!loopItem.isDead && !(maxValue > 0 && loopItem.xpValue >= maxValue)) {
                                 long newTotal = (long)xp.xpValue + (long)loopItem.xpValue;
                                 if ((int) newTotal < 0) continue; // Overflow
                                 if (maxValue > 0 && newTotal > (long)maxValue) {

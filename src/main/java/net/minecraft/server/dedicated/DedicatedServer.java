@@ -60,7 +60,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
     private RConThreadQuery rconQueryThread;
     public final RConConsoleSource rconConsoleSource = new RConConsoleSource(this); // Akarin
     private RConThreadMain rconThread;
-    private PropertyManager settings;
+    public PropertyManager settings; // Akarin
     private ServerEula eula;
     private boolean canSpawnStructures;
     private GameType gameType;

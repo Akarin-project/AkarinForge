@@ -37,6 +37,7 @@ import com.mojang.authlib.GameProfile;
 import io.akarin.forge.AkarinForge;
 import io.akarin.forge.command.CraftSimpleCommandMap;
 import io.akarin.forge.remapper.ReflectionTransformer;
+import io.akarin.forge.utils.MCUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
@@ -83,13 +84,26 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.command.ServerCommandManager;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Enchantments;
+import net.minecraft.init.Items;
 import net.minecraft.init.MobEffects;
+import net.minecraft.item.crafting.CraftingManager;
+import net.minecraft.item.crafting.FurnaceRecipes;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.server.dedicated.PendingCommand;
 import net.minecraft.server.management.PlayerList;
+import net.minecraft.server.management.UserListEntry;
 import net.minecraft.tileentity.TileEntitySign;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.GameType;
+import net.minecraft.world.MinecraftException;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
+import net.minecraft.world.storage.MapData;
+import net.minecraft.world.storage.MapStorage;
+import net.minecraft.world.storage.SaveHandler;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
@@ -707,19 +721,19 @@ implements Server {
     /*
      * WARNING - Removed try catching itself - possible behaviour change.
      */
-    public boolean dispatchServerCommand(CommandSender sender, nk serverCommand) {
+    public boolean dispatchServerCommand(CommandSender sender, PendingCommand serverCommand) {
         Conversable conversable2;
         if (sender instanceof Conversable && (conversable2 = (Conversable)((Object)sender)).isConversing()) {
-            conversable2.acceptConversationInput(serverCommand.a);
+            conversable2.acceptConversationInput(serverCommand.command);
             return true;
         }
         try {
             this.playerCommandState = true;
-            boolean result = this.dispatchCommand(sender, serverCommand.a);
+            boolean result = this.dispatchCommand(sender, serverCommand.command);
             return result;
         }
         catch (Exception ex2) {
-            this.getLogger().log(Level.WARNING, "Unexpected exception while parsing console command \"" + serverCommand.a + '\"', ex2);
+            this.getLogger().log(Level.WARNING, "Unexpected exception while parsing console command \"" + serverCommand.command + '\"', ex2);
             boolean bl2 = false;
             return bl2;
         }
@@ -861,9 +875,9 @@ implements Server {
         }
         boolean hardcore = false;
         WorldSettings worldSettings = new WorldSettings(creator.seed(), GameType.getByID(getDefaultGameMode().getValue()), generateStructures, hardcore, type);
-        oo worldserver = DimensionManager.initDimension(creator, worldSettings);
+        WorldServer worldserver = DimensionManager.initDimension(creator, worldSettings);
         this.pluginManager.callEvent(new WorldInitEvent(worldserver.getWorld()));
-        this.logger.info("Preparing start region for level " + (this.console.worldServerList.size() - 1) + " (Dimension: " + worldserver.s.getDimension() + ", Seed: " + worldserver.Q() + ")");
+        this.logger.info("Preparing start region for level " + (this.console.worldServers.size() - 1) + " (Dimension: " + worldserver.provider.getDimension() + ", Seed: " + worldserver.getSeed() + ")");
         if (worldserver.getWorld().getKeepSpawnInMemory()) {
             int short1 = 196;
             long i2 = System.currentTimeMillis();
@@ -879,8 +893,8 @@ implements Server {
                         this.logger.info("Preparing spawn area for " + worldserver.getWorld().getName() + ", " + j1 * 100 / i1 + "%");
                         i2 = l2;
                     }
-                    et pos = worldserver.T();
-                    worldserver.r().b(pos.p() + j2 >> 4, pos.r() + k2 >> 4);
+                    BlockPos pos = worldserver.getSpawnPoint();
+                    worldserver.getChunkProvider().loadChunk(pos.getX() + j2 >> 4, pos.getZ() + k2 >> 4);
                 }
             }
         }
@@ -898,14 +912,14 @@ implements Server {
         if (world == null) {
             return false;
         }
-        oo handle = ((CraftWorld)world).getHandle();
-        if (!this.console.worldServerList.contains(handle)) {
+        WorldServer handle = ((CraftWorld)world).getHandle();
+        if (!this.console.worldServers.contains(handle)) {
             return false;
         }
         if (handle.dimension == 0) {
             return false;
         }
-        if (handle.i.size() > 0) {
+        if (handle.playerEntities.size() > 0) {
             return false;
         }
         WorldUnloadEvent e2 = new WorldUnloadEvent(handle.getWorld());
@@ -915,16 +929,16 @@ implements Server {
         }
         if (save) {
             try {
-                handle.a(true, null);
-                handle.s();
+                handle.saveAllChunks(true, null);
+                handle.flush();
             }
-            catch (amv ex2) {
+            catch (MinecraftException ex2) {
                 this.getLogger().log(Level.SEVERE, null, ex2);
             }
         }
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(handle));
         this.worlds.remove(world.getName().toLowerCase(Locale.ENGLISH));
-        DimensionManager.setWorld(handle.s.getDimension(), null, FMLCommonHandler.instance().getMinecraftServerInstance());
+        DimensionManager.setWorld(handle.provider.getDimension(), null, FMLCommonHandler.instance().getMinecraftServerInstance());
         return true;
     }
 
@@ -939,7 +953,7 @@ implements Server {
         if (world == null && name.toUpperCase().startsWith("DIM")) {
             try {
                 int dimension = Integer.valueOf(name.substring(3));
-                oo worldserver = this.console.a(dimension);
+                WorldServer worldserver = this.console.getWorld(dimension);
                 if (worldserver != null) {
                     world = worldserver.getWorld();
                 }
@@ -989,7 +1003,7 @@ implements Server {
     @Override
     public void savePlayers() {
         this.checkSaveState();
-        this.playerList.j();
+        this.playerList.saveAllPlayerData();
     }
 
     @Override
@@ -1031,31 +1045,40 @@ implements Server {
 
     @Override
     public void clearRecipes() {
-        aku.a = new fh();
-        akp.a().b.clear();
-        akp.a().customRecipes.clear();
-        akp.a().customExperience.clear();
+        CraftingManager.REGISTRY = new RegistryNamespaced();
+        FurnaceRecipes.instance().smeltingList.clear();
+        FurnaceRecipes.instance().customRecipes.clear();
+        FurnaceRecipes.instance().customExperience.clear();
     }
 
     @Override
     public void resetRecipes() {
-        aku.a = new fh();
-        aku.a();
-        akp.a().b = new akp().b;
-        akp.a().customRecipes.clear();
-        akp.a().customExperience.clear();
+        CraftingManager.REGISTRY = new RegistryNamespaced();
+        CraftingManager.init();
+        FurnaceRecipes.instance().smeltingList = new FurnaceRecipes().smeltingList;
+        FurnaceRecipes.instance().customRecipes.clear();
+        FurnaceRecipes.instance().customExperience.clear();
     }
 
     @Override
     public Map<String, String[]> getCommandAliases() {
-        ConfigurationSection section = this.commandsConfiguration.getConfigurationSection("aliases");
-        LinkedHashMap<String, String[]> result = new LinkedHashMap<String, String[]>();
+        ConfigurationSection section = commandsConfiguration.getConfigurationSection("aliases");
+        Map<String, String[]> result = new LinkedHashMap<String, String[]>();
+
         if (section != null) {
             for (String key : section.getKeys(false)) {
-                ImmutableList commands = section.isList(key) ? section.getStringList(key) : ImmutableList.of((Object)section.getString(key));
+                List<String> commands;
+
+                if (section.isList(key)) {
+                    commands = section.getStringList(key);
+                } else {
+                    commands = ImmutableList.of(section.getString(key));
+                }
+
                 result.put(key, commands.toArray(new String[commands.size()]));
             }
         }
+
         return result;
     }
 
@@ -1075,7 +1098,7 @@ implements Server {
 
     @Override
     public int getSpawnRadius() {
-        return ((nz)this.console).q.a("spawn-protection", 16);
+        return ((DedicatedServer) console).settings.getIntProperty("spawn-protection", 16);
     }
 
     @Override
@@ -1091,12 +1114,12 @@ implements Server {
 
     @Override
     public boolean getAllowFlight() {
-        return this.console.ah();
+        return this.console.isFlightAllowed();
     }
 
     @Override
     public boolean isHardcore() {
-        return this.console.p();
+        return this.console.isHardcore();
     }
 
     public ChunkGenerator getGenerator(String world) {
@@ -1128,9 +1151,9 @@ implements Server {
 
     @Deprecated
     @Override
-    public CraftMapView getMap(short id2) {
-        bfm collection = this.console.d[0].z;
-        bev worldmap = (bev)collection.a(bev.class, "map_" + id2);
+    public CraftMapView getMap(short id) {
+        MapStorage collection = console.worlds[0].mapStorage;
+        MapData worldmap = (MapData) collection.getOrLoadData(MapData.class, "map_" + id);
         if (worldmap == null) {
             return null;
         }
@@ -1139,15 +1162,16 @@ implements Server {
 
     @Override
     public CraftMapView createMap(World world) {
-        Validate.notNull((Object)world, (String)"World cannot be null", (Object[])new Object[0]);
-        aip stack = new aip(air.cg, 1, -1);
-        bev worldmap = air.bl.a(stack, ((CraftWorld)world).getHandle());
+        Validate.notNull(world, "World cannot be null");
+
+        net.minecraft.item.ItemStack stack = new net.minecraft.item.ItemStack(Items.MAP, 1, -1);
+        MapData worldmap = Items.FILLED_MAP.getMapData(stack, ((CraftWorld) world).getHandle());
         return worldmap.mapView;
     }
 
     @Override
     public void shutdown() {
-        this.console.x();
+        console.initiateShutdown();
     }
 
     @Override
@@ -1175,7 +1199,7 @@ implements Server {
         Validate.notNull((Object)name, (String)"Name cannot be null", (Object[])new Object[0]);
         OfflinePlayer result = this.getPlayerExact(name);
         if (result == null) {
-            GameProfile profile = this.console.aB().a(name);
+            GameProfile profile = console.getPlayerProfileCache().getGameProfileForUsername( name );
             result = profile == null ? this.getOfflinePlayer(new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(Charsets.UTF_8)), name)) : this.getOfflinePlayer(profile);
         } else {
             this.offlinePlayers.remove(result.getUniqueId());
@@ -1207,7 +1231,7 @@ implements Server {
 
     @Override
     public Set<String> getIPBans() {
-        return new HashSet<String>(Arrays.asList(this.playerList.i().a()));
+        return new HashSet<String>(Arrays.asList(playerList.getBannedIPs().getKeys()));
     }
 
     @Override
@@ -1224,63 +1248,72 @@ implements Server {
 
     @Override
     public Set<OfflinePlayer> getBannedPlayers() {
-        HashSet<OfflinePlayer> result = new HashSet<OfflinePlayer>();
-        for (po entry : this.playerList.h().getValuesCB()) {
-            result.add(this.getOfflinePlayer((GameProfile)entry.f()));
-        }
+        Set<OfflinePlayer> result = new HashSet<OfflinePlayer>();
+
+        for (UserListEntry entry : playerList.getBannedPlayers().getValues()) {
+            result.add(getOfflinePlayer((GameProfile) entry.getValue()));
+        }        
+
         return result;
     }
 
     @Override
     public BanList getBanList(BanList.Type type) {
-        Validate.notNull((Object)((Object)type), (String)"Type cannot be null", (Object[])new Object[0]);
-        switch (type) {
-            case IP: {
-                return new CraftIpBanList(this.playerList.i());
-            }
+        Validate.notNull(type, "Type cannot be null");
+
+        switch(type){
+        case IP:
+            return new CraftIpBanList(playerList.getBannedIPs());
+        case NAME:
+        default:
+            return new CraftProfileBanList(playerList.getBannedPlayers());
         }
-        return new CraftProfileBanList(this.playerList.h());
     }
 
     @Override
     public void setWhitelist(boolean value) {
-        this.playerList.a(value);
-        this.console.getPropertyManager().a("white-list", (Object)value);
+        playerList.setWhiteListEnabled(value);
+        console.getPropertyManager().setProperty("white-list", value);
     }
 
     @Override
     public Set<OfflinePlayer> getWhitelistedPlayers() {
-        LinkedHashSet<OfflinePlayer> result = new LinkedHashSet<OfflinePlayer>();
-        for (po entry : this.playerList.k().getValuesCB()) {
-            result.add(this.getOfflinePlayer((GameProfile)entry.f()));
+        Set<OfflinePlayer> result = new LinkedHashSet<OfflinePlayer>();
+
+        for (UserListEntry entry : playerList.getWhitelistedPlayers().getValues()) {
+            result.add(getOfflinePlayer((GameProfile) entry.getValue()));
         }
+
         return result;
     }
 
     @Override
     public Set<OfflinePlayer> getOperators() {
-        HashSet<OfflinePlayer> result = new HashSet<OfflinePlayer>();
-        for (po entry : this.playerList.m().getValuesCB()) {
-            result.add(this.getOfflinePlayer((GameProfile)entry.f()));
+        Set<OfflinePlayer> result = new HashSet<OfflinePlayer>();
+
+        for (UserListEntry entry : playerList.getOppedPlayers().getValues()) {
+            result.add(getOfflinePlayer((GameProfile) entry.getValue()));
         }
+
         return result;
     }
 
     @Override
     public void reloadWhitelist() {
-        this.playerList.a();
+        playerList.reloadWhitelist();
     }
 
     @Override
     public GameMode getDefaultGameMode() {
-        return GameMode.getByValue(this.console.d[0].V().q().a());
+        return GameMode.getByValue(console.worlds[0].getWorldInfo().getGameType().getID());
     }
 
     @Override
     public void setDefaultGameMode(GameMode mode) {
-        Validate.notNull((Object)((Object)mode), (String)"Mode cannot be null", (Object[])new Object[0]);
-        for (World world : this.getWorlds()) {
-            ((CraftWorld)world).getHandle().x.a(ams.a(mode.getValue()));
+        Validate.notNull(mode, "Mode cannot be null");
+
+        for (World world : getWorlds()) {
+            ((CraftWorld) world).getHandle().worldInfo.setGameType(GameType.getByID(mode.getValue()));
         }
     }
 
@@ -1304,20 +1337,23 @@ implements Server {
     @Override
     public File getWorldContainer() {
         if (DimensionManager.getWorld(0) != null) {
-            return ((bfb)DimensionManager.getWorld(0).U()).b();
+            return ((SaveHandler) DimensionManager.getWorld(0).getSaveHandler()).getWorldDirectory();
         }
-        if (this.getServer().n != null) {
-            return this.getServer().n;
+        
+        if (this.getServer().anvilFile != null) {
+            return this.getServer().anvilFile;
         }
-        if (this.container == null) {
-            this.container = new File(this.configuration.getString("settings.world-container", "."));
+
+        if (container == null) {
+            container = new File(configuration.getString("settings.world-container", "."));
         }
-        return this.container;
+
+        return container;
     }
 
     @Override
     public OfflinePlayer[] getOfflinePlayers() {
-        bfb storage = (bfb)this.console.d[0].U();
+        SaveHandler storage = (SaveHandler) this.console.worlds[0].getSaveHandler();
         String[] files = storage.getPlayerDir().list(new DatFileFilter());
         HashSet<OfflinePlayer> players = new HashSet<OfflinePlayer>();
         for (String file : files) {
@@ -1418,7 +1454,7 @@ implements Server {
 
     @Override
     public String getMotd() {
-        return this.console.aj();
+        return console.getMOTD();
     }
 
     @Override
@@ -1426,33 +1462,49 @@ implements Server {
         return this.warningState;
     }
 
-    public List<String> tabComplete(bn sender, String message, et pos, boolean forceCommand) {
-        if (!(SpigotConfig.tabComplete >= 0 && message.length() > SpigotConfig.tabComplete || message.contains(" "))) {
+    public List<String> tabComplete(net.minecraft.command.ICommandSender sender, String message, BlockPos pos, boolean forceCommand) {
+        if (!(sender instanceof EntityPlayerMP)) {
             return ImmutableList.of();
         }
-        if (!(sender instanceof oq)) {
-            return ImmutableList.of();
+
+        List<String> offers;
+        Player player = ((EntityPlayerMP) sender).getBukkitEntity();
+        if (message.startsWith("/") || forceCommand) {
+            offers = tabCompleteCommand(player, message, pos);
+        } else {
+            offers = tabCompleteChat(player, message);
         }
-        CraftPlayer player = ((oq)sender).getBukkitEntity();
-        List<String> offers = message.startsWith("/") || forceCommand ? this.tabCompleteCommand(player, message, pos) : this.tabCompleteChat(player, message);
+
         TabCompleteEvent tabEvent = new TabCompleteEvent(player, message, offers);
         this.getPluginManager().callEvent(tabEvent);
         return tabEvent.isCancelled() ? Collections.EMPTY_LIST : tabEvent.getCompletions();
     }
 
-    public List<String> tabCompleteCommand(Player player, String message, et pos) {
-        ImmutableList completions = null;
+    public List<String> tabCompleteCommand(Player player, String message, BlockPos pos) {
+        // Spigot Start
+        if ( (org.spigotmc.SpigotConfig.tabComplete < 0 || message.length() <= org.spigotmc.SpigotConfig.tabComplete) && !message.contains( " " ) )
+        {
+            return ImmutableList.of();
+        }
+        // Spigot End
+
+        List<String> completions = null;
         try {
             if (message.startsWith("/")) {
+                // Trim leading '/' if present (won't always be present in command blocks)
                 message = message.substring(1);
             }
-            completions = pos == null ? this.getCommandMap().tabComplete(player, message) : this.getCommandMap().tabComplete(player, message, new Location(player.getWorld(), pos.p(), pos.q(), pos.r()));
+            if (pos == null) {
+                completions = getCommandMap().tabComplete(player, message);
+            } else {
+                completions = getCommandMap().tabComplete(player, message, new Location(player.getWorld(), pos.getX(), pos.getY(), pos.getZ()));
+            }
+        } catch (CommandException ex) {
+            player.sendMessage(ChatColor.RED + "An internal error occurred while attempting to tab-complete this command");
+            getLogger().log(Level.SEVERE, "Exception when " + player.getName() + " attempted to tab complete " + message, ex);
         }
-        catch (CommandException ex2) {
-            player.sendMessage((Object)((Object)ChatColor.RED) + "An internal error occurred while attempting to tab-complete this command");
-            this.getLogger().log(Level.SEVERE, "Exception when " + player.getName() + " attempted to tab complete " + message, ex2);
-        }
-        return completions == null ? ImmutableList.of() : completions;
+
+        return completions == null ? ImmutableList.<String>of() : completions;
     }
 
     public List<String> tabCompleteChat(Player player, String message) {
@@ -1527,12 +1579,12 @@ implements Server {
 
     @Override
     public void setIdleTimeout(int threshold) {
-        this.console.d(threshold);
+        console.setPlayerIdleTimeout(threshold);
     }
 
     @Override
     public int getIdleTimeout() {
-        return this.console.ax();
+        return console.getMaxPlayerIdleMinutes();
     }
 
     @Override
@@ -1541,29 +1593,30 @@ implements Server {
     }
 
     @Override
-    public /* varargs */ BossBar createBossBar(String title, BarColor color, BarStyle style, BarFlag ... flags) {
+    public BossBar createBossBar(String title, BarColor color, BarStyle style, BarFlag... flags) {
         return new CraftBossBar(title, color, style, flags);
     }
 
     @Override
     public Entity getEntity(UUID uuid) {
-        Validate.notNull((Object)uuid, (String)"UUID cannot be null", (Object[])new Object[0]);
-        vg entity = this.console.a(uuid);
+        Validate.notNull(uuid, "UUID cannot be null");
+        net.minecraft.entity.Entity entity = console.getEntityFromUuid(uuid); // PAIL: getEntity
         return entity == null ? null : entity.getBukkitEntity();
     }
 
     @Override
-    public Advancement getAdvancement(NamespacedKey key) {
-        Preconditions.checkArgument((boolean)(key != null), (Object)"key");
-        i advancement = this.console.aK().a(CraftNamespacedKey.toMinecraft(key));
-        return advancement == null ? null : advancement.bukkit;
+    public org.bukkit.advancement.Advancement getAdvancement(NamespacedKey key) {
+        Preconditions.checkArgument(key != null, "key");
+
+        net.minecraft.advancements.Advancement advancement = console.getAdvancementManager().getAdvancement(CraftNamespacedKey.toMinecraft(key));
+        return (advancement == null) ? null : advancement.bukkit;
     }
 
     @Override
     public Iterator<Advancement> advancementIterator() {
-        return Iterators.unmodifiableIterator((Iterator)Iterators.transform(this.console.aK().c().iterator(), (Function)new Function<i, Advancement>(){
-
-            public Advancement apply(i advancement) {
+        return Iterators.unmodifiableIterator(Iterators.transform(console.getAdvancementManager().getAdvancements().iterator(), new Function<net.minecraft.advancements.Advancement, org.bukkit.advancement.Advancement>() { // PAIL: rename
+            @Override
+            public org.bukkit.advancement.Advancement apply(net.minecraft.advancements.Advancement advancement) {
                 return advancement.bukkit;
             }
         }));

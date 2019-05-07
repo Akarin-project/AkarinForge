@@ -36,7 +36,7 @@ public class CraftingManager
 {
     private static final Logger LOGGER = LogManager.getLogger();
     private static int nextAvailableId;
-    public static final RegistryNamespaced<ResourceLocation, IRecipe> REGISTRY = net.minecraftforge.registries.GameData.getWrapper(IRecipe.class);
+    public static RegistryNamespaced<ResourceLocation, IRecipe> REGISTRY = net.minecraftforge.registries.GameData.getWrapper(IRecipe.class); // Akarin
 
     public static boolean init()
     {
