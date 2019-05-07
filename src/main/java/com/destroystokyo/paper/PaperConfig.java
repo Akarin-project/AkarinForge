@@ -178,7 +178,7 @@ public class PaperConfig {
         config.addDefault(path, def);
         return config.getString(path, config.getString(path));
     }
-
+    
     public static int minChunkLoadThreads = 2;
     private static void chunkLoadThreads() {
         minChunkLoadThreads = Math.min(6, getInt("settings.min-chunk-load-threads", 2)); // Keep people from doing stupid things with max of 6

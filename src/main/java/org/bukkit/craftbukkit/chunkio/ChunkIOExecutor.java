@@ -6,6 +6,8 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 
 import org.bukkit.craftbukkit.util.AsynchronousExecutor;
 
+import com.destroystokyo.paper.PaperConfig;
+
 import io.akarin.forge.utils.MCUtil;
 import net.minecraft.world.World;
 

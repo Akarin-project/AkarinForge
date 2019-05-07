@@ -13,7 +13,7 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import io.akarin.forge.BukkitInjector;
 import io.akarin.forge.Metrics;
 import io.akarin.forge.api.bukkit.I18nManager;
-import io.akarin.forge.threads.WatchCatThread;
+import io.akarin.forge.threads.AkarinWatcher;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
@@ -578,7 +578,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         }
         
         this.server.enablePlugins(PluginLoadOrder.POSTWORLD);
-        WatchCatThread.startThread();
+        AkarinWatcher.startThread();
         new Metrics();
         // Akarin end
 
@@ -665,7 +665,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
             this.hasStopped = true;
         }
         
-        WatchCatThread.stopThread();
+        AkarinWatcher.stopThread();
         
         if (this.server != null) {
             this.server.disablePlugins();
@@ -917,6 +917,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
     public void tick()
     {
+        AkarinWatcher.update(); // Akarin
         long i = System.nanoTime();
         net.minecraftforge.fml.common.FMLCommonHandler.instance().onPreServerTick();
         ++this.tickCounter;

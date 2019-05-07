@@ -9,7 +9,6 @@ import org.apache.commons.lang3.Validate;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Structure;
-import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.block.structure.UsageMode;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
@@ -83,13 +82,13 @@ public class CraftStructureBlock extends CraftBlockEntityState<TileEntityStructu
     }
 
     @Override
-    public void setMirror(Mirror mirror) {
+    public void setMirror(org.bukkit.block.structure.Mirror mirror) {
         getSnapshot().mirror = Mirror.valueOf(mirror.name()); // PAIL: rename mirror
     }
 
     @Override
-    public Mirror getMirror() {
-        return Mirror.valueOf(getSnapshot().mirror.name()); // PAIL: rename mirror
+    public org.bukkit.block.structure.Mirror getMirror() {
+        return org.bukkit.block.structure.Mirror.valueOf(getSnapshot().mirror.name()); // PAIL: rename mirror
     }
 
     @Override

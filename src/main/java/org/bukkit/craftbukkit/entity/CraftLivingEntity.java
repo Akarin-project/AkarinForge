@@ -42,6 +42,7 @@ import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.inventory.CraftEntityEquipment;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.DragonFireball;
 import org.bukkit.entity.Egg;
@@ -250,16 +251,6 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         return getHandle().attackingPlayer == null ? null : (Player) getHandle().attackingPlayer.getBukkitEntity();
     }
 
-    // Paper start
-    @Override
-    public void setKiller(Player killer) {
-        minecraft.entity.player.EntityPlayerMP entityPlayer = killer == null ? null : ((CraftPlayer) killer).getHandle();
-        getHandle().attackingPlayer = entityPlayer;
-        getHandle().revengeTarget = entityPlayer;
-        getHandle().recentlyHit = entityPlayer == null ? 0 : 100; // 100 value taken from EntityLiving#damageEntity
-    }
-    // Paper end
-
     public boolean addPotionEffect(PotionEffect effect) {
         return addPotionEffect(effect, false);
     }
@@ -275,9 +266,9 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         return true;
     }
 
-    public boolean addPotionEffects(Collection<PotionEffect> effects) {
+    public boolean addPotionEffects(Collection<org.bukkit.potion.PotionEffect> effects) {
         boolean success = true;
-        for (PotionEffect effect : effects) {
+        for (org.bukkit.potion.PotionEffect effect : effects) {
             success &= addPotionEffect(effect);
         }
         return success;
@@ -288,19 +279,19 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     }
 
     @Override
-    public PotionEffect getPotionEffect(PotionEffectType type) {
+    public org.bukkit.potion.PotionEffect getPotionEffect(PotionEffectType type) {
         PotionEffect handle = getHandle().getActivePotionEffect(Potion.getPotionById(type.getId()));
-        return (handle == null) ? null : new PotionEffect(PotionEffectType.getById(Potion.getIdFromPotion(handle.getPotion())), handle.getDuration(), handle.getAmplifier(), handle.getIsAmbient(), handle.doesShowParticles());
+        return (handle == null) ? null : new org.bukkit.potion.PotionEffect(PotionEffectType.getById(Potion.getIdFromPotion(handle.getPotion())), handle.getDuration(), handle.getAmplifier(), handle.getIsAmbient(), handle.doesShowParticles());
     }
 
     public void removePotionEffect(PotionEffectType type) {
         getHandle().removePotionEffect(Potion.getPotionById(type.getId()));
     }
 
-    public Collection<PotionEffect> getActivePotionEffects() {
-        List<PotionEffect> effects = new ArrayList<PotionEffect>();
+    public Collection<org.bukkit.potion.PotionEffect> getActivePotionEffects() {
+        Collection<org.bukkit.potion.PotionEffect> effects = new ArrayList<>();
         for (PotionEffect handle : getHandle().activePotionsMap.values()) {
-            effects.add(new PotionEffect(PotionEffectType.getById(Potion.getIdFromPotion(handle.getPotion())), handle.getDuration(), handle.getAmplifier(), handle.getIsAmbient(), handle.doesShowParticles()));
+            effects.add(new org.bukkit.potion.PotionEffect(PotionEffectType.getById(Potion.getIdFromPotion(handle.getPotion())), handle.getDuration(), handle.getAmplifier(), handle.getIsAmbient(), handle.doesShowParticles()));
         }
         return effects;
     }
@@ -502,46 +493,4 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     public boolean isCollidable() {
         return getHandle().collides;
     }
-
-    // Paper start
-    @Override
-    public int getArrowsStuck() {
-        return getHandle().getArrowCountInEntity();
-    }
-
-    @Override
-    public void setArrowsStuck(int arrows) {
-        getHandle().setArrowCountInEntity(arrows);
-    }
-
-    @Override
-    public int getShieldBlockingDelay() {
-        return getHandle().getShieldBlockingDelay();
-    }
-
-    @Override
-    public void setShieldBlockingDelay(int delay) {
-        getHandle().setShieldBlockingDelay(delay);
-    }
-
-    @Override
-    public ItemStack getActiveItem() {
-        return getHandle().getActiveItem().asBukkitMirror();
-    }
-
-    @Override
-    public int getItemUseRemainingTime() {
-        return getHandle().getItemUseRemainingTime();
-    }
-
-    @Override
-    public int getHandRaisedTime() {
-        return getHandle().getHandRaisedTime();
-    }
-
-    @Override
-    public boolean isHandRaised() {
-        return getHandle().isHandActive();
-    }
-    // Paper end
 }

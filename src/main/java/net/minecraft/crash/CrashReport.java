@@ -117,6 +117,7 @@ public class CrashReport
             }
         });
         net.minecraftforge.fml.common.FMLCommonHandler.instance().enhanceCrashReport(this, this.systemDetailsCategory);
+        this.systemDetailsCategory.addDetail("CraftBukkit Information", (ICrashReportDetail) new org.bukkit.craftbukkit.CraftCrashReport()); // CraftBukkit
     }
 
     public String getDescription()

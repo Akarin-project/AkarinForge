@@ -3,7 +3,6 @@ package org.bukkit.craftbukkit.generator;
 import java.util.List;
 import java.util.Random;
 
-
 import org.bukkit.block.Biome;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
@@ -14,7 +13,6 @@ import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -28,7 +26,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
     private final MapGenStronghold strongholdGen = new MapGenStronghold();
 
     private static class CustomBiomeGrid implements BiomeGrid {
-        Biome[] biome;
+        net.minecraft.world.biome.Biome[] biome;
 
         @Override
         public Biome getBiome(int x, int z) {
@@ -56,7 +54,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
 
         // Get default biome data for chunk
         CustomBiomeGrid biomegrid = new CustomBiomeGrid();
-        biomegrid.biome = new Biome[256];
+        biomegrid.biome = new net.minecraft.world.biome.Biome[256];
         world.getBiomeProvider().getBiomes(biomegrid.biome, x << 4, z << 4, 16, 16);
 
         // Try ChunkData method (1.8+)
@@ -84,7 +82,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
                 }
                 // Build chunk section
                 if (emptyTest != 0) {
-                    csect[sec] = new ExtendedBlockStorage(sec << 4, true, section, this.world.chunkPacketBlockController.getPredefinedBlockData(chunk, sec)); // Paper - Anti-Xray - Add predefined block data
+                    csect[sec] = new ExtendedBlockStorage(sec << 4, true);
                 }
             }
         }
@@ -109,7 +107,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
                         secBlkID[i] = (char) Block.BLOCK_STATE_IDS.get(b.getDefaultState());
                     }
                     // Build chunk section
-                    csect[sec] = new ExtendedBlockStorage(sec << 4, true, secBlkID, this.world.chunkPacketBlockController.getPredefinedBlockData(chunk, sec)); // Paper - Anti-Xray - Add predefined block data
+                    csect[sec] = new ExtendedBlockStorage(sec << 4, true);
                 }
             }
             else { // Else check for byte-per-block section data
@@ -131,7 +129,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
                             Block b = Block.getBlockById(btypes[sec][i] & 0xFF);
                             secBlkID[i] = (char) Block.BLOCK_STATE_IDS.get(b.getDefaultState());
                         }
-                        csect[sec] = new ExtendedBlockStorage(sec << 4, true, secBlkID, this.world.chunkPacketBlockController.getPredefinedBlockData(chunk, sec)); // Paper - Anti-Xray - Add predefined block data
+                        csect[sec] = new ExtendedBlockStorage(sec << 4, true);
                     }
                 }
                 else { // Else, fall back to pre 1.2 method
@@ -171,7 +169,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
                         }
                         // If section built, finish prepping its state
                         if (csbytes != null) {
-                            ExtendedBlockStorage cs = csect[sec] = new ExtendedBlockStorage(sec << 4, true, csbytes, this.world.chunkPacketBlockController.getPredefinedBlockData(chunk, sec)); // Paper - Anti-Xray - Add predefined block data
+                            ExtendedBlockStorage cs = csect[sec] = new ExtendedBlockStorage(sec << 4, true);
                             cs.recalculateRefCounts();
                         }
                     }
@@ -181,7 +179,7 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
         // Set biome grid
         byte[] biomeIndex = chunk.getBiomeArray();
         for (int i = 0; i < biomeIndex.length; i++) {
-            biomeIndex[i] = (byte) (Biome.REGISTRY.getIDForObject(biomegrid.biome[i]) & 0xFF); // PAIL : rename
+            biomeIndex[i] = (byte) (net.minecraft.world.biome.Biome.REGISTRY.getIDForObject(biomegrid.biome[i]) & 0xFF); // PAIL : rename
         }
         // Initialize lighting
         chunk.generateSkylightMap();
@@ -225,8 +223,8 @@ public class CustomChunkGenerator extends InternalChunkGenerator {
     }
 
     @Override
-    public List<Biome.SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos position) {
-        Biome biomebase = world.getBiome(position);
+    public List<net.minecraft.world.biome.Biome.SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos position) {
+        net.minecraft.world.biome.Biome biomebase = world.getBiome(position);
 
         return biomebase == null ? null : biomebase.getSpawnableList(type);
     }

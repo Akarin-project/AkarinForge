@@ -35,7 +35,6 @@ public class HelpYamlReader {
     private final Server server;
 
     public HelpYamlReader(Server server) {
-        this.ALT_COLOR_CODE = 38;
         this.server = server;
         File helpYamlFile = new File("help.yml");
         YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("configurations/help.yml"), Charsets.UTF_8));

@@ -140,7 +140,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public float thunderingStrength;
     private int lastLightningBolt;
     public final Random rand = new Random();
-    public final WorldProvider provider;
+    public WorldProvider provider; // Akarin
     protected PathWorldListener pathListener = new PathWorldListener();
     protected List<IWorldEventListener> eventListeners;
     public IChunkProvider chunkProvider; // Akarin
@@ -1286,18 +1286,18 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         this.playSound(player, (double)pos.getX() + 0.5D, (double)pos.getY() + 0.5D, (double)pos.getZ() + 0.5D, soundIn, category, volume, pitch);
     }
 
-    public void playSound(@Nullable EntityPlayer player, double x, double y, double z, SoundEvent soundIn, SoundCategory category, float volume, float pitch)
+    public void playSound(@Nullable EntityPlayer player, double x, double y, double z, SoundEvent soundIn, SoundCategory soundCategory, float volume, float pitch)
     {
-        net.minecraftforge.event.entity.PlaySoundAtEntityEvent event = net.minecraftforge.event.ForgeEventFactory.onPlaySoundAtEntity(player, soundIn, category, volume, pitch);
+        net.minecraftforge.event.entity.PlaySoundAtEntityEvent event = net.minecraftforge.event.ForgeEventFactory.onPlaySoundAtEntity(player, soundIn, soundCategory, volume, pitch);
         if (event.isCanceled() || event.getSound() == null) return;
         soundIn = event.getSound();
-        category = event.getCategory();
+        soundCategory = event.getCategory();
         volume = event.getVolume();
         pitch = event.getPitch();
 
         for (int i = 0; i < this.eventListeners.size(); ++i)
         {
-            ((IWorldEventListener)this.eventListeners.get(i)).playSoundToAllNearExcept(player, soundIn, category, x, y, z, volume, pitch);
+            ((IWorldEventListener)this.eventListeners.get(i)).playSoundToAllNearExcept(player, soundIn, soundCategory, x, y, z, volume, pitch);
         }
     }
 
@@ -2254,7 +2254,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
             }
         }
         // Akarin start
-        if (forceUpdate && !ActivationRange.checkIfActive(entityIn)) {
+        if (forceUpdate) {
             ++entityIn.ticksExisted;
             entityIn.inactiveTick();
             return;

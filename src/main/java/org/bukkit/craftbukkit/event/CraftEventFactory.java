@@ -306,7 +306,7 @@ public class CraftEventFactory {
                     break;
             }
         }
-        BlockFace blockFace = CraftBlock.notchToBlockFace(direction);
+        BlockFace blockFace = org.bukkit.craftbukkit.block.CraftBlock.notchToBlockFace(direction);
 
         if (itemInHand.getType() == Material.AIR || itemInHand.getAmount() == 0) {
             itemInHand = null;
@@ -333,7 +333,7 @@ public class CraftEventFactory {
             itemInHand = null;
         }
 
-        EntityShootBowEvent event = new EntityShootBowEvent(shooter, itemInHand, CraftItemStack.asCraftMirror(arrowItem), arrow, force); // Paper
+        EntityShootBowEvent event = new EntityShootBowEvent(shooter, itemInHand, arrow, force);
         Bukkit.getPluginManager().callEvent(event);
 
         return event;
@@ -474,18 +474,10 @@ public class CraftEventFactory {
 
     public static EntityDeathEvent callEntityDeathEvent(EntityLivingBase victim, List<org.bukkit.inventory.ItemStack> drops) {
         CraftLivingEntity entity = (CraftLivingEntity) victim.getBukkitEntity();
-        EntityDeathEvent event = new EntityDeathEvent(entity, drops, victim.getExpReward());
-        populateFields(victim, event); // Paper - make cancellable
+        EntityDeathEvent event = new EntityDeathEvent(entity, drops);
         CraftWorld world = (CraftWorld) entity.getWorld();
         Bukkit.getServer().getPluginManager().callEvent(event);
-
-        // Paper start - make cancellable
-        if (event.isCancelled()) {
-            return event;
-        }
-        playDeathSound(victim, event);
         // Paper end
-        victim.expToDrop = event.getDroppedExp();
 
         for (org.bukkit.inventory.ItemStack stack : event.getDrops()) {
             if (stack == null || stack.getType() == Material.AIR || stack.getAmount() == 0) continue;
@@ -498,22 +490,15 @@ public class CraftEventFactory {
 
     public static PlayerDeathEvent callPlayerDeathEvent(EntityPlayerMP victim, List<org.bukkit.inventory.ItemStack> drops, String deathMessage, boolean keepInventory) {
         CraftPlayer entity = victim.getBukkitEntity();
-        PlayerDeathEvent event = new PlayerDeathEvent(entity, drops, victim.getExpReward(), 0, deathMessage);
+        PlayerDeathEvent event = new PlayerDeathEvent(entity, drops, 0, deathMessage);
         event.setKeepInventory(keepInventory);
-        populateFields(victim, event); // Paper - make cancellable
         org.bukkit.World world = entity.getWorld();
         Bukkit.getServer().getPluginManager().callEvent(event);
-        // Paper start - make cancellable
-        if (event.isCancelled()) {
-            return event;
-        }
-        playDeathSound(victim, event);
         // Paper end
 
         victim.keepLevel = event.getKeepLevel();
         victim.newLevel = event.getNewLevel();
         victim.newTotalExp = event.getNewTotalExp();
-        victim.expToDrop = event.getDroppedExp();
         victim.newExp = event.getNewExp();
 
         if (event.getKeepInventory()) {
@@ -527,31 +512,6 @@ public class CraftEventFactory {
         }
 
         return event;
-    }
-
-    // Paper start - helper methods for making death event cancellable
-    // Add information to death event
-    private static void populateFields(EntityLivingBase victim, EntityDeathEvent event) {
-        event.setReviveHealth(event.getEntity().getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).getValue());
-        event.setShouldPlayDeathSound(!victim.silentDeath && !victim.isSilent());
-        SoundEvent soundEffect = victim.getDeathSoundEffect();
-        event.setDeathSound(soundEffect != null ? org.bukkit.craftbukkit.CraftSound.getSoundByEffect(soundEffect) : null);
-        event.setDeathSoundCategory(org.bukkit.SoundCategory.valueOf(victim.getDeathSoundCategory().name()));
-        event.setDeathSoundVolume(victim.getDeathSoundVolume());
-        event.setDeathSoundPitch(victim.getDeathSoundPitch());
-    }
-
-    // Play death sound manually
-    private static void playDeathSound(EntityLivingBase victim, EntityDeathEvent event) {
-        if (event.shouldPlayDeathSound() && event.getDeathSound() != null && event.getDeathSoundCategory() != null) {
-            EntityPlayer source = victim instanceof EntityPlayer ? (EntityPlayer) victim : null;
-            double x = event.getEntity().getLocation().getX();
-            double y = event.getEntity().getLocation().getY();
-            double z = event.getEntity().getLocation().getZ();
-            SoundEvent soundEffect = org.bukkit.craftbukkit.CraftSound.getSoundEffect(event.getDeathSound());
-            SoundCategory soundCategory = SoundCategory.valueOf(event.getDeathSoundCategory().name());
-            victim.world.sendSoundEffect(source, x, y, z, soundEffect, soundCategory, event.getDeathSoundVolume(), event.getDeathSoundPitch());
-        }
     }
     // Paper end
     /**
@@ -784,7 +744,7 @@ public class CraftEventFactory {
         Player player = (Player) entity.getBukkitEntity();
         ExperienceOrb source = (ExperienceOrb) entityOrb.getBukkitEntity();
         int expAmount = source.getExperience();
-        PlayerExpChangeEvent event = new PlayerExpChangeEvent(player, source, expAmount);
+        PlayerExpChangeEvent event = new PlayerExpChangeEvent(player, expAmount);
         Bukkit.getPluginManager().callEvent(event);
         return event;
     }
@@ -918,23 +878,6 @@ public class CraftEventFactory {
 
         return CraftItemStack.asNMSCopy(bitem);
     }
-
-    // Paper start
-    public static com.destroystokyo.paper.event.entity.ProjectileCollideEvent callProjectileCollideEvent(Entity entity, RayTraceResult position) {
-        Projectile projectile = (Projectile) entity.getBukkitEntity();
-        org.bukkit.entity.Entity collided = position.entityHit.getBukkitEntity();
-        com.destroystokyo.paper.event.entity.ProjectileCollideEvent event = new com.destroystokyo.paper.event.entity.ProjectileCollideEvent(projectile, collided);
-
-        if (projectile.getShooter() instanceof Player && collided instanceof Player) {
-            if (!((Player) projectile.getShooter()).canSee((Player) collided)) {
-                event.setCancelled(true);
-            }
-        }
-
-        Bukkit.getPluginManager().callEvent(event);
-        return event;
-    }
-    // Paper end
 
     public static ProjectileLaunchEvent callProjectileLaunchEvent(Entity entity) {
         Projectile bukkitEntity = (Projectile) entity.getBukkitEntity();
@@ -1123,7 +1066,7 @@ public class CraftEventFactory {
         Player player = ((EntityPlayerMP) entityHuman).getBukkitEntity();
         Event event;
         if (true) {
-            org.bukkit.Statistic stat = CraftStatistic.getBukkitStatistic(statistic);
+            org.bukkit.Statistic stat = org.bukkit.craftbukkit.CraftStatistic.getBukkitStatistic(statistic);
             if (stat == null) {
                 System.err.println("Unhandled statistic: " + statistic);
                 return null;

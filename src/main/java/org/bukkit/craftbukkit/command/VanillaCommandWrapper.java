@@ -64,7 +64,7 @@ public final class VanillaCommandWrapper extends BukkitCommand {
         Validate.notNull(sender, "Sender cannot be null");
         Validate.notNull(args, "Arguments cannot be null");
         Validate.notNull(alias, "Alias cannot be null");
-        return (List<String>) vanillaCommand.getTabCompletions(MinecraftServer.getServer(), getListener(sender), args, (location) == null ? null : new BlockPos(location.getX(), location.getY(), location.getZ()));
+        return (List<String>) vanillaCommand.getTabCompletions(MinecraftServer.getServerInst(), getListener(sender), args, (location) == null ? null : new BlockPos(location.getX(), location.getY(), location.getZ()));
     }
 
     public static CommandSender lastSender = null; // Nasty :(
@@ -148,7 +148,7 @@ public final class VanillaCommandWrapper extends BukkitCommand {
             }
         } finally {
             icommandlistener.setCommandStat(CommandResultStats.Type.SUCCESS_COUNT, j);
-            MinecraftServer.getServer().worlds = prev;
+            MinecraftServer.getServerInst().worlds = prev;
         }
         return j;
     }

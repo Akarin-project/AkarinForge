@@ -11,9 +11,7 @@ import org.bukkit.craftbukkit.inventory.CraftInventory;
 import org.bukkit.craftbukkit.inventory.CraftInventoryDoubleChest;
 import org.bukkit.inventory.Inventory;
 
-import com.destroystokyo.paper.loottable.CraftLootableBlockInventory;
-
-public class CraftChest extends CraftLootable<TileEntityChest> implements Chest, CraftLootableBlockInventory { // Paper
+public class CraftChest extends CraftLootable<TileEntityChest> implements Chest {
 
     public CraftChest(final Block block) {
         super(block, TileEntityChest.class);

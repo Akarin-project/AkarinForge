@@ -14,9 +14,7 @@ import org.bukkit.craftbukkit.projectiles.CraftBlockProjectileSource;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.projectiles.BlockProjectileSource;
 
-import com.destroystokyo.paper.loottable.CraftLootableBlockInventory;
-
-public class CraftDispenser extends CraftLootable<TileEntityDispenser> implements Dispenser, CraftLootableBlockInventory {
+public class CraftDispenser extends CraftLootable<TileEntityDispenser> implements Dispenser {
 
     public CraftDispenser(final Block block) {
         super(block, TileEntityDispenser.class);

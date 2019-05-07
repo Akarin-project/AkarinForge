@@ -108,7 +108,7 @@ public class SpigotTimings {
         public final CustomTimingsHandler syncChunkLoadPostTimer;
 
         public WorldTimingsHandler(WorldServer server) {
-            String name = server.x.j() + " - ";
+            String name = server.worldInfo.getWorldName() + " - ";
             this.mobSpawn = new CustomTimingsHandler("** " + name + "mobSpawn");
             this.doChunkUnload = new CustomTimingsHandler("** " + name + "doChunkUnload");
             this.doTickPending = new CustomTimingsHandler("** " + name + "doTickPending");

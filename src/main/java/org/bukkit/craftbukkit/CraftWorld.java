@@ -888,13 +888,13 @@ implements World {
     }
 
     public void setBiome(int x, int z, Biome bio) {
-        Biome bb = CraftBlock.biomeToBiomeBase(bio);
+        net.minecraft.world.biome.Biome bb = CraftBlock.biomeToBiomeBase(bio);
         if (this.world.isBlockLoaded(new BlockPos(x, 0, z))) {
-            minecraft.world.chunk.Chunk chunk = this.world.getChunkFromBlockCoords(new BlockPos(x, 0, z));
+            net.minecraft.world.chunk.Chunk chunk = this.world.getChunkFromBlockCoords(new BlockPos(x, 0, z));
 
             if (chunk != null) {
                 byte[] biomevals = chunk.getBiomeArray();
-                biomevals[((z & 0xF) << 4) | (x & 0xF)] = (byte) Biome.REGISTRY.getIDForObject(bb);
+                biomevals[((z & 0xF) << 4) | (x & 0xF)] = (byte) net.minecraft.world.biome.Biome.REGISTRY.getIDForObject(bb);
 
                 chunk.markDirty(); // SPIGOT-2890
             }
@@ -1474,7 +1474,7 @@ implements World {
         } else if (TNTPrimed.class.isAssignableFrom(clazz)) {
             entity = new EntityTNTPrimed(world, x, y, z, null);
         } else if (ExperienceOrb.class.isAssignableFrom(clazz)) {
-            entity = new EntityXPOrb(world, x, y, z, 0, org.bukkit.entity.ExperienceOrb.SpawnReason.CUSTOM, null, null); // Paper
+            entity = new EntityXPOrb(world, x, y, z, 0);
         } else if (Weather.class.isAssignableFrom(clazz)) {
             // not sure what this can do
             if (LightningStrike.class.isAssignableFrom(clazz)) {
@@ -1490,12 +1490,6 @@ implements World {
         }
 
         if (entity != null) {
-            // Spigot start
-            if (entity instanceof EntityOcelot)
-            {
-                ( (EntityOcelot) entity ).spawnBonus = false;
-            }
-            // Spigot end
             return entity;
         }
 
@@ -1728,14 +1722,14 @@ implements World {
     }
 
     @Override
-    public void playSound(Location loc, Sound sound, org.bukkit.SoundCategory category, float volume, float pitch) {
+    public void playSound(Location loc, Sound sound, SoundCategory category, float volume, float pitch) {
         if (loc == null || sound == null || category == null) return;
 
         double x = loc.getX();
         double y = loc.getY();
         double z = loc.getZ();
 
-        getHandle().playSound(null, x, y, z, CraftSound.getSoundEffect(CraftSound.getSound(sound)), SoundCategory.valueOf(category.name()), volume, pitch); // PAIL: rename
+        getHandle().playSound(null, x, y, z, CraftSound.getSoundEffect(CraftSound.getSound(sound)), net.minecraft.util.SoundCategory.valueOf(category.name()), volume, pitch); // PAIL: rename
     }
 
     @Override
@@ -1746,13 +1740,13 @@ implements World {
         double y = loc.getY();
         double z = loc.getZ();
 
-        SPacketCustomSound packet = new SPacketCustomSound(sound, SoundCategory.valueOf(category.name()), x, y, z, volume, pitch);
+        SPacketCustomSound packet = new SPacketCustomSound(sound, net.minecraft.util.SoundCategory.valueOf(category.name()), x, y, z, volume, pitch);
         world.getMinecraftServer().getPlayerList().sendPacketNearby(null, x, y, z, volume > 1.0F ? 16.0F * volume : 16.0D, this.world, packet); // Paper - this.world.dimension -> this.world
     }
 
     @Override
     public String getGameRuleValue(String rule) {
-        return this.getHandle().W().a(rule);
+        return getHandle().getGameRules().getString(rule);
     }
 
     @Override
@@ -1763,7 +1757,7 @@ implements World {
         if (!this.isGameRule(rule)) {
             return false;
         }
-        this.getHandle().W().a(rule, value);
+        getHandle().getGameRules().setOrCreateGameRule(rule, value);
         return true;
     }
 
@@ -1861,7 +1855,7 @@ implements World {
         ChunkProviderServer cps = world.getChunkProvider();
         for (net.minecraft.world.chunk.Chunk chunk : cps.id2ChunkMap.values()) {
             // If in use, skip it
-            if (isChunkInUse(chunk.x, chunk.z) || chunk.scheduledForUnload != null) { // Paper - delayed chunk unloads
+            if (isChunkInUse(chunk.x, chunk.z)) {
                 continue;
             }
 
@@ -1945,7 +1939,7 @@ implements World {
         @Override
         public LightningStrike strikeLightning(Location loc, boolean isSilent)
         {
-            EntityLightningBolt lightning = new EntityLightningBolt( world, loc.getX(), loc.getY(), loc.getZ(), false, isSilent );
+            EntityLightningBolt lightning = new EntityLightningBolt( world, loc.getX(), loc.getY(), loc.getZ(), false );
             world.addWeatherEffect( lightning );
             return new CraftLightningStrike( server, lightning );
         }
@@ -1953,7 +1947,7 @@ implements World {
         @Override
         public LightningStrike strikeLightningEffect(Location loc, boolean isSilent)
         {
-            EntityLightningBolt lightning = new EntityLightningBolt( world, loc.getX(), loc.getY(), loc.getZ(), true, isSilent );
+            EntityLightningBolt lightning = new EntityLightningBolt( world, loc.getX(), loc.getY(), loc.getZ(), true );
             world.addWeatherEffect( lightning );
             return new CraftLightningStrike( server, lightning );
         }

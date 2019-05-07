@@ -152,7 +152,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
 
     @Override
     public Chunk getChunk() {
-        minecraft.world.chunk.Chunk currentChunk = entity.getCurrentChunk();
+        net.minecraft.world.chunk.Chunk currentChunk = entity.getCurrentChunk();
         return currentChunk != null ? currentChunk.bukkitChunk : getLocation().getChunk();
     }
 
@@ -357,12 +357,6 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
     public void setVelocity(Vector velocity) {
         Preconditions.checkArgument(velocity != null, "velocity");
         velocity.checkFinite();
-
-        // Paper start - Warn server owners when plugins try to set super high velocities
-        if (!(this instanceof org.bukkit.entity.Projectile) && isUnsafeVelocity(velocity)) {
-            CraftServer.excessiveVelEx = new Exception("Excessive velocity set detected: tried to set velocity of entity " + entity.getName() + " id #" + getEntityId() + " to (" + velocity.getX() + "," + velocity.getY() + "," + velocity.getZ() + ").");
-        }
-        // Paper end
 
         entity.motionX = velocity.getX();
         entity.motionY = velocity.getY();
@@ -904,17 +898,4 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
         return spigot;
     }
     // Spigot end
-
-    // Paper start
-    @Override
-    public Location getOrigin() {
-        Location origin = getHandle().origin;
-        return origin == null ? null : origin.clone();
-    }
-
-    @Override
-    public boolean fromMobSpawner() {
-        return getHandle().spawnedViaMobSpawner;
-    }
-    // Paper end
 }

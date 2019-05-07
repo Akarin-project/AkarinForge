@@ -203,7 +203,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     protected UUID entityUniqueID;
     protected String cachedUniqueIdString;
     private final CommandResultStats cmdResultStats;
-    protected boolean glowing;
+    public boolean glowing; // Akarin
     private final Set<String> tags;
     private boolean isPositionDirty;
     private final double[] pistonDeltas;

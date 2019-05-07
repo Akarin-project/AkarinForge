@@ -168,7 +168,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     private boolean chatColours = true;
     private long playerLastActiveTime = System.currentTimeMillis();
     private Entity spectatingEntity;
-    private boolean invulnerableDimensionChange;
+    public boolean invulnerableDimensionChange; // Akarin
     private boolean seenCredits;
     private final RecipeBookServer recipeBook = new RecipeBookServer();
     private Vec3d levitationStartPos;
