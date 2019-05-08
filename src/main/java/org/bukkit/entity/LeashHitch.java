@@ -1,11 +1,7 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Hanging;
-
-public interface LeashHitch
-extends Hanging {
+/**
+ * Represents a Leash Hitch on a fence
+ */
+public interface LeashHitch extends Hanging {
 }
-

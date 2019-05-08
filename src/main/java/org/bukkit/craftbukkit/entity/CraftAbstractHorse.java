@@ -2,7 +2,6 @@ package org.bukkit.craftbukkit.entity;
 
 import java.util.UUID;
 import net.minecraft.entity.passive.EntityHorse;
-import net.minecraft.entity.passive.AbstractHorse;
 import org.apache.commons.lang.Validate;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.inventory.CraftSaddledInventory;
@@ -13,13 +12,13 @@ import org.bukkit.inventory.AbstractHorseInventory;
 
 public abstract class CraftAbstractHorse extends CraftAnimals implements AbstractHorse {
 
-    public CraftAbstractHorse(CraftServer server, AbstractHorse entity) {
+    public CraftAbstractHorse(CraftServer server, net.minecraft.entity.passive.AbstractHorse entity) {
         super(server, entity);
     }
 
     @Override
-    public AbstractHorse getHandle() {
-        return (AbstractHorse) entity;
+    public net.minecraft.entity.passive.AbstractHorse getHandle() {
+        return (net.minecraft.entity.passive.AbstractHorse) entity;
     }
 
     public void setVariant(Horse.Variant variant) {

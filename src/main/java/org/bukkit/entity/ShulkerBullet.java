@@ -1,15 +1,18 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Projectile;
+public interface ShulkerBullet extends Projectile {
 
-public interface ShulkerBullet
-extends Projectile {
-    public Entity getTarget();
+    /**
+     * Retrieve the target of this bullet.
+     *
+     * @return the targeted entity
+     */
+    Entity getTarget();
 
-    public void setTarget(Entity var1);
+    /**
+     * Sets the target of this bullet
+     *
+     * @param target the entity to target
+     */
+    void setTarget(Entity target);
 }
-

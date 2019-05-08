@@ -70,5 +70,10 @@ public class CraftMerchantCustom extends CraftMerchant {
         public BlockPos getPos() {
             return null;
         }
+
+        @Override
+        public void setRecipes(MerchantRecipeList recipeList) {
+            return;
+        }
     }
 }

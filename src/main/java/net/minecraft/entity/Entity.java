@@ -89,6 +89,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.TravelAgent;
@@ -285,6 +286,42 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             this.decrementTimeUntilPortal();
             this.world.profiler.endSection();
         }
+    }
+    
+    private java.lang.ref.WeakReference<net.minecraft.world.chunk.Chunk> currentChunk = null;
+
+    public void setCurrentChunk(net.minecraft.world.chunk.Chunk chunk) {
+        this.currentChunk = chunk != null ? new java.lang.ref.WeakReference<>(chunk) : null;
+    }
+    
+    /**
+     * Returns the entities current registered chunk. If the entity is not added to a chunk yet, it will return null
+     */
+    public net.minecraft.world.chunk.Chunk getCurrentChunk() {
+        final net.minecraft.world.chunk.Chunk chunk = currentChunk != null ? currentChunk.get() : null;
+        return chunk != null && chunk.isLoaded() ? chunk : (addedToChunk ? world.getChunkIfLoaded(chunkCoordX, chunkCoordZ) : null);
+    }
+    
+    /**
+     * Returns the chunk at the location, using the entities local cache if avail
+     * Will only return null if the location specified is not loaded
+     */
+    public net.minecraft.world.chunk.Chunk getCurrentChunkAt(int x, int z) {
+        if (chunkCoordX == x && chunkCoordZ == z) {
+            net.minecraft.world.chunk.Chunk chunk = getCurrentChunk();
+            if (chunk != null) {
+                return chunk;
+            }
+        }
+        return world.getChunkIfLoaded(x, z);
+    }
+    
+    /**
+     * Returns the chunk at the entities current location, using the entities local cache if avail
+     * Will only return null if the location specified is not loaded
+     */
+    public net.minecraft.world.chunk.Chunk getChunkAtLocation() {
+        return getCurrentChunkAt((int)Math.floor(posX) >> 4, (int)Math.floor(posZ) >> 4);
     }
 
     public Entity(World worldIn)
@@ -2174,7 +2211,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     @Nullable
-    protected final String getEntityString()
+    public
+    final String getEntityString()
     {
         ResourceLocation resourcelocation = EntityList.getKey(this);
         return resourcelocation == null ? null : resourcelocation.toString();
@@ -2654,12 +2692,12 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         this.setFlag(5, invisible);
     }
 
-    protected boolean getFlag(int flag)
+    public boolean getFlag(int flag)
     {
         return (((Byte)this.dataManager.get(FLAGS)).byteValue() & 1 << flag) != 0;
     }
 
-    protected void setFlag(int flag, boolean set)
+    public void setFlag(int flag, boolean set)
     {
         byte b0 = ((Byte)this.dataManager.get(FLAGS)).byteValue();
 
@@ -3780,7 +3818,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         return SoundCategory.NEUTRAL;
     }
 
-    protected int getFireImmuneTicks()
+    public int getFireImmuneTicks()
     {
         return 1;
     }

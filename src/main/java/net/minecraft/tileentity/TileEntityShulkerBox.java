@@ -2,6 +2,10 @@ package net.minecraft.tileentity;
 
 import java.util.List;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.entity.HumanEntity;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockShulkerBox;
 import net.minecraft.block.material.EnumPushReaction;
@@ -41,6 +45,30 @@ public class TileEntityShulkerBox extends TileEntityLockableLoot implements ITic
     private float progressOld;
     private EnumDyeColor color;
     private boolean destroyedByCreativePlayer;
+    // CraftBukkit start - add fields and methods
+    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
+    private int maxStack = 64;
+
+    public List<ItemStack> getContents() {
+        return this.items;
+    }
+
+    public void onOpen(CraftHumanEntity who) {
+        transaction.add(who);
+    }
+
+    public void onClose(CraftHumanEntity who) {
+        transaction.remove(who);
+    }
+
+    public List<HumanEntity> getViewers() {
+        return transaction;
+    }
+
+    public void setMaxStackSize(int size) {
+        maxStack = size;
+    }
+    // CraftBukkit end
 
     public TileEntityShulkerBox()
     {
@@ -199,7 +227,7 @@ public class TileEntityShulkerBox extends TileEntityLockableLoot implements ITic
 
     public int getInventoryStackLimit()
     {
-        return 64;
+        return maxStack; // CraftBukkit
     }
 
     public boolean receiveClientEvent(int id, int type)

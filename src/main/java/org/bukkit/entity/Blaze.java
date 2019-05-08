@@ -1,11 +1,8 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Monster;
+/**
+ * Represents a Blaze monster
+ */
+public interface Blaze extends Monster {
 
-public interface Blaze
-extends Monster {
 }
-

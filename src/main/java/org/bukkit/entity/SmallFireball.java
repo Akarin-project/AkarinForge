@@ -1,11 +1,8 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Fireball;
+/**
+ * Represents a small {@link Fireball}
+ */
+public interface SmallFireball extends Fireball {
 
-public interface SmallFireball
-extends Fireball {
 }
-

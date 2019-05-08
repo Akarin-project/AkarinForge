@@ -1,11 +1,6 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.AbstractHorse;
-
-public interface ZombieHorse
-extends AbstractHorse {
-}
-
+/**
+ * Represents a ZombieHorse - variant of {@link AbstractHorse}.
+ */
+public interface ZombieHorse extends AbstractHorse { }

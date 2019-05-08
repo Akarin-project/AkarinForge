@@ -11,9 +11,15 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 
-public class RecipeFireworks extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<IRecipe> implements IRecipe
+public class RecipeFireworks extends ShapelessRecipes implements IRecipe // CraftBukkit - added extends
 {
     private ItemStack resultItem = ItemStack.EMPTY;
+    // CraftBukkit start - Delegate to new parent class with bogus info
+    public RecipeFireworks() {
+        super("", new ItemStack(Items.FIREWORKS, 0, 0), NonNullList.from(Ingredient.EMPTY, Ingredient.fromItem(Items.GUNPOWDER)));
+        this.resultItem = ItemStack.EMPTY;
+    }
+    // CraftBukkit end
 
     public boolean matches(InventoryCrafting inv, World worldIn)
     {

@@ -1,16 +1,19 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Animals;
 import org.bukkit.material.Colorable;
 
-public interface Sheep
-extends Animals,
-Colorable {
+/**
+ * Represents a Sheep.
+ */
+public interface Sheep extends Animals, Colorable {
+
+    /**
+     * @return Whether the sheep is sheared.
+     */
     public boolean isSheared();
 
-    public void setSheared(boolean var1);
+    /**
+     * @param flag Whether to shear the sheep
+     */
+    public void setSheared(boolean flag);
 }
-

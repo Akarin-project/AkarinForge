@@ -1,11 +1,6 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.ChestedHorse;
-
-public interface Mule
-extends ChestedHorse {
-}
-
+/**
+ * Represents a Mule - variant of {@link ChestedHorse}.
+ */
+public interface Mule extends ChestedHorse { }

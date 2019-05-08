@@ -73,18 +73,4 @@ public class CraftFirework extends CraftEntity implements Firework {
     public void detonate() {
         getHandle().lifetime = 0;
     }
-
-    // Paper start
-
-    @Override
-    public UUID getSpawningEntity() {
-        return getHandle().spawningEntity;
-    }
-
-    @Override
-    public LivingEntity getBoostedEntity() {
-        EntityLivingBase boostedEntity = getHandle().getBoostedEntity();
-        return boostedEntity != null ? (LivingEntity) boostedEntity.getBukkitEntity() : null;
-    }
-    // Paper end
 }

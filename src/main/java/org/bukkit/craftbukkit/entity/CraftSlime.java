@@ -1,6 +1,5 @@
 package org.bukkit.craftbukkit.entity;
 
-import com.destroystokyo.paper.entity.CraftSentientNPC;
 import net.minecraft.entity.monster.EntitySlime;
 
 import org.bukkit.craftbukkit.CraftServer;
@@ -8,7 +7,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Slime;
 
-public class CraftSlime extends CraftLivingEntity implements Slime, CraftSentientNPC { // Paper
+public class CraftSlime extends CraftLivingEntity implements Slime {
 
     public CraftSlime(CraftServer server, EntitySlime entity) {
         super(server, entity);

@@ -1,11 +1,6 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.WaterMob;
-
-public interface Squid
-extends WaterMob {
-}
-
+/**
+ * Represents a Squid.
+ */
+public interface Squid extends WaterMob {}

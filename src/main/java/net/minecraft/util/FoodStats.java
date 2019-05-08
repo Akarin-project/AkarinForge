@@ -17,9 +17,9 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class FoodStats
 {
-    private int foodLevel = 20;
-    private float foodSaturationLevel = 5.0F;
-    private float foodExhaustionLevel;
+    public int foodLevel = 20;
+    public float foodSaturationLevel = 5.0F;
+    public float foodExhaustionLevel;
     private int foodTimer;
     private int prevFoodLevel = 20;
     // Akarin start

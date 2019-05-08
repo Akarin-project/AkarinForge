@@ -1,8 +1,5 @@
 package org.bukkit.craftbukkit.entity;
 
-import com.destroystokyo.paper.Title;
-import com.destroystokyo.paper.profile.CraftPlayerProfile;
-import com.destroystokyo.paper.profile.PlayerProfile;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -32,13 +29,30 @@ import net.minecraft.network.play.server.SPacketTitle.Type;
 
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang.NotImplementedException;
-import org.bukkit.Statistic.Type;
+import org.bukkit.Achievement;
+import org.bukkit.Effect;
+import org.bukkit.GameMode;
+import org.bukkit.Instrument;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Note;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.WeatherType;
+import org.bukkit.World;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.conversations.ConversationAbandonedEvent;
 import org.bukkit.conversations.ManuallyAbandonedConversationCanceller;
 import org.bukkit.craftbukkit.block.CraftSign;
 import org.bukkit.craftbukkit.conversations.ConversationTracker;
+import org.bukkit.craftbukkit.CraftEffect;
+import org.bukkit.craftbukkit.CraftOfflinePlayer;
+import org.bukkit.craftbukkit.CraftParticle;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.CraftSound;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.advancement.CraftAdvancement;
 import org.bukkit.craftbukkit.advancement.CraftAdvancementProgress;
 import org.bukkit.craftbukkit.map.CraftMapView;
@@ -173,20 +187,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         }
     }
 
-    // Paper start - Implement NetworkClient
-    @Override
-    public int getProtocolVersion() {
-        if (getHandle().connection == null) return -1;
-        return getHandle().connection.netManager.protocolVersion;
-    }
-
-    @Override
-    public InetSocketAddress getVirtualHost() {
-        if (getHandle().connection == null) return null;
-        return getHandle().connection.netManager.virtualHost;
-    }
-    // Paper end
-
     @Override
     public double getEyeHeight(boolean ignorePose) {
         if (ignorePose) {
@@ -218,97 +218,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
             sendMessage(message);
         }
     }
-
-    // Paper start
-    @Override
-    public void sendActionBar(String message) {
-        if (getHandle().connection == null || message == null || message.isEmpty()) return;
-        getHandle().connection.sendPacket(new SPacketChat(new TextComponentString(message), ChatType.GAME_INFO));
-    }
-
-    @Override
-    public void sendActionBar(char alternateChar, String message) {
-        if (message == null || message.isEmpty()) return;
-        sendActionBar(org.bukkit.ChatColor.translateAlternateColorCodes(alternateChar, message));
-    }
-
-    @Override
-    public void setPlayerListHeaderFooter(BaseComponent[] header, BaseComponent[] footer) {
-        SPacketPlayerListHeaderFooter packet = new SPacketPlayerListHeaderFooter();
-        packet.header = header;
-        packet.footer = footer;
-        getHandle().connection.sendPacket(packet);
-    }
-
-    @Override
-    public void setPlayerListHeaderFooter(BaseComponent header, BaseComponent footer) {
-        this.setPlayerListHeaderFooter(header == null ? null : new BaseComponent[]{header},
-                footer == null ? null : new BaseComponent[]{footer});
-    }
-
-
-    @Override
-    public void setTitleTimes(int fadeInTicks, int stayTicks, int fadeOutTicks) {
-        getHandle().connection.sendPacket(new SPacketTitle(SPacketTitle.Type.TIMES, (BaseComponent[]) null, fadeInTicks, stayTicks, fadeOutTicks));
-    }
-
-    @Override
-    public void setSubtitle(BaseComponent[] subtitle) {
-        getHandle().connection.sendPacket(new SPacketTitle(SPacketTitle.Type.SUBTITLE, subtitle, 0, 0, 0));
-    }
-
-    @Override
-    public void setSubtitle(BaseComponent subtitle) {
-        setSubtitle(new BaseComponent[]{subtitle});
-    }
-
-    @Override
-    public void showTitle(BaseComponent[] title) {
-        getHandle().connection.sendPacket(new SPacketTitle(SPacketTitle.Type.TITLE, title, 0, 0, 0));
-    }
-
-    @Override
-    public void showTitle(BaseComponent title) {
-        showTitle(new BaseComponent[]{title});
-    }
-
-    @Override
-    public void showTitle(BaseComponent[] title, BaseComponent[] subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
-        setTitleTimes(fadeInTicks, stayTicks, fadeOutTicks);
-        setSubtitle(subtitle);
-        showTitle(title);
-    }
-
-    @Override
-    public void showTitle(BaseComponent title, BaseComponent subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
-        setTitleTimes(fadeInTicks, stayTicks, fadeOutTicks);
-        setSubtitle(subtitle);
-        showTitle(title);
-    }
-
-    @Override
-    public void sendTitle(Title title) {
-        Preconditions.checkNotNull(title, "Title is null");
-        setTitleTimes(title.getFadeIn(), title.getStay(), title.getFadeOut());
-        setSubtitle(title.getSubtitle() == null ? new BaseComponent[0] : title.getSubtitle());
-        showTitle(title.getTitle());
-    }
-
-    @Override
-    public void updateTitle(Title title) {
-        Preconditions.checkNotNull(title, "Title is null");
-        setTitleTimes(title.getFadeIn(), title.getStay(), title.getFadeOut());
-        if (title.getSubtitle() != null) {
-            setSubtitle(title.getSubtitle());
-        }
-        showTitle(title.getTitle());
-    }
-
-    @Override
-    public void hideTitle() {
-        getHandle().connection.sendPacket(new SPacketTitle(SPacketTitle.Type.CLEAR, (BaseComponent[]) null, 0, 0, 0));
-    }
-    // Paper end
 
     @Override
     public String getDisplayName() {
@@ -674,7 +583,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
         // Close any foreign inventory
         if (getHandle().openContainer != getHandle().inventoryContainer) {
-            getHandle().closeInventory(org.bukkit.event.inventory.InventoryCloseEvent.Reason.TELEPORT); // Paper
+            getHandle().closeContainer();
         }
 
         // Check if the fromWorld and toWorld are the same.
@@ -692,7 +601,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     public boolean setPassenger(org.bukkit.entity.Entity passenger) {
         boolean wasSet = super.setPassenger(passenger);
         if (wasSet) {
-            this.getHandle().connection.sendPacket(new network.play.server.SPacketSetPassengers(this.getHandle()));
+            this.getHandle().connection.sendPacket(new net.minecraft.network.play.server.SPacketSetPassengers(this.getHandle()));
         }
         return wasSet;
     }
@@ -761,125 +670,125 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     @Override
-    public void incrementStatistic(Statistic statistic) {
+    public void incrementStatistic(org.bukkit.Statistic statistic) {
         incrementStatistic(statistic, 1);
     }
 
     @Override
-    public void decrementStatistic(Statistic statistic) {
+    public void decrementStatistic(org.bukkit.Statistic statistic) {
         decrementStatistic(statistic, 1);
     }
 
     @Override
-    public int getStatistic(Statistic statistic) {
+    public int getStatistic(org.bukkit.Statistic statistic) {
         Validate.notNull(statistic, "Statistic cannot be null");
-        Validate.isTrue(statistic.getType() == Type.UNTYPED, "Must supply additional paramater for this statistic");
-        return getHandle().getStatFile().readStat(CraftStatistic.getNMSStatistic(statistic));
+        Validate.isTrue(statistic.getType() == org.bukkit.Statistic.Type.UNTYPED, "Must supply additional paramater for this statistic");
+        return getHandle().getStatFile().readStat(org.bukkit.craftbukkit.CraftStatistic.getNMSStatistic(statistic));
     }
 
     @Override
-    public void incrementStatistic(Statistic statistic, int amount) {
+    public void incrementStatistic(org.bukkit.Statistic statistic, int amount) {
         Validate.isTrue(amount > 0, "Amount must be greater than 0");
         setStatistic(statistic, getStatistic(statistic) + amount);
     }
 
     @Override
-    public void decrementStatistic(Statistic statistic, int amount) {
+    public void decrementStatistic(org.bukkit.Statistic statistic, int amount) {
         Validate.isTrue(amount > 0, "Amount must be greater than 0");
         setStatistic(statistic, getStatistic(statistic) - amount);
     }
 
     @Override
-    public void setStatistic(Statistic statistic, int newValue) {
+    public void setStatistic(org.bukkit.Statistic statistic, int newValue) {
         Validate.notNull(statistic, "Statistic cannot be null");
-        Validate.isTrue(statistic.getType() == Type.UNTYPED, "Must supply additional paramater for this statistic");
+        Validate.isTrue(statistic.getType() == org.bukkit.Statistic.Type.UNTYPED, "Must supply additional paramater for this statistic");
         Validate.isTrue(newValue >= 0, "Value must be greater than or equal to 0");
-        net.minecraft.stats.StatBase nmsStatistic = CraftStatistic.getNMSStatistic(statistic);
+        net.minecraft.stats.StatBase nmsStatistic = org.bukkit.craftbukkit.CraftStatistic.getNMSStatistic(statistic);
         getHandle().getStatFile().unlockAchievement(getHandle(), nmsStatistic, newValue);
     }
 
     @Override
-    public void incrementStatistic(Statistic statistic, Material material) {
+    public void incrementStatistic(org.bukkit.Statistic statistic, Material material) {
         incrementStatistic(statistic, material, 1);
     }
 
     @Override
-    public void decrementStatistic(Statistic statistic, Material material) {
+    public void decrementStatistic(org.bukkit.Statistic statistic, Material material) {
         decrementStatistic(statistic, material, 1);
     }
 
     @Override
-    public int getStatistic(Statistic statistic, Material material) {
+    public int getStatistic(org.bukkit.Statistic statistic, Material material) {
         Validate.notNull(statistic, "Statistic cannot be null");
         Validate.notNull(material, "Material cannot be null");
-        Validate.isTrue(statistic.getType() == Type.BLOCK || statistic.getType() == Type.ITEM, "This statistic does not take a Material parameter");
-        net.minecraft.stats.StatBase nmsStatistic = CraftStatistic.getMaterialStatistic(statistic, material);
+        Validate.isTrue(statistic.getType() == org.bukkit.Statistic.Type.BLOCK || statistic.getType() == org.bukkit.Statistic.Type.ITEM, "This statistic does not take a Material parameter");
+        net.minecraft.stats.StatBase nmsStatistic = org.bukkit.craftbukkit.CraftStatistic.getMaterialStatistic(statistic, material);
         Validate.notNull(nmsStatistic, "The supplied Material does not have a corresponding statistic");
         return getHandle().getStatFile().readStat(nmsStatistic);
     }
 
     @Override
-    public void incrementStatistic(Statistic statistic, Material material, int amount) {
+    public void incrementStatistic(org.bukkit.Statistic statistic, Material material, int amount) {
         Validate.isTrue(amount > 0, "Amount must be greater than 0");
         setStatistic(statistic, material, getStatistic(statistic, material) + amount);
     }
 
     @Override
-    public void decrementStatistic(Statistic statistic, Material material, int amount) {
+    public void decrementStatistic(org.bukkit.Statistic statistic, Material material, int amount) {
         Validate.isTrue(amount > 0, "Amount must be greater than 0");
         setStatistic(statistic, material, getStatistic(statistic, material) - amount);
     }
 
     @Override
-    public void setStatistic(Statistic statistic, Material material, int newValue) {
+    public void setStatistic(org.bukkit.Statistic statistic, Material material, int newValue) {
         Validate.notNull(statistic, "Statistic cannot be null");
         Validate.notNull(material, "Material cannot be null");
         Validate.isTrue(newValue >= 0, "Value must be greater than or equal to 0");
-        Validate.isTrue(statistic.getType() == Type.BLOCK || statistic.getType() == Type.ITEM, "This statistic does not take a Material parameter");
-        net.minecraft.stats.StatBase nmsStatistic = CraftStatistic.getMaterialStatistic(statistic, material);
+        Validate.isTrue(statistic.getType() == org.bukkit.Statistic.Type.BLOCK || statistic.getType() == org.bukkit.Statistic.Type.ITEM, "This statistic does not take a Material parameter");
+        net.minecraft.stats.StatBase nmsStatistic = org.bukkit.craftbukkit.CraftStatistic.getMaterialStatistic(statistic, material);
         Validate.notNull(nmsStatistic, "The supplied Material does not have a corresponding statistic");
         getHandle().getStatFile().unlockAchievement(getHandle(), nmsStatistic, newValue);
     }
 
     @Override
-    public void incrementStatistic(Statistic statistic, EntityType entityType) {
+    public void incrementStatistic(org.bukkit.Statistic statistic, EntityType entityType) {
         incrementStatistic(statistic, entityType, 1);
     }
 
     @Override
-    public void decrementStatistic(Statistic statistic, EntityType entityType) {
+    public void decrementStatistic(org.bukkit.Statistic statistic, EntityType entityType) {
         decrementStatistic(statistic, entityType, 1);
     }
 
     @Override
-    public int getStatistic(Statistic statistic, EntityType entityType) {
+    public int getStatistic(org.bukkit.Statistic statistic, EntityType entityType) {
         Validate.notNull(statistic, "Statistic cannot be null");
         Validate.notNull(entityType, "EntityType cannot be null");
-        Validate.isTrue(statistic.getType() == Type.ENTITY, "This statistic does not take an EntityType parameter");
-        net.minecraft.stats.StatBase nmsStatistic = CraftStatistic.getEntityStatistic(statistic, entityType);
+        Validate.isTrue(statistic.getType() == org.bukkit.Statistic.Type.ENTITY, "This statistic does not take an EntityType parameter");
+        net.minecraft.stats.StatBase nmsStatistic = org.bukkit.craftbukkit.CraftStatistic.getEntityStatistic(statistic, entityType);
         Validate.notNull(nmsStatistic, "The supplied EntityType does not have a corresponding statistic");
         return getHandle().getStatFile().readStat(nmsStatistic);
     }
 
     @Override
-    public void incrementStatistic(Statistic statistic, EntityType entityType, int amount) {
+    public void incrementStatistic(org.bukkit.Statistic statistic, EntityType entityType, int amount) {
         Validate.isTrue(amount > 0, "Amount must be greater than 0");
         setStatistic(statistic, entityType, getStatistic(statistic, entityType) + amount);
     }
 
     @Override
-    public void decrementStatistic(Statistic statistic, EntityType entityType, int amount) {
+    public void decrementStatistic(org.bukkit.Statistic statistic, EntityType entityType, int amount) {
         Validate.isTrue(amount > 0, "Amount must be greater than 0");
         setStatistic(statistic, entityType, getStatistic(statistic, entityType) - amount);
     }
 
     @Override
-    public void setStatistic(Statistic statistic, EntityType entityType, int newValue) {
+    public void setStatistic(org.bukkit.Statistic statistic, EntityType entityType, int newValue) {
         Validate.notNull(statistic, "Statistic cannot be null");
         Validate.notNull(entityType, "EntityType cannot be null");
         Validate.isTrue(newValue >= 0, "Value must be greater than or equal to 0");
-        Validate.isTrue(statistic.getType() == Type.ENTITY, "This statistic does not take an EntityType parameter");
-        net.minecraft.stats.StatBase nmsStatistic = CraftStatistic.getEntityStatistic(statistic, entityType);
+        Validate.isTrue(statistic.getType() == org.bukkit.Statistic.Type.ENTITY, "This statistic does not take an EntityType parameter");
+        net.minecraft.stats.StatBase nmsStatistic = org.bukkit.craftbukkit.CraftStatistic.getEntityStatistic(statistic, entityType);
         Validate.notNull(nmsStatistic, "The supplied EntityType does not have a corresponding statistic");
         getHandle().getStatFile().unlockAchievement(getHandle(), nmsStatistic, newValue);
     }
@@ -927,7 +836,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
     @Override
     public boolean isBanned() {
-        return server.getBanList(BanList.Type.NAME).isBanned(getName());
+        return server.getBanList(org.bukkit.BanList.Type.NAME).isBanned(getName());
     }
 
     @Override
@@ -958,42 +867,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     @Override
     public GameMode getGameMode() {
         return GameMode.getByValue(getHandle().interactionManager.getGameType().getID());
-    }
-
-    // Paper start
-    @Override
-    public int applyMending(int amount) {
-        EntityPlayerMP handle = getHandle();
-        // Logic copied from EntityExperienceOrb and remapped to unobfuscated methods/properties
-        ItemStack itemstack = EnchantmentHelper.getRandomEquippedItemWithEnchant(Enchantments.MENDING, handle);
-        if (!itemstack.isEmpty() && itemstack.hasDamage()) {
-
-            EntityXPOrb orb = new EntityXPOrb(handle.world);
-            orb.xpValue = amount;
-            orb.spawnReason = org.bukkit.entity.ExperienceOrb.SpawnReason.CUSTOM;
-            orb.posX = handle.posX;
-            orb.posY = handle.posY;
-            orb.posZ = handle.posZ;
-
-            int i = Math.min(orb.xpToDur(amount), itemstack.getDamage());
-            org.bukkit.event.player.PlayerItemMendEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerItemMendEvent(handle, orb, itemstack, i);
-            i = event.getRepairAmount();
-            orb.isDead = true;
-            if (!event.isCancelled()) {
-                amount -= orb.durToXp(i);
-                itemstack.setDamage(itemstack.getDamage() - i);
-            }
-        }
-        return amount;
-    }
-
-    @Override
-    public void giveExp(int exp, boolean applyMending) {
-        if (applyMending) {
-            exp = this.applyMending(exp);
-        }
-        // Paper end
-        getHandle().addExperience(exp);
     }
 
     @Override
@@ -1137,14 +1010,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         EntityTracker tracker = ((WorldServer) entity.world).entityTracker;
         // Paper end
 
-        tracker.entriesLock.updateLock().lock(); // Akarin
         EntityTrackerEntry entry = tracker.trackedEntityHashTable.lookup(other.getEntityId());
         if (entry != null) {
-            tracker.entriesLock.writeLock().lock(); // Akarin
             entry.removeTrackedPlayerSymmetric(getHandle());
-            tracker.entriesLock.writeLock().unlock(); // Akarin
         }
-        tracker.entriesLock.updateLock().unlock(); // Akarin
 
         // Remove the hidden player from this player user list, if they're on it
         if (other.sentListPacket) {
@@ -1191,57 +1060,11 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
         getHandle().connection.sendPacket(new SPacketPlayerListItem(SPacketPlayerListItem.Action.ADD_PLAYER, other));
 
-        tracker.entriesLock.updateLock().lock(); // Akarin
         EntityTrackerEntry entry = tracker.trackedEntityHashTable.lookup(other.getEntityId());
         if (entry != null && !entry.trackingPlayers.contains(getHandle())) {
-            tracker.entriesLock.writeLock().lock(); // Akarin
             entry.updatePlayerEntity(getHandle());
-            tracker.entriesLock.writeLock().unlock(); // Akarin
-        }
-        tracker.entriesLock.updateLock().unlock(); // Akarin
-    }
-    // Paper start
-    private void reregisterPlayer(EntityPlayerMP player) {
-        if (!hiddenPlayers.containsKey(player.getUniqueID())) {
-            unregisterPlayer(player);
-            registerPlayer(player);
         }
     }
-    @Override
-    public void setPlayerProfile(PlayerProfile profile) {
-        EntityPlayerMP self = getHandle();
-        self.setProfile(CraftPlayerProfile.asAuthlibCopy(profile));
-        List<EntityPlayerMP> players = server.getServer().getPlayerList().playerEntityList;
-        for (EntityPlayerMP player : players) {
-            player.getBukkitEntity().reregisterPlayer(self);
-        }
-        refreshPlayer();
-    }
-    @Override
-    public PlayerProfile getPlayerProfile() {
-        return new CraftPlayerProfile(this).clone();
-    }
-
-    private void refreshPlayer() {
-        EntityPlayerMP handle = getHandle();
-
-        Location loc = getLocation();
-
-        NetHandlerPlayServer connection = handle.connection;
-        reregisterPlayer(handle);
-
-        //Respawn the player then update their position and selected slot
-        connection.sendPacket(new SPacketRespawn(handle.dimension, handle.world.getDifficulty(), handle.world.getWorldInfo().getTerrainType(), handle.interactionManager.getGameType()));
-        handle.sendPlayerAbilities();
-        connection.sendPacket(new SPacketPlayerPosLook(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), new HashSet<>(), 0));
-        MinecraftServer.getServer().getPlayerList().syncPlayerInventory(handle);
-
-        if (this.isOp()) {
-            this.setOp(false);
-            this.setOp(true);
-        }
-    }
-    // Paper end
 
     public void removeDisconnectingPlayer(Player player) {
         hiddenPlayers.remove(player.getUniqueId());
@@ -1652,15 +1475,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public void sendHealthUpdate() {
-        // Paper start - cancellable death event
-        //getHandle().playerConnection.sendPacket(new PacketPlayOutUpdateHealth(getScaledHealth(), getHandle().getFoodData().getFoodLevel(), getHandle().getFoodData().getSaturationLevel()));
-        SPacketUpdateHealth packet = new SPacketUpdateHealth(getScaledHealth(), getHandle().getFoodStats().getFoodLevel(), getHandle().getFoodStats().getSaturationLevel());
-        if (this.getHandle().queueHealthUpdatePacket) {
-            this.getHandle().queuedHealthUpdatePacket = packet;
-        } else {
-            this.getHandle().connection.sendPacket(packet);
-        }
-        // Paper end
+        getHandle().connection.sendPacket(new SPacketUpdateHealth(getScaledHealth(), getHandle().getFoodStats().getFoodLevel(), getHandle().getFoodStats().getSaturationLevel()));
     }
 
     public void injectScaledMaxHealth(Collection<IAttributeInstance> collection, boolean force) {
@@ -1783,7 +1598,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         if (data != null && !particle.getDataType().isInstance(data)) {
             throw new IllegalArgumentException("data should be " + particle.getDataType() + " got " + data.getClass());
         }
-        SPacketParticles packetplayoutworldparticles = new SPacketParticles(CraftParticle.toNMS(particle), true, (float) x, (float) y, (float) z, (float) offsetX, (float) offsetY, (float) offsetZ, (float) extra, count, CraftParticle.toData(particle, data));
+        SPacketParticles packetplayoutworldparticles = new SPacketParticles(org.bukkit.craftbukkit.CraftParticle.toNMS(particle), true, (float) x, (float) y, (float) z, (float) offsetX, (float) offsetY, (float) offsetZ, (float) extra, count, CraftParticle.toData(particle, data));
         getHandle().connection.sendPacket(packetplayoutworldparticles);
 
     }
@@ -1805,48 +1620,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         final String locale = getHandle().language;
         return locale != null ? locale : "en_us";
         // Paper end
-    }
-
-    @Override
-    public void setAffectsSpawning(boolean affects) {
-        this.getHandle().affectsSpawning = affects;
-    }
-
-    @Override
-    public boolean getAffectsSpawning() {
-        return this.getHandle().affectsSpawning;
-    }
-
-    @Override
-    public int getViewDistance() {
-        return getHandle().getViewDistance();
-    }
-
-    @Override
-    public void setViewDistance(int viewDistance) {
-        ((WorldServer) getHandle().world).getPlayerChunkMap().updateViewDistance(getHandle(), viewDistance);
-    }
-
-    @Override
-    public void setResourcePack(String url, String hash) {
-        Validate.notNull(url, "Resource pack URL cannot be null");
-        Validate.notNull(hash, "Hash cannot be null");
-        this.getHandle().loadResourcePack(url, hash);
-    }
-
-    @Override
-    public org.bukkit.event.player.PlayerResourcePackStatusEvent.Status getResourcePackStatus() {
-        return this.resourcePackStatus;
-    }
-
-    @Override
-    public String getResourcePackHash() {
-        return this.resourcePackHash;
-    }
-
-    @Override
-    public boolean hasResourcePack() {
-        return this.resourcePackStatus == org.bukkit.event.player.PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED;
     }
 
     public void setResourcePackStatus(org.bukkit.event.player.PlayerResourcePackStatusEvent.Status status) {
@@ -1988,12 +1761,6 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
             packet.components = components;
             getHandle().connection.sendPacket(packet);
         }
-
-        @Override
-        public int getPing()
-        {
-            return getHandle().ping;
-        }
     };
 
     @Override
@@ -2002,4 +1769,11 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
         return spigot;
     }
     // Spigot end
+
+    // Akarin start
+    @Override
+    public void giveExp(int amount) {
+        getHandle().addExperience(amount);
+    }
+    // Akarin end
 }

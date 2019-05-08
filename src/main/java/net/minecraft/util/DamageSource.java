@@ -44,6 +44,18 @@ public class DamageSource
     private boolean magicDamage;
     private boolean explosion;
     public String damageType;
+    // CraftBukkit start
+    private boolean sweep;
+
+    public boolean isSweep() {
+        return sweep;
+    }
+
+    public DamageSource sweep() {
+        this.sweep = true;
+        return this;
+    }
+    // CraftBukkit end
 
     public static DamageSource causeMobDamage(EntityLivingBase mob)
     {

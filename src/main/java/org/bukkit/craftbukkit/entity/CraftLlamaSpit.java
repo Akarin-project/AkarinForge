@@ -1,5 +1,6 @@
 package org.bukkit.craftbukkit.entity;
 
+import net.minecraft.entity.passive.EntityLlama;
 import net.minecraft.entity.projectile.EntityLlamaSpit;
 
 import org.bukkit.craftbukkit.CraftServer;
@@ -35,6 +36,6 @@ public class CraftLlamaSpit extends AbstractProjectile implements LlamaSpit {
 
     @Override
     public void setShooter(ProjectileSource source) {
-        getHandle().owner = (source != null) ? ((CraftLivingEntity) source).getHandle() : null;
+        getHandle().owner = (source != null) ? (EntityLlama) ((CraftLivingEntity) source).getHandle() : null;
     }
 }

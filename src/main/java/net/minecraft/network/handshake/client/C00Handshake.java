@@ -11,8 +11,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class C00Handshake implements Packet<INetHandlerHandshakeServer>
 {
     private int protocolVersion;
-    private String ip;
-    private int port;
+    public String ip;
+    public int port;
     private EnumConnectionState requestedState;
     private boolean hasFMLMarker = false;
 

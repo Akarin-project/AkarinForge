@@ -1,11 +1,6 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.ThrownPotion;
-
-public interface LingeringPotion
-extends ThrownPotion {
-}
-
+/**
+ * Represents a thrown lingering potion bottle
+ */
+public interface LingeringPotion extends ThrownPotion { }

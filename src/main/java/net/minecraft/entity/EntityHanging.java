@@ -33,7 +33,7 @@ public abstract class EntityHanging extends Entity
         }
     };
     private int tickCounter1;
-    protected BlockPos hangingPosition;
+    public BlockPos hangingPosition;
     @Nullable
     public EnumFacing facingDirection;
 
@@ -53,7 +53,7 @@ public abstract class EntityHanging extends Entity
     {
     }
 
-    protected void updateFacingWithBoundingBox(EnumFacing facingDirectionIn)
+    public void updateFacingWithBoundingBox(EnumFacing facingDirectionIn)
     {
         Validate.notNull(facingDirectionIn);
         Validate.isTrue(facingDirectionIn.getAxis().isHorizontal());

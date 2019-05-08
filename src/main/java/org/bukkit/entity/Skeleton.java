@@ -1,28 +1,42 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Monster;
+/**
+ * Represents a Skeleton.
+ */
+public interface Skeleton extends Monster {
 
-public interface Skeleton
-extends Monster {
+    /**
+     * Gets the current type of this skeleton.
+     *
+     * @return Current type
+     * @deprecated should check what class instance this is
+     */
     @Deprecated
     public SkeletonType getSkeletonType();
 
+    /**
+     * @deprecated Must spawn a new subtype variant
+     */
     @Deprecated
-    public void setSkeletonType(SkeletonType var1);
+    public void setSkeletonType(SkeletonType type);
 
+    /*
+     * @deprecated classes are different types
+     */
     @Deprecated
-    public static enum SkeletonType {
+    public enum SkeletonType {
+
+        /**
+         * Standard skeleton type.
+         */
         NORMAL,
+        /**
+         * Wither skeleton. Generally found in Nether fortresses.
+         */
         WITHER,
+        /**
+         * Stray skeleton. Generally found in ice biomes. Shoots tipped arrows.
+         */
         STRAY;
-        
-
-        private SkeletonType() {
-        }
     }
-
 }
-

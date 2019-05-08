@@ -1,151 +1,207 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import org.bukkit.entity.AreaEffectCloud;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Bat;
-import org.bukkit.entity.Blaze;
-import org.bukkit.entity.Boat;
-import org.bukkit.entity.CaveSpider;
-import org.bukkit.entity.Chicken;
-import org.bukkit.entity.ComplexEntityPart;
-import org.bukkit.entity.Cow;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Donkey;
-import org.bukkit.entity.DragonFireball;
-import org.bukkit.entity.Egg;
-import org.bukkit.entity.ElderGuardian;
-import org.bukkit.entity.EnderCrystal;
-import org.bukkit.entity.EnderDragon;
-import org.bukkit.entity.EnderPearl;
-import org.bukkit.entity.EnderSignal;
-import org.bukkit.entity.Enderman;
-import org.bukkit.entity.Endermite;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Evoker;
-import org.bukkit.entity.EvokerFangs;
-import org.bukkit.entity.ExperienceOrb;
-import org.bukkit.entity.FallingBlock;
-import org.bukkit.entity.Firework;
-import org.bukkit.entity.FishHook;
-import org.bukkit.entity.Ghast;
-import org.bukkit.entity.Giant;
-import org.bukkit.entity.Guardian;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.Husk;
-import org.bukkit.entity.Illusioner;
-import org.bukkit.entity.IronGolem;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.LargeFireball;
-import org.bukkit.entity.LeashHitch;
-import org.bukkit.entity.LightningStrike;
-import org.bukkit.entity.LingeringPotion;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Llama;
-import org.bukkit.entity.LlamaSpit;
-import org.bukkit.entity.MagmaCube;
-import org.bukkit.entity.Mule;
-import org.bukkit.entity.MushroomCow;
-import org.bukkit.entity.Ocelot;
-import org.bukkit.entity.Painting;
-import org.bukkit.entity.Parrot;
-import org.bukkit.entity.Pig;
-import org.bukkit.entity.PigZombie;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.PolarBear;
-import org.bukkit.entity.Rabbit;
-import org.bukkit.entity.Sheep;
-import org.bukkit.entity.Shulker;
-import org.bukkit.entity.ShulkerBullet;
-import org.bukkit.entity.Silverfish;
-import org.bukkit.entity.Skeleton;
-import org.bukkit.entity.SkeletonHorse;
-import org.bukkit.entity.Slime;
-import org.bukkit.entity.SmallFireball;
-import org.bukkit.entity.Snowball;
-import org.bukkit.entity.Snowman;
-import org.bukkit.entity.SpectralArrow;
-import org.bukkit.entity.Spider;
-import org.bukkit.entity.SplashPotion;
-import org.bukkit.entity.Squid;
-import org.bukkit.entity.Stray;
-import org.bukkit.entity.TNTPrimed;
-import org.bukkit.entity.ThrownExpBottle;
-import org.bukkit.entity.TippedArrow;
-import org.bukkit.entity.Vex;
-import org.bukkit.entity.Villager;
-import org.bukkit.entity.Vindicator;
-import org.bukkit.entity.Weather;
-import org.bukkit.entity.Witch;
-import org.bukkit.entity.Wither;
-import org.bukkit.entity.WitherSkeleton;
-import org.bukkit.entity.WitherSkull;
-import org.bukkit.entity.Wolf;
-import org.bukkit.entity.Zombie;
-import org.bukkit.entity.ZombieHorse;
-import org.bukkit.entity.ZombieVillager;
+
 import org.bukkit.entity.minecart.CommandMinecart;
-import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.entity.minecart.HopperMinecart;
-import org.bukkit.entity.minecart.PoweredMinecart;
-import org.bukkit.entity.minecart.RideableMinecart;
 import org.bukkit.entity.minecart.SpawnerMinecart;
+import org.bukkit.entity.minecart.RideableMinecart;
+import org.bukkit.entity.minecart.ExplosiveMinecart;
+import org.bukkit.entity.minecart.PoweredMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.potion.PotionEffectType;
 
 import io.akarin.forge.entity.CraftCustomEntity;
 
 public enum EntityType {
+
+    // These strings MUST match the strings in nms.EntityTypes and are case sensitive.
+    /**
+     * An item resting on the ground.
+     * <p>
+     * Spawn with {@link World#dropItem(Location, ItemStack)} or {@link
+     * World#dropItemNaturally(Location, ItemStack)}
+     */
     DROPPED_ITEM("item", Item.class, 1, false),
+    /**
+     * An experience orb.
+     */
     EXPERIENCE_ORB("xp_orb", ExperienceOrb.class, 2),
+    /**
+     * @see AreaEffectCloud
+     */
     AREA_EFFECT_CLOUD("area_effect_cloud", AreaEffectCloud.class, 3),
+    /**
+     * @see ElderGuardian
+     */
     ELDER_GUARDIAN("elder_guardian", ElderGuardian.class, 4),
+    /**
+     * @see WitherSkeleton
+     */
     WITHER_SKELETON("wither_skeleton", WitherSkeleton.class, 5),
+    /**
+     * @see Stray
+     */
     STRAY("stray", Stray.class, 6),
+    /**
+     * A flying chicken egg.
+     */
     EGG("egg", Egg.class, 7),
+    /**
+     * A leash attached to a fencepost.
+     */
     LEASH_HITCH("leash_knot", LeashHitch.class, 8),
+    /**
+     * A painting on a wall.
+     */
     PAINTING("painting", Painting.class, 9),
+    /**
+     * An arrow projectile; may get stuck in the ground.
+     */
     ARROW("arrow", Arrow.class, 10),
+    /**
+     * A flying snowball.
+     */
     SNOWBALL("snowball", Snowball.class, 11),
+    /**
+     * A flying large fireball, as thrown by a Ghast for example.
+     */
     FIREBALL("fireball", LargeFireball.class, 12),
+    /**
+     * A flying small fireball, such as thrown by a Blaze or player.
+     */
     SMALL_FIREBALL("small_fireball", SmallFireball.class, 13),
+    /**
+     * A flying ender pearl.
+     */
     ENDER_PEARL("ender_pearl", EnderPearl.class, 14),
+    /**
+     * An ender eye signal.
+     */
     ENDER_SIGNAL("eye_of_ender_signal", EnderSignal.class, 15),
+    /**
+     * A flying splash potion.
+     */
     SPLASH_POTION("potion", SplashPotion.class, 16, false),
+    /**
+     * A flying experience bottle.
+     */
     THROWN_EXP_BOTTLE("xp_bottle", ThrownExpBottle.class, 17),
+    /**
+     * An item frame on a wall.
+     */
     ITEM_FRAME("item_frame", ItemFrame.class, 18),
+    /**
+     * A flying wither skull projectile.
+     */
     WITHER_SKULL("wither_skull", WitherSkull.class, 19),
+    /**
+     * Primed TNT that is about to explode.
+     */
     PRIMED_TNT("tnt", TNTPrimed.class, 20),
+    /**
+     * A block that is going to or is about to fall.
+     */
     FALLING_BLOCK("falling_block", FallingBlock.class, 21, false),
+    /**
+     * Internal representation of a Firework once it has been launched.
+     */
     FIREWORK("fireworks_rocket", Firework.class, 22, false),
+    /**
+     * @see Husk
+     */
     HUSK("husk", Husk.class, 23),
+    /**
+     * Like {@link #TIPPED_ARROW} but causes the {@link PotionEffectType#GLOWING} effect on all team members.
+     */
     SPECTRAL_ARROW("spectral_arrow", SpectralArrow.class, 24),
+    /**
+     * Bullet fired by {@link #SHULKER}.
+     */
     SHULKER_BULLET("shulker_bullet", ShulkerBullet.class, 25),
+    /**
+     * Like {@link #FIREBALL} but with added effects.
+     */
     DRAGON_FIREBALL("dragon_fireball", DragonFireball.class, 26),
+    /**
+     * @see ZombieVillager
+     */
     ZOMBIE_VILLAGER("zombie_villager", ZombieVillager.class, 27),
+    /**
+     * @see SkeletonHorse
+     */
     SKELETON_HORSE("skeleton_horse", SkeletonHorse.class, 28),
+    /**
+     * @see ZombieHorse
+     */
     ZOMBIE_HORSE("zombie_horse", ZombieHorse.class, 29),
+    /**
+     * Mechanical entity with an inventory for placing weapons / armor into.
+     */
     ARMOR_STAND("armor_stand", ArmorStand.class, 30),
+    /**
+     * @see Donkey
+     */
     DONKEY("donkey", Donkey.class, 31),
+    /**
+     * @see Mule
+     */
     MULE("mule", Mule.class, 32),
+    /**
+     * @see EvokerFangs
+     */
     EVOKER_FANGS("evocation_fangs", EvokerFangs.class, 33),
+    /**
+     * @see Evoker
+     */
     EVOKER("evocation_illager", Evoker.class, 34),
+    /**
+     * @see Vex
+     */
     VEX("vex", Vex.class, 35),
+    /**
+     * @see Vindicator
+     */
     VINDICATOR("vindication_illager", Vindicator.class, 36),
+    /**
+     * @see Illusioner
+     */
     ILLUSIONER("illusion_illager", Illusioner.class, 37),
+    /**
+     * @see CommandMinecart
+     */
     MINECART_COMMAND("commandblock_minecart", CommandMinecart.class, 40),
+    /**
+     * A placed boat.
+     */
     BOAT("boat", Boat.class, 41),
+    /**
+     * @see RideableMinecart
+     */
     MINECART("minecart", RideableMinecart.class, 42),
+    /**
+     * @see StorageMinecart
+     */
     MINECART_CHEST("chest_minecart", StorageMinecart.class, 43),
+    /**
+     * @see PoweredMinecart
+     */
     MINECART_FURNACE("furnace_minecart", PoweredMinecart.class, 44),
+    /**
+     * @see ExplosiveMinecart
+     */
     MINECART_TNT("tnt_minecart", ExplosiveMinecart.class, 45),
+    /**
+     * @see HopperMinecart
+     */
     MINECART_HOPPER("hopper_minecart", HopperMinecart.class, 46),
+    /**
+     * @see SpawnerMinecart
+     */
     MINECART_MOB_SPAWNER("spawner_minecart", SpawnerMinecart.class, 47),
     CREEPER("creeper", Creeper.class, 50),
     SKELETON("skeleton", Skeleton.class, 51),
@@ -185,23 +241,53 @@ public enum EntityType {
     PARROT("parrot", Parrot.class, 105),
     VILLAGER("villager", Villager.class, 120),
     ENDER_CRYSTAL("ender_crystal", EnderCrystal.class, 200),
+    // These don't have an entity ID in nms.EntityTypes.
+    /**
+     * A flying lingering potion
+     */
     LINGERING_POTION(null, LingeringPotion.class, -1, false),
+    /**
+     * A fishing line and bobber.
+     */
     FISHING_HOOK(null, FishHook.class, -1, false),
+    /**
+     * A bolt of lightning.
+     * <p>
+     * Spawn with {@link World#strikeLightning(Location)}.
+     */
     LIGHTNING(null, LightningStrike.class, -1, false),
     WEATHER(null, Weather.class, -1, false),
     PLAYER(null, Player.class, -1, false),
     COMPLEX_PART(null, ComplexEntityPart.class, -1, false),
+    /**
+     * Like {@link #ARROW} but tipped with a specific potion which is applied on
+     * contact.
+     */
     TIPPED_ARROW(null, TippedArrow.class, -1),
+    /**
+     * An unknown entity without an Entity Class
+     */
     UNKNOWN(null, null, -1, false),
-    MOD_CUSTOM("mod_custom", CraftCustomEntity.class, -1, false);
-    
+    MOD_CUSTOM("mod_custom", CraftCustomEntity.class, -1, false); // Akarin
+
     private String name;
     private Class<? extends Entity> clazz;
     private short typeId;
-    private boolean independent;
-    private boolean living;
-    private static final Map<String, EntityType> NAME_MAP;
-    private static final Map<Short, EntityType> ID_MAP;
+    private boolean independent, living;
+
+    private static final Map<String, EntityType> NAME_MAP = new HashMap<String, EntityType>();
+    private static final Map<Short, EntityType> ID_MAP = new HashMap<Short, EntityType>();
+
+    static {
+        for (EntityType type : values()) {
+            if (type.name != null) {
+                NAME_MAP.put(type.name.toLowerCase(java.util.Locale.ENGLISH), type);
+            }
+            if (type.typeId > 0) {
+                ID_MAP.put(type.typeId, type);
+            }
+        }
+    }
 
     private EntityType(String name, Class<? extends Entity> clazz, int typeId) {
         this(name, clazz, typeId, true);
@@ -210,61 +296,78 @@ public enum EntityType {
     private EntityType(String name, Class<? extends Entity> clazz, int typeId, boolean independent) {
         this.name = name;
         this.clazz = clazz;
-        this.typeId = (short)typeId;
+        this.typeId = (short) typeId;
         this.independent = independent;
         if (clazz != null) {
             this.living = LivingEntity.class.isAssignableFrom(clazz);
         }
     }
 
+    /**
+     *
+     * @return the entity type's name
+     * @deprecated Magic value
+     */
     @Deprecated
     public String getName() {
-        return this.name;
+        return name;
     }
 
     public Class<? extends Entity> getEntityClass() {
-        return this.clazz;
+        return clazz;
     }
 
+    /**
+     *
+     * @return the raw type id 
+     * @deprecated Magic value
+     */
     @Deprecated
     public short getTypeId() {
-        return this.typeId;
+        return typeId;
     }
 
+    /**
+     *
+     * @param name the entity type's name
+     * @return the matching entity type or null
+     * @deprecated Magic value
+     */
     @Deprecated
     public static EntityType fromName(String name) {
         if (name == null) {
             return null;
         }
-        return NAME_MAP.get(name.toLowerCase(Locale.ENGLISH));
+        return NAME_MAP.get(name.toLowerCase(java.util.Locale.ENGLISH));
     }
 
+    /**
+     *
+     * @param id the raw type id
+     * @return the matching entity type or null
+     * @deprecated Magic value
+     */
     @Deprecated
-    public static EntityType fromId(int id2) {
-        if (id2 > 32767) {
+    public static EntityType fromId(int id) {
+        if (id > Short.MAX_VALUE) {
             return null;
         }
-        return ID_MAP.get((short)id2);
+        return ID_MAP.get((short) id);
     }
 
+    /**
+     * Some entities cannot be spawned using {@link
+     * World#spawnEntity(Location, EntityType)} or {@link
+     * World#spawn(Location, Class)}, usually because they require additional
+     * information in order to spawn.
+     *
+     * @return False if the entity type cannot be spawned
+     */
     public boolean isSpawnable() {
-        return this.independent;
+        return independent;
     }
 
     public boolean isAlive() {
-        return this.living;
-    }
-
-    static {
-        NAME_MAP = new HashMap<String, EntityType>();
-        ID_MAP = new HashMap<Short, EntityType>();
-        for (EntityType type : EntityType.values()) {
-            if (type.name != null) {
-                NAME_MAP.put(type.name.toLowerCase(Locale.ENGLISH), type);
-            }
-            if (type.typeId <= 0) continue;
-            ID_MAP.put(type.typeId, type);
-        }
+        return living;
     }
 }
-

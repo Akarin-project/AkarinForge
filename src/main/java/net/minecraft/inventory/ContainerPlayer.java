@@ -1,6 +1,10 @@
 package net.minecraft.inventory;
 
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.inventory.CraftInventoryCrafting;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
@@ -17,11 +21,32 @@ public class ContainerPlayer extends Container
     public InventoryCraftResult craftResult = new InventoryCraftResult();
     public boolean isLocalWorld;
     private final EntityPlayer player;
+    // CraftBukkit start
+    private CraftInventoryView bukkitEntity = null;
+    private InventoryPlayer playerInventory;
+    
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (bukkitEntity != null) {
+            return bukkitEntity;
+        }
+
+        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
+        bukkitEntity = new CraftInventoryView(this.playerInventory.player.getBukkitEntity(), inventory, this);
+        return bukkitEntity;
+    }
+    // CraftBukkit end
 
     public ContainerPlayer(InventoryPlayer playerInventory, boolean localWorld, EntityPlayer playerIn)
     {
         this.isLocalWorld = localWorld;
         this.player = playerIn;
+        // CraftBukkit start
+        this.craftResult = new InventoryCraftResult(); // CraftBukkit - moved to before InventoryCrafting construction
+        this.craftMatrix = new InventoryCrafting(this, 2, 2, playerInventory.player); // CraftBukkit - pass player
+        this.craftMatrix.resultInventory = this.craftResult; // CraftBukkit - let InventoryCrafting know about its result slot
+        this.playerInventory = playerInventory; // CraftBukkit - save player
+        // CraftBukkit end
         this.addSlotToContainer(new SlotCrafting(playerInventory.player, this.craftMatrix, this.craftResult, 0, 154, 28));
 
         for (int i = 0; i < 2; ++i)

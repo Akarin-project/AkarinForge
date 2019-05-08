@@ -1,6 +1,3 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.craftbukkit.entity;
 
 import java.util.List;
@@ -14,11 +11,11 @@ import org.bukkit.plugin.Plugin;
 
 import io.akarin.forge.AkarinForge;
 
-public class CraftFuckPlayer
+public class CraftFakePlayer
 extends CraftPlayer {
     private Player realPlayer = null;
 
-    public CraftFuckPlayer(CraftServer server, FakePlayer entity) {
+    public CraftFakePlayer(CraftServer server, FakePlayer entity) {
         super(server, entity);
         this.realPlayer = this.getRealPlayer();
     }
@@ -80,7 +77,7 @@ extends CraftPlayer {
         if (this.realPlayer != null) {
             this.realPlayer = null;
         }
-        if ((getRealPlayer = this.server.getPlayer(myName = this.getHandle().h_())) instanceof CraftFuckPlayer) {
+        if ((getRealPlayer = this.server.getPlayerExact(myName = this.getHandle().getName())) instanceof CraftFakePlayer) {
             return null;
         }
         if (getRealPlayer != null) {

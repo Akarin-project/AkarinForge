@@ -1,15 +1,21 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
+/**
+ * Represents Evoker Fangs.
+ */
+public interface EvokerFangs extends Entity {
 
-public interface EvokerFangs
-extends Entity {
-    public LivingEntity getOwner();
+    /**
+     * Gets the {@link LivingEntity} which summoned the fangs.
+     *
+     * @return the {@link LivingEntity} which summoned the fangs
+     */
+    LivingEntity getOwner();
 
-    public void setOwner(LivingEntity var1);
+    /**
+     * Sets the {@link LivingEntity} which summoned the fangs.
+     *
+     * @param owner the {@link LivingEntity} which summoned the fangs
+     */
+    void setOwner(LivingEntity owner);
 }
-

@@ -1,15 +1,27 @@
 package net.minecraft.inventory;
 
+import org.bukkit.craftbukkit.inventory.CraftInventory;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
+import sun.net.www.content.text.plain;
 
 public class ContainerDispenser extends Container
 {
     private final IInventory dispenserInventory;
+    // CraftBukkit start
+    private CraftInventoryView bukkitEntity = null;
+    private InventoryPlayer player;
+    // CraftBukkit end
 
     public ContainerDispenser(IInventory playerInventory, IInventory dispenserInventoryIn)
     {
         this.dispenserInventory = dispenserInventoryIn;
+        // CraftBukkit start - Save player
+        this.player = (InventoryPlayer) playerInventory;
+        // CraftBukkit end
 
         for (int i = 0; i < 3; ++i)
         {
@@ -35,6 +47,7 @@ public class ContainerDispenser extends Container
 
     public boolean canInteractWith(EntityPlayer playerIn)
     {
+        if (!this.checkReachable) return true; // CraftBukkit
         return this.dispenserInventory.isUsableByPlayer(playerIn);
     }
 
@@ -79,4 +92,17 @@ public class ContainerDispenser extends Container
 
         return itemstack;
     }
+    
+    // CraftBukkit start
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (bukkitEntity != null) {
+            return bukkitEntity;
+        }
+
+        CraftInventory inventory = new CraftInventory(this.dispenserInventory);
+        bukkitEntity = new CraftInventoryView(this.player.player.getBukkitEntity(), inventory, this);
+        return bukkitEntity;
+    }
+    // CraftBukkit end
 }

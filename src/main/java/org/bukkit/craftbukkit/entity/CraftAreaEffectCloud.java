@@ -15,7 +15,6 @@ import org.bukkit.craftbukkit.potion.CraftPotionUtil;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.potion.PotionData;
@@ -134,7 +133,7 @@ public class CraftAreaEffectCloud extends CraftEntity implements AreaEffectCloud
     }
 
     @Override
-    public boolean addCustomEffect(PotionEffect effect, boolean override) {
+    public boolean addCustomEffect(org.bukkit.potion.PotionEffect effect, boolean override) {
         int effectId = effect.getType().getId();
         PotionEffect existing = null;
         for (PotionEffect mobEffect : getHandle().effects) {
@@ -160,8 +159,8 @@ public class CraftAreaEffectCloud extends CraftEntity implements AreaEffectCloud
     }
 
     @Override
-    public List<PotionEffect> getCustomEffects() {
-        ImmutableList.Builder<PotionEffect> builder = ImmutableList.builder();
+    public List<org.bukkit.potion.PotionEffect> getCustomEffects() {
+        ImmutableList.Builder<org.bukkit.potion.PotionEffect> builder = ImmutableList.builder();
         for (PotionEffect effect : getHandle().effects) {
             builder.add(CraftPotionUtil.toBukkit(effect));
         }
@@ -211,11 +210,13 @@ public class CraftAreaEffectCloud extends CraftEntity implements AreaEffectCloud
         return CraftPotionUtil.toBukkit(getHandle().getType());
     }
 
+    @Override
     public ProjectileSource getSource() {
-        EntityLivingBase source = getHandle().getSource();
+        EntityLivingBase source = getHandle().getOwner();
         return (source == null) ? null : (LivingEntity) source.getBukkitEntity();
     }
 
+    @Override
     public void setSource(ProjectileSource shooter) {
         if (shooter instanceof CraftLivingEntity) {
             getHandle().setOwner((EntityLivingBase) ((CraftLivingEntity) shooter).getHandle());

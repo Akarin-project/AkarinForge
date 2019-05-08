@@ -6,6 +6,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 
+import akka.event.Logging.Info;
 import io.akarin.forge.AkarinForge;
 import io.akarin.forge.WorldCapture;
 
@@ -181,7 +182,6 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public boolean populating;
     private int tickPosition;
     public final SpigotWorldConfig spigotConfig;
-    public final WorldTimingsHandler timings;
     public static boolean haveWeSilencedAPhysicsCrash;
     public static String blockLocation;
     private TickLimiter entityLimiter;
@@ -214,6 +214,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     {
         // Akarin start
         this.spigotConfig = new SpigotWorldConfig(info.getWorldName());
+        this.paperConfig = new com.destroystokyo.paper.PaperWorldConfig(info.getWorldName(), this.spigotConfig); // Paper
         this.generator = gen;
         this.world = new CraftWorld((WorldServer) this, gen, env);
         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();

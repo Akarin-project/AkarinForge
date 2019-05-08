@@ -1,14 +1,22 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Arrow;
+/**
+ * Represents a spectral arrow.
+ */
+public interface SpectralArrow extends Arrow {
 
-public interface SpectralArrow
-extends Arrow {
-    public int getGlowingTicks();
+    /**
+     * Returns the amount of time that this arrow will apply
+     * the glowing effect for.
+     * 
+     * @return the glowing effect ticks
+     */
+    int getGlowingTicks();
 
-    public void setGlowingTicks(int var1);
+    /**
+     * Sets the amount of time to apply the glowing effect for.
+     * 
+     * @param duration the glowing effect ticks
+     */
+    void setGlowingTicks(int duration);
 }
-

@@ -84,6 +84,7 @@ import org.bukkit.TravelAgent;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.chunkio.ChunkIOExecutor;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.util.CraftChatMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -302,23 +303,23 @@ public abstract class PlayerList
         {
             public void onSizeChanged(WorldBorder border, double newSize)
             {
-                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_SIZE), border.world); // Akarin
+                PlayerList.this.sendAll(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_SIZE), border.world); // Akarin
             }
             public void onTransitionStarted(WorldBorder border, double oldSize, double newSize, long time)
             {
-                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.LERP_SIZE), border.world); // Akarin
+                PlayerList.this.sendAll(new SPacketWorldBorder(border, SPacketWorldBorder.Action.LERP_SIZE), border.world); // Akarin
             }
             public void onCenterChanged(WorldBorder border, double x, double z)
             {
-                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_CENTER), border.world); // Akarin
+                PlayerList.this.sendAll(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_CENTER), border.world); // Akarin
             }
             public void onWarningTimeChanged(WorldBorder border, int newTime)
             {
-                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_WARNING_TIME), border.world); // Akarin
+                PlayerList.this.sendAll(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_WARNING_TIME), border.world); // Akarin
             }
             public void onWarningDistanceChanged(WorldBorder border, int newDistance)
             {
-                PlayerList.this.sendPacketToAllPlayers(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_WARNING_BLOCKS), border.world); // Akarin
+                PlayerList.this.sendAll(new SPacketWorldBorder(border, SPacketWorldBorder.Action.SET_WARNING_BLOCKS), border.world); // Akarin
             }
             public void onDamageAmountChanged(WorldBorder border, double newAmount)
             {
@@ -588,21 +589,21 @@ public abstract class PlayerList
         if (getBannedPlayers().isBanned(gameprofile) && !getBannedPlayers().getEntry(gameprofile).hasBanExpired()) {
             UserListBansEntry gameprofilebanentry = this.bannedPlayers.getEntry(gameprofile);
 
-            String s1 = "You are banned from this server!\nReason: " + gameprofilebanentry.getBanReason();
+            s = "You are banned from this server!\nReason: " + gameprofilebanentry.getBanReason();
             if (gameprofilebanentry.banEndDate != null) {
-                s1 = s1 + "\nYour ban will be removed on " + DATE_FORMAT.format(gameprofilebanentry.getBanEndDate());
+                s = s + "\nYour ban will be removed on " + DATE_FORMAT.format(gameprofilebanentry.getBanEndDate());
             }
             
             if (!gameprofilebanentry.hasBanExpired())
                 event.disallow(PlayerLoginEvent.Result.KICK_BANNED, s); // Spigot
-        } else if (!this.isWhitelisted(gameprofile, event)) { // Paper
+        } else if (!this.canJoin(gameprofile)) { // Paper
             event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, org.spigotmc.SpigotConfig.whitelistMessage);
         } else if (getBannedIPs().isBanned(socketaddress) && !getBannedIPs().getBanEntry(socketaddress).hasBanExpired()) {
             UserListIPBansEntry ipbanentry = this.bannedIPs.getBanEntry(socketaddress);
 
-            String s2 = "Your IP address is banned from this server!\nReason: " + ipbanentry.getBanReason();
+            s = "Your IP address is banned from this server!\nReason: " + ipbanentry.getBanReason();
             if (ipbanentry.banEndDate != null) {
-                s2 = s2 + "\nYour ban will be removed on " + DATE_FORMAT.format(ipbanentry.getBanEndDate());
+                s = s + "\nYour ban will be removed on " + DATE_FORMAT.format(ipbanentry.getBanEndDate());
             }
             
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, s);
@@ -1353,7 +1354,7 @@ public abstract class PlayerList
         {
             EntityPlayerMP entityplayermp = this.playerEntityList.get(i);
             // CraftBukkit start - Test if player receiving packet can see the source of the packet
-            if (entityplayermp != null && entityplayermp instanceof EntityPlayerMP && !except.getBukkitEntity().canSee(((EntityPlayerMP) except).getBukkitEntity())) {
+            if (entityplayermp != null && entityplayermp instanceof EntityPlayerMP && !((CraftPlayer) except.getBukkitEntity()).canSee(((EntityPlayerMP) except).getBukkitEntity())) {
                continue;
             }
             // CraftBukkit end

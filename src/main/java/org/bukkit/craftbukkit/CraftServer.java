@@ -521,7 +521,6 @@ implements Server {
         return this.getOnlinePlayers().toArray(new Player[0]);
     }
 
-    @Deprecated
     @Override
     public Player getPlayer(String name) {
         Validate.notNull((Object)name, (String)"Name cannot be null", (Object[])new Object[0]);
@@ -544,7 +543,6 @@ implements Server {
         return found;
     }
 
-    @Deprecated
     @Override
     public Player getPlayerExact(String name) {
         Validate.notNull(name, "Name cannot be null");
@@ -1250,7 +1248,7 @@ implements Server {
     public Set<OfflinePlayer> getBannedPlayers() {
         Set<OfflinePlayer> result = new HashSet<OfflinePlayer>();
 
-        for (UserListEntry entry : playerList.getBannedPlayers().getValues()) {
+        for (UserListEntry entry : playerList.getBannedPlayers().getMapValues()) {
             result.add(getOfflinePlayer((GameProfile) entry.getValue()));
         }        
 
@@ -1280,7 +1278,7 @@ implements Server {
     public Set<OfflinePlayer> getWhitelistedPlayers() {
         Set<OfflinePlayer> result = new LinkedHashSet<OfflinePlayer>();
 
-        for (UserListEntry entry : playerList.getWhitelistedPlayers().getValues()) {
+        for (UserListEntry entry : playerList.getWhitelistedPlayers().getMapValues()) {
             result.add(getOfflinePlayer((GameProfile) entry.getValue()));
         }
 
@@ -1291,7 +1289,7 @@ implements Server {
     public Set<OfflinePlayer> getOperators() {
         Set<OfflinePlayer> result = new HashSet<OfflinePlayer>();
 
-        for (UserListEntry entry : playerList.getOppedPlayers().getValues()) {
+        for (UserListEntry entry : playerList.getOppedPlayers().getMapValues()) {
             result.add(getOfflinePlayer((GameProfile) entry.getValue()));
         }
 

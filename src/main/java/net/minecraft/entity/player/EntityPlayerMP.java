@@ -20,6 +20,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
@@ -131,6 +132,7 @@ import org.bukkit.WeatherType;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.util.CraftChatMessage;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -162,7 +164,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     private float lastHealth = -1.0E8F;
     private int lastFoodLevel = -99999999;
     private boolean wasHungry = true;
-    private int lastExperience = -99999999;
+    public int lastExperience = -99999999;
     public int respawnInvulnerabilityTicks = 60; // Akarin
     private EntityPlayer.EnumChatVisibility chatVisibility;
     private boolean chatColours = true;
@@ -764,13 +766,13 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
             this.inventory.clear();
         }
         
-        if (!(keepInventory || this.y() || MinecraftForge.EVENT_BUS.post(new PlayerDropsEvent(this, cause, this.capturedDrops, this.aT > 0)))) {
+        if (!(keepInventory || this.queuedEndExit || MinecraftForge.EVENT_BUS.post(new PlayerDropsEvent(this, cause, this.capturedDrops, this.recentlyHit > 0)))) {
             for (net.minecraft.entity.item.EntityItem item : capturedDrops) {
                 this.world.spawnEntity(item);
             }
         }
         
-        this.closeInventory();
+        this.closeContainer();
         this.setSpectatingEntity(this); // Remove spectated target
         
         Collection<Score> collection = this.world.getServer().getScoreboardManager().getScoreboardScores(IScoreCriteria.DEATH_COUNT, this.getName(), Lists.newArrayList());
@@ -1001,7 +1003,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
             }
 
             PlayerTeleportEvent.TeleportCause cause = this.dimension == 1 || dimensionIn == 1 ? PlayerTeleportEvent.TeleportCause.END_PORTAL : (this.dimension == -1 || dimensionIn == -1 ? PlayerTeleportEvent.TeleportCause.NETHER_PORTAL : PlayerTeleportEvent.TeleportCause.MOD); // Akarin
-            this.mcServer.getPlayerList().transferPlayerToDimension(this, dimensionIn, teleporter, cause); // Akarin
+            this.mcServer.getPlayerList().transferPlayerToDimension(this, dimensionIn, teleporter); // Akarin
             this.connection.sendPacket(new SPacketEffect(1032, BlockPos.ORIGIN, 0, false));
             this.lastExperience = -1;
             this.lastHealth = -1.0F;
@@ -1291,7 +1293,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     public void openGuiHorseInventory(AbstractHorse horse, IInventory inventoryIn)
     {
         // Akarin start
-        Container container = CraftEventFactory.callInventoryOpenEvent(this, new ContainerHorseInventory(this.inventory, horse, inventoryIn, this));
+        Container container = CraftEventFactory.callInventoryOpenEvent(this, new ContainerHorseInventory(this.inventory, inventoryIn, horse, this));
         if (container == null) {
             inventoryIn.closeInventory(this);
             return;
@@ -1873,13 +1875,13 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
     public void setElytraFlying()
     {
-        if (CraftEventFactory.callToggleGlideEvent(this, true).isCancelled()) continue; // Akarin
+        if (CraftEventFactory.callToggleGlideEvent(this, true).isCancelled()) return; // Akarin
         this.setFlag(7, true);
     }
 
     public void clearElytraFlying()
     {
-        if (CraftEventFactory.callToggleGlideEvent(this, false).isCancelled()) continue; // Akarin
+        if (CraftEventFactory.callToggleGlideEvent(this, false).isCancelled()) return; // Akarin
         this.setFlag(7, true);
         this.setFlag(7, false);
     }

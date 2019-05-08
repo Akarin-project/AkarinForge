@@ -7,8 +7,12 @@ import net.minecraft.item.ItemWrittenBook;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 
-public class RecipeBookCloning extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<IRecipe> implements IRecipe
+public class RecipeBookCloning extends ShapelessRecipes implements IRecipe // Akairn
 {
+    public RecipeBookCloning() {
+        super("", new ItemStack(Items.WRITTEN_BOOK, 0, -1), NonNullList.from(Ingredient.EMPTY, Ingredient.fromItem(Items.WRITABLE_BOOK)));
+    }
+
     public boolean matches(InventoryCrafting inv, World worldIn)
     {
         int i = 0;

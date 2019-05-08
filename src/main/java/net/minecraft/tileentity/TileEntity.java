@@ -20,6 +20,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.inventory.InventoryHolder;
 
 public abstract class TileEntity implements net.minecraftforge.common.capabilities.ICapabilitySerializable<NBTTagCompound>
 {
@@ -30,6 +31,23 @@ public abstract class TileEntity implements net.minecraftforge.common.capabiliti
     protected boolean tileEntityInvalid;
     private int blockMetadata = -1;
     protected Block blockType;
+    // CraftBukkit start - add method
+    // Paper start
+    public InventoryHolder getOwner() {
+        // Paper end
+        if (world == null) return null;
+        // Spigot start
+        org.bukkit.block.Block block = world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+        if (block == null) {
+            org.bukkit.Bukkit.getLogger().log(java.util.logging.Level.WARNING, "No block for owner at %s %d %d %d", new Object[]{world.getWorld(), pos.getX(), pos.getY(), pos.getZ()});
+            return null;
+        }
+        // Spigot end
+        org.bukkit.block.BlockState state = block.getState(); // Paper
+        if (state instanceof InventoryHolder) return (InventoryHolder) state;
+        return null;
+    }
+    // CraftBukkit end
 
     public static void register(String id, Class <? extends TileEntity > clazz)
     {

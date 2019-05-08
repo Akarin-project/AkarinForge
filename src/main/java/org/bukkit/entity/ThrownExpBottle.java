@@ -1,11 +1,8 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Projectile;
+/**
+ * Represents a thrown Experience bottle.
+ */
+public interface ThrownExpBottle extends Projectile {
 
-public interface ThrownExpBottle
-extends Projectile {
 }
-

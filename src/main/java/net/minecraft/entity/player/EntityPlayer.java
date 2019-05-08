@@ -140,9 +140,9 @@ public abstract class EntityPlayer extends EntityLivingBase
     public double chasingPosX;
     public double chasingPosY;
     public double chasingPosZ;
-    protected boolean sleeping;
+    public boolean sleeping;
     public BlockPos bedLocation;
-    private int sleepTimer;
+    public int sleepTimer;
     public float renderOffsetX;
     @SideOnly(Side.CLIENT)
     public float renderOffsetY;
@@ -439,7 +439,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         return SoundCategory.PLAYERS;
     }
 
-    protected int getFireImmuneTicks()
+    public int getFireImmuneTicks()
     {
         return 20;
     }
@@ -1451,7 +1451,7 @@ public abstract class EntityPlayer extends EntityLivingBase
 
                             for (EntityLivingBase entitylivingbase : this.world.getEntitiesWithinAABB(EntityLivingBase.class, targetEntity.getEntityBoundingBox().grow(1.0D, 0.25D, 1.0D)))
                             {
-                                if (entitylivingbase != this && entitylivingbase != targetEntity && !this.isOnSameTeam(entitylivingbase) && this.getDistanceSq(entitylivingbase) < 9.0D && entitylivingbase.damageEntity(DamageSource.playerAttack(this).sweep(), f3)) // Akarin
+                                if (entitylivingbase != this && entitylivingbase != targetEntity && !this.isOnSameTeam(entitylivingbase) && this.getDistanceSq(entitylivingbase) < 9.0D && entitylivingbase.damageEntity0(DamageSource.causePlayerDamage(this).sweep(), f3)) // Akarin
                                 {
                                     entitylivingbase.knockBack(this, 0.4F, (double)MathHelper.sin(this.rotationYaw * 0.017453292F), (double)(-MathHelper.cos(this.rotationYaw * 0.017453292F)));
                                     entitylivingbase.attackEntityFrom(DamageSource.causePlayerDamage(this), f3);
@@ -1915,7 +1915,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         {
             this.spawnPos = pos;
             this.spawnForced = forced;
-            this.spawnWorld = this.world.worldData.getName(); // Akarin
+            this.spawnWorld = this.world.worldInfo.getWorldName(); // Akarin
         }
         else
         {
@@ -2673,7 +2673,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         return (NBTTagCompound)this.dataManager.get(LEFT_SHOULDER_ENTITY);
     }
 
-    protected void setLeftShoulderEntity(NBTTagCompound tag)
+    public void setLeftShoulderEntity(NBTTagCompound tag)
     {
         this.dataManager.set(LEFT_SHOULDER_ENTITY, tag);
     }
@@ -2683,7 +2683,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         return (NBTTagCompound)this.dataManager.get(RIGHT_SHOULDER_ENTITY);
     }
 
-    protected void setRightShoulderEntity(NBTTagCompound tag)
+    public void setRightShoulderEntity(NBTTagCompound tag)
     {
         this.dataManager.set(RIGHT_SHOULDER_ENTITY, tag);
     }

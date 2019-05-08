@@ -1,16 +1,21 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Animals;
-import org.bukkit.entity.Vehicle;
+/**
+ * Represents a Pig.
+ */
+public interface Pig extends Animals, Vehicle {
 
-public interface Pig
-extends Animals,
-Vehicle {
+    /**
+     * Check if the pig has a saddle.
+     *
+     * @return if the pig has been saddled.
+     */
     public boolean hasSaddle();
 
-    public void setSaddle(boolean var1);
+    /**
+     * Sets if the pig has a saddle or not
+     *
+     * @param saddled set if the pig has a saddle or not.
+     */
+    public void setSaddle(boolean saddled);
 }
-

@@ -1,27 +1,62 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
 import org.bukkit.Material;
-import org.bukkit.entity.Entity;
 
-public interface FallingBlock
-extends Entity {
-    public Material getMaterial();
+/**
+ * Represents a falling block
+ */
+public interface FallingBlock extends Entity {
 
+    /**
+     * Get the Material of the falling block
+     *
+     * @return Material of the block
+     */
+    Material getMaterial();
+
+    /**
+     * Get the ID of the falling block
+     *
+     * @return ID type of the block
+     * @deprecated Magic value
+     */
     @Deprecated
-    public int getBlockId();
+    int getBlockId();
 
+    /**
+     * Get the data for the falling block
+     *
+     * @return data of the block
+     * @deprecated Magic value
+     */
     @Deprecated
-    public byte getBlockData();
+    byte getBlockData();
 
-    public boolean getDropItem();
+    /**
+     * Get if the falling block will break into an item if it cannot be placed
+     *
+     * @return true if the block will break into an item when obstructed
+     */
+    boolean getDropItem();
 
-    public void setDropItem(boolean var1);
+    /**
+     * Set if the falling block will break into an item if it cannot be placed
+     *
+     * @param drop true to break into an item when obstructed
+     */
+    void setDropItem(boolean drop);
 
-    public boolean canHurtEntities();
+    /**
+     * Get the HurtEntities state of this block.
+     *
+     * @return whether entities will be damaged by this block.
+     */
+    boolean canHurtEntities();
 
-    public void setHurtEntities(boolean var1);
+    /**
+     * Set the HurtEntities state of this block.
+     *
+     * @param hurtEntities whether entities will be damaged by this block.
+     */
+    void setHurtEntities(boolean hurtEntities);
 }
-

@@ -1,6 +1,5 @@
 package org.bukkit.craftbukkit.entity;
 
-import com.destroystokyo.paper.entity.SentientNPC;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.monster.EntityVex;
 
@@ -18,13 +17,6 @@ public class CraftVex extends CraftMonster implements Vex {
     public EntityVex getHandle() {
         return (EntityVex) super.getHandle();
     }
-
-    // Paper start
-    public SentientNPC getOwner() {
-        EntityLiving owner = getHandle().getOwner();
-        return owner != null ? (SentientNPC) owner.getBukkitEntity() : null;
-    }
-    // Paper end
 
     @Override
     public String toString() {

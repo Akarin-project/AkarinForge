@@ -236,8 +236,8 @@ public final class CraftItemStack extends ItemStack {
         ImmutableMap.Builder<Enchantment, Integer> result = ImmutableMap.builder();
 
         for (int i = 0; i < list.tagCount(); i++) {
-            int id = 0xffff & ((NBTTagCompound) list.getCompoundTagAt(i)).getShort(ENCHANTMENTS_ID.NBT);
-            int level = 0xffff & ((NBTTagCompound) list.getCompoundTagAt(i)).getShort(ENCHANTMENTS_LVL.NBT);
+            int id = 0xffff & ((NBTTagCompound) list.getCompoundTagAt(i)).getShort(CraftMetaItem.ENCHANTMENTS_ID.NBT);
+            int level = 0xffff & ((NBTTagCompound) list.getCompoundTagAt(i)).getShort(CraftMetaItem.ENCHANTMENTS_LVL.NBT);
 
             result.put(Enchantment.getById(id), level);
         }

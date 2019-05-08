@@ -1,11 +1,6 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Entity;
-
-public interface Weather
-extends Entity {
-}
-
+/**
+ * Represents a Weather related entity, such as a storm
+ */
+public interface Weather extends Entity {}

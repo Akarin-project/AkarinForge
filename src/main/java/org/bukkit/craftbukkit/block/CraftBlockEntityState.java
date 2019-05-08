@@ -73,7 +73,7 @@ public class CraftBlockEntityState<T extends TileEntity> extends CraftBlockState
     private void copyData(T from, T to) {
         BlockPos pos = to.getPos();
         NBTTagCompound nbtTagCompound = from.writeToNBT(new NBTTagCompound());
-        to.load(nbtTagCompound);
+        to.readFromNBT(nbtTagCompound);
 
         // reset the original position:
         to.setPos(pos);

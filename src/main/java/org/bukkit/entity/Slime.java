@@ -1,18 +1,32 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.LivingEntity;
+/**
+ * Represents a Slime.
+ */
+public interface Slime extends LivingEntity {
 
-public interface Slime
-extends LivingEntity {
+    /**
+     * @return The size of the slime
+     */
     public int getSize();
 
-    public void setSize(int var1);
+    /**
+     * @param sz The new size of the slime.
+     */
+    public void setSize(int sz);
 
-    public void setTarget(LivingEntity var1);
+    /**
+     * Set the {@link LivingEntity} target for this slime. Set to null to clear
+     * the target.
+     *
+     * @param target the entity to target
+     */
+    public void setTarget(LivingEntity target);
 
+    /**
+     * Get the {@link LivingEntity} this slime is currently targeting.
+     *
+     * @return the current target, or null if no target exists.
+     */
     public LivingEntity getTarget();
 }
-

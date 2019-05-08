@@ -1305,7 +1305,7 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
         // Akarin end
         this.player.mountEntityAndWakeUp();
         // Akarin start
-        String quitMessage = this.serverController.getPlayerList().disconnect(this.player);
+        String quitMessage = this.serverController.getPlayerList().playerLoggedOut(this.player);
         if ((quitMessage != null) && (quitMessage.length() > 0)) {
             this.serverController.getPlayerList().sendMessage(CraftChatMessage.fromString(quitMessage));
         }
@@ -1926,7 +1926,7 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
         if (this.player.isMovementBlocked()) return; // CraftBukkit
         this.player.markPlayerActive();
 
-        if (this.player.openContainer.windowId == packetIn.getWindowId() && this.player.openContainer.getCanCraft(this.player) && this.player.openContainer.canUse(this.player)) { // Akarin
+        if (this.player.openContainer.windowId == packetIn.getWindowId() && this.player.openContainer.getCanCraft(this.player) && this.player.openContainer.canInteractWith(this.player)) { // Akarin
             boolean cancelled = this.player.isSpectator(); // Akarin - see below if
             if (false/*this.player.isSpectator()*/) // Akarin
             {

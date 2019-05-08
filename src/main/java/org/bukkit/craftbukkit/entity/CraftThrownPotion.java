@@ -1,8 +1,8 @@
 package org.bukkit.craftbukkit.entity;
 
 import java.util.Collection;
+
 import net.minecraft.entity.projectile.EntityPotion;
-import net.minecraft.potion.PotionEffect;
 import net.minecraft.potion.PotionUtils;
 
 import org.bukkit.craftbukkit.CraftServer;
@@ -21,7 +21,7 @@ public abstract class CraftThrownPotion extends CraftProjectile implements Throw
 
     public Collection<PotionEffect> getEffects() {
         ImmutableList.Builder<PotionEffect> builder = ImmutableList.builder();
-        for (PotionEffect effect : PotionUtils.getEffectsFromStack(getHandle().getPotion())) {
+        for (net.minecraft.potion.PotionEffect effect : PotionUtils.getEffectsFromStack(getHandle().getPotion())) {
             builder.add(CraftPotionUtil.toBukkit(effect));
         }
         return builder.build();

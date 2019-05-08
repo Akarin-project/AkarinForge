@@ -16,7 +16,6 @@ import org.bukkit.potion.PotionType;
 import com.google.common.collect.ImmutableList;
 
 import net.minecraft.entity.projectile.EntityTippedArrow;
-import net.minecraft.potion.PotionEffect;
 import net.minecraft.potion.Potion;
 
 public class CraftTippedArrow extends CraftArrow implements TippedArrow {
@@ -43,8 +42,8 @@ public class CraftTippedArrow extends CraftArrow implements TippedArrow {
     @Override
     public boolean addCustomEffect(PotionEffect effect, boolean override) {
         int effectId = effect.getType().getId();
-        PotionEffect existing = null;
-        for (PotionEffect mobEffect : getHandle().customPotionEffects) {
+        net.minecraft.potion.PotionEffect existing = null;
+        for (net.minecraft.potion.PotionEffect mobEffect : getHandle().customPotionEffects) {
             if (Potion.getIdFromPotion(mobEffect.getPotion()) == effectId) {
                 existing = mobEffect;
             }
@@ -70,7 +69,7 @@ public class CraftTippedArrow extends CraftArrow implements TippedArrow {
     @Override
     public List<PotionEffect> getCustomEffects() {
         ImmutableList.Builder<PotionEffect> builder = ImmutableList.builder();
-        for (PotionEffect effect : getHandle().customPotionEffects) {
+        for (net.minecraft.potion.PotionEffect effect : getHandle().customPotionEffects) {
             builder.add(CraftPotionUtil.toBukkit(effect));
         }
         return builder.build();
@@ -78,7 +77,7 @@ public class CraftTippedArrow extends CraftArrow implements TippedArrow {
 
     @Override
     public boolean hasCustomEffect(PotionEffectType type) {
-        for (PotionEffect effect : getHandle().customPotionEffects) {
+        for (net.minecraft.potion.PotionEffect effect : getHandle().customPotionEffects) {
             if (CraftPotionUtil.equals(effect.getPotion(), type)) {
                 return true;
             }
@@ -94,8 +93,8 @@ public class CraftTippedArrow extends CraftArrow implements TippedArrow {
     @Override
     public boolean removeCustomEffect(PotionEffectType effect) {
         int effectId = effect.getId();
-        PotionEffect existing = null;
-        for (PotionEffect mobEffect : getHandle().customPotionEffects) {
+        net.minecraft.potion.PotionEffect existing = null;
+        for (net.minecraft.potion.PotionEffect mobEffect : getHandle().customPotionEffects) {
             if (Potion.getIdFromPotion(mobEffect.getPotion()) == effectId) {
                 existing = mobEffect;
             }

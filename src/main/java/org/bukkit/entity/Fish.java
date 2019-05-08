@@ -1,11 +1,8 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.FishHook;
-
-public interface Fish
-extends FishHook {
+/**
+ * Represents a fishing hook.
+ * @deprecated in favor of {@link FishHook}
+ */
+public interface Fish extends FishHook {
 }
-

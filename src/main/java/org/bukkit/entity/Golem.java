@@ -1,11 +1,8 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Creature;
-
-public interface Golem
-extends Creature {
+/**
+ * A mechanical creature that may harm enemies.
+ */
+public interface Golem extends Creature {
+    
 }
-

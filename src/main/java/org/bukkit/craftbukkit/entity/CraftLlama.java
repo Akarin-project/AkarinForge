@@ -1,6 +1,5 @@
 package org.bukkit.craftbukkit.entity;
 
-import com.destroystokyo.paper.entity.CraftRangedEntity;
 import com.google.common.base.Preconditions;
 import net.minecraft.entity.passive.EntityLlama;
 
@@ -13,7 +12,7 @@ import org.bukkit.inventory.LlamaInventory;
 
 import org.bukkit.entity.Llama.Color;
 
-public class CraftLlama extends CraftChestedHorse implements Llama, CraftRangedEntity<EntityLlama> { // Paper
+public class CraftLlama extends CraftChestedHorse implements Llama {
 
     public CraftLlama(CraftServer server, EntityLlama entity) {
         super(server, entity);

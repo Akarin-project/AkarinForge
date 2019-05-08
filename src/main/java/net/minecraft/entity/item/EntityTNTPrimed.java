@@ -1,6 +1,9 @@
 package net.minecraft.entity.item;
 
 import javax.annotation.Nullable;
+
+import org.bukkit.event.entity.ExplosionPrimeEvent;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.MoverType;
@@ -17,6 +20,8 @@ public class EntityTNTPrimed extends Entity
     @Nullable
     private EntityLivingBase tntPlacedBy;
     private int fuse;
+    public float yield = 4; // CraftBukkit - add field
+    public boolean isIncendiary = false; // CraftBukkit - add field
 
     public EntityTNTPrimed(World worldIn)
     {
@@ -69,6 +74,11 @@ public class EntityTNTPrimed extends Entity
         }
 
         this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
+        // Paper start - Configurable TNT entity height nerf
+        if (this.world.paperConfig.entityTNTHeightNerf != 0 && this.posY > this.world.paperConfig.entityTNTHeightNerf) {
+            this.setDead();
+        }
+        // Paper end
         this.motionX *= 0.9800000190734863D;
         this.motionY *= 0.9800000190734863D;
         this.motionZ *= 0.9800000190734863D;
@@ -84,12 +94,12 @@ public class EntityTNTPrimed extends Entity
 
         if (this.fuse <= 0)
         {
-            this.setDead();
-
-            if (!this.world.isRemote)
-            {
+            // CraftBukkit start - Need to reverse the order of the explosion and the entity death so we have a location for the event
+            if (!this.world.isRemote) {
                 this.explode();
             }
+            this.setDead();
+            // CraftBukkit end
         }
         else
         {
@@ -100,8 +110,15 @@ public class EntityTNTPrimed extends Entity
 
     private void explode()
     {
-        float f = 4.0F;
-        this.world.createExplosion(this, this.posX, this.posY + (double)(this.height / 16.0F), this.posZ, 4.0F, true);
+        // CraftBukkit start
+        org.bukkit.craftbukkit.CraftServer server = this.world.getServer();
+        ExplosionPrimeEvent event = new ExplosionPrimeEvent((org.bukkit.entity.Explosive) org.bukkit.craftbukkit.entity.CraftEntity.getEntity(server, this));
+        server.getPluginManager().callEvent(event);
+
+        if (!event.isCancelled()) {
+            this.world.newExplosion(this, this.posX, this.posY + (double) (this.height / 16.0F), this.posZ, event.getRadius(), event.getFire(), true);
+        }
+        // CraftBukkit end
     }
 
     protected void writeEntityToNBT(NBTTagCompound compound)

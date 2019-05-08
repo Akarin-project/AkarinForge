@@ -1,11 +1,6 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Animals;
-
-public interface PolarBear
-extends Animals {
-}
-
+/**
+ * Represents a polar bear.
+ */
+public interface PolarBear extends Animals {}

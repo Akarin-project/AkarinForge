@@ -1,11 +1,8 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Creature;
+/**
+ * Represents a non-player character
+ */
+public interface NPC extends Creature {
 
-public interface NPC
-extends Creature {
 }
-

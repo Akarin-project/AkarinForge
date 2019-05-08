@@ -1,11 +1,6 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Skeleton;
-
-public interface WitherSkeleton
-extends Skeleton {
-}
-
+/**
+ * Represents a WitherSkeleton - variant of {@link Skeleton}.
+ */
+public interface WitherSkeleton extends Skeleton { }

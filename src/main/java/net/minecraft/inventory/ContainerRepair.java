@@ -18,6 +18,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.craftbukkit.inventory.CraftInventoryView;
 
 public class ContainerRepair extends Container
 {
@@ -30,6 +31,35 @@ public class ContainerRepair extends Container
     public int materialCost;
     public String repairedItemName; // Akarin
     private final EntityPlayer player;
+    // CraftBukkit start
+    private int lastLevelCost;
+    private CraftInventoryView bukkitEntity;
+    private InventoryPlayer playerInventory;
+    
+    @Override
+    public void detectAndSendChanges() {
+        super.detectAndSendChanges();
+
+        for (int i = 0; i < this.listeners.size(); ++i) {
+            IContainerListener icrafting = (IContainerListener) this.listeners.get(i);
+            icrafting.sendWindowProperty(this, 0, this.maximumCost);
+        }
+
+        this.lastLevelCost = this.maximumCost;
+    }
+
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (bukkitEntity != null) {
+            return bukkitEntity;
+        }
+
+        org.bukkit.craftbukkit.inventory.CraftInventory inventory = new org.bukkit.craftbukkit.inventory.CraftInventoryAnvil(
+                new org.bukkit.Location(world.getWorld(), selfPosition.getX(), selfPosition.getY(), selfPosition.getZ()), this.inputSlots, this.outputSlot, this);
+        bukkitEntity = new CraftInventoryView(this.playerInventory.player.getBukkitEntity(), inventory, this);
+        return bukkitEntity;
+    }
+    // CraftBukkit end
 
     @SideOnly(Side.CLIENT)
     public ContainerRepair(InventoryPlayer playerInventory, World worldIn, EntityPlayer player)
@@ -39,6 +69,7 @@ public class ContainerRepair extends Container
 
     public ContainerRepair(InventoryPlayer playerInventory, final World worldIn, final BlockPos blockPosIn, EntityPlayer player)
     {
+        this.playerInventory = playerInventory; // CraftBukkit
         this.outputSlot = new InventoryCraftResult();
         this.inputSlots = new InventoryBasic("Repair", true, 2)
         {

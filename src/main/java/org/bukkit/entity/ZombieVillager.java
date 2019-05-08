@@ -1,17 +1,19 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Villager;
-import org.bukkit.entity.Zombie;
+/**
+ * Represents a {@link Zombie} which was once a {@link Villager}.
+ */
+public interface ZombieVillager extends Zombie {
 
-public interface ZombieVillager
-extends Zombie {
-    @Override
-    public void setVillagerProfession(Villager.Profession var1);
+    /**
+     * Sets the villager profession of this zombie.
+     */
+    public void setVillagerProfession(Villager.Profession profession);
 
-    @Override
+    /**
+     * Returns the villager profession of this zombie.
+     *
+     * @return the profession or null
+     */
     public Villager.Profession getVillagerProfession();
 }
-

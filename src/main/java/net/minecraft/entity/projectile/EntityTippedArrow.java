@@ -26,7 +26,7 @@ public class EntityTippedArrow extends EntityArrow
 {
     private static final DataParameter<Integer> COLOR = EntityDataManager.<Integer>createKey(EntityTippedArrow.class, DataSerializers.VARINT);
     private PotionType potion = PotionTypes.EMPTY;
-    private final Set<PotionEffect> customPotionEffects = Sets.<PotionEffect>newHashSet();
+    public final Set<PotionEffect> customPotionEffects = Sets.<PotionEffect>newHashSet();
     private boolean fixedColor;
     // CraftBukkit start accessor methods
     public void refreshEffects() {
@@ -169,7 +169,7 @@ public class EntityTippedArrow extends EntityArrow
         return ((Integer)this.dataManager.get(COLOR)).intValue();
     }
 
-    private void setFixedColor(int p_191507_1_)
+    public void setFixedColor(int p_191507_1_)
     {
         this.fixedColor = true;
         this.dataManager.set(COLOR, Integer.valueOf(p_191507_1_));

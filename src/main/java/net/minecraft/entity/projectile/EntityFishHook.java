@@ -38,7 +38,7 @@ public class EntityFishHook extends Entity
     private static final DataParameter<Integer> DATA_HOOKED_ENTITY = EntityDataManager.<Integer>createKey(EntityFishHook.class, DataSerializers.VARINT);
     private boolean inGround;
     private int ticksInGround;
-    private EntityPlayer angler;
+    public EntityPlayer angler;
     private int ticksInAir;
     private int ticksCatchable;
     private int ticksCaughtDelay;

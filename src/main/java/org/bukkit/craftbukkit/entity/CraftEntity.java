@@ -150,7 +150,6 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
         this.entity = entity;
     }
 
-    @Override
     public Chunk getChunk() {
         net.minecraft.world.chunk.Chunk currentChunk = entity.getCurrentChunk();
         return currentChunk != null ? currentChunk.bukkitChunk : getLocation().getChunk();

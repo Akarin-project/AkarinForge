@@ -1,11 +1,8 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Cow;
+/**
+ * Represents a mushroom {@link Cow}
+ */
+public interface MushroomCow extends Cow {
 
-public interface MushroomCow
-extends Cow {
 }
-

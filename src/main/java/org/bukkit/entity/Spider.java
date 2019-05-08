@@ -1,11 +1,6 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Monster;
-
-public interface Spider
-extends Monster {
-}
-
+/**
+ * Represents a Spider.
+ */
+public interface Spider extends Monster {}

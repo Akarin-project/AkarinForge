@@ -1,11 +1,6 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.ThrownPotion;
-
-public interface SplashPotion
-extends ThrownPotion {
-}
-
+/**
+ * Represents a thrown splash potion bottle
+ */
+public interface SplashPotion extends ThrownPotion { }

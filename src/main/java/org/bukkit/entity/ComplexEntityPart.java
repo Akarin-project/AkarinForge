@@ -1,13 +1,14 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.ComplexLivingEntity;
-import org.bukkit.entity.Entity;
+/**
+ * Represents a single part of a {@link ComplexLivingEntity}
+ */
+public interface ComplexEntityPart extends Entity {
 
-public interface ComplexEntityPart
-extends Entity {
+    /**
+     * Gets the parent {@link ComplexLivingEntity} of this part.
+     *
+     * @return Parent complex entity
+     */
     public ComplexLivingEntity getParent();
 }
-

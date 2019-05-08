@@ -9,8 +9,13 @@ import net.minecraft.world.World;
 
 public class ShieldRecipes
 {
-    public static class Decoration extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<IRecipe> implements IRecipe
+    public static class Decoration extends ShapelessRecipes implements IRecipe // CraftBukkit - added extends
         {
+        // CraftBukkit start - Delegate to new parent class with bogus info
+        public Decoration() {
+            super("", new ItemStack(Items.SHIELD, 0, 0), NonNullList.from(Ingredient.EMPTY, Ingredient.fromItem(Items.BANNER)));
+        }
+        // CraftBukkit end
             public boolean matches(InventoryCrafting inv, World worldIn)
             {
                 ItemStack itemstack = ItemStack.EMPTY;

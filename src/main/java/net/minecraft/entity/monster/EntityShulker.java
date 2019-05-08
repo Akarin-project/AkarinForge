@@ -55,7 +55,7 @@ public class EntityShulker extends EntityGolem implements IMob
     protected static final DataParameter<EnumFacing> ATTACHED_FACE = EntityDataManager.<EnumFacing>createKey(EntityShulker.class, DataSerializers.FACING);
     protected static final DataParameter<Optional<BlockPos>> ATTACHED_BLOCK_POS = EntityDataManager.<Optional<BlockPos>>createKey(EntityShulker.class, DataSerializers.OPTIONAL_BLOCK_POS);
     protected static final DataParameter<Byte> PEEK_TICK = EntityDataManager.<Byte>createKey(EntityShulker.class, DataSerializers.BYTE);
-    protected static final DataParameter<Byte> COLOR = EntityDataManager.<Byte>createKey(EntityShulker.class, DataSerializers.BYTE);
+    public static final DataParameter<Byte> COLOR = EntityDataManager.<Byte>createKey(EntityShulker.class, DataSerializers.BYTE);
     public static final EnumDyeColor DEFAULT_COLOR = EnumDyeColor.PURPLE;
     private float prevPeekAmount;
     private float peekAmount;

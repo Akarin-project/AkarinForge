@@ -1,25 +1,33 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Weather;
+/**
+ * Represents an instance of a lightning strike. May or may not do damage.
+ */
+public interface LightningStrike extends Weather {
 
-public interface LightningStrike
-extends Weather {
+    /**
+     * Returns whether the strike is an effect that does no damage.
+     *
+     * @return whether the strike is an effect
+     */
     public boolean isEffect();
 
-    @Override
-    public Spigot spigot();
+    // Spigot start
+    public class Spigot extends Entity.Spigot
+    {
 
-    public static class Spigot
-    extends Entity.Spigot {
-        public boolean isSilent() {
-            throw new UnsupportedOperationException("Not supported yet.");
+        /*
+         * Returns whether the strike is silent.
+         *
+         * @return whether the strike is silent.
+         */
+        public boolean isSilent()
+        {
+            throw new UnsupportedOperationException( "Not supported yet." );
         }
     }
 
+    @Override
+    Spigot spigot();
+    // Spigot end
 }
-

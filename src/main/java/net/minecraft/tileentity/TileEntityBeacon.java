@@ -4,9 +4,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.potion.CraftPotionUtil;
+import org.bukkit.entity.HumanEntity;
+
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStainedGlass;
@@ -51,6 +57,107 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
     public Potion secondaryEffect; // Akarin
     private ItemStack payment = ItemStack.EMPTY;
     private String customName;
+    // CraftBukkit start - add fields and methods
+    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
+    private int maxStack = 64;
+
+    public List<ItemStack> getContents() {
+        return Arrays.asList(this.payment);
+    }
+
+    public void onOpen(CraftHumanEntity who) {
+        transaction.add(who);
+    }
+
+    public void onClose(CraftHumanEntity who) {
+        transaction.remove(who);
+    }
+
+    public List<HumanEntity> getViewers() {
+        return transaction;
+    }
+
+    public void setMaxStackSize(int size) {
+        maxStack = size;
+    }
+
+    public org.bukkit.potion.PotionEffect getPrimaryEffect() {
+        return (this.primaryEffect != null) ? CraftPotionUtil.toBukkit(new PotionEffect(this.primaryEffect, getLevel(), getAmplification(), true, true)) : null;
+    }
+
+    public org.bukkit.potion.PotionEffect getSecondaryEffect() {
+        return (hasSecondaryEffect()) ? CraftPotionUtil.toBukkit(new PotionEffect(this.secondaryEffect, getLevel(), getAmplification(), true, true)) : null;
+    }
+    
+    // CraftBukkit start - split into components
+    private byte getAmplification() {
+        {
+            byte b0 = 0;
+
+            if (this.levels >= 4 && this.primaryEffect == this.secondaryEffect) {
+                b0 = 1;
+            }
+
+            return b0;
+        }
+    }
+
+    private int getLevel() {
+        {
+            int i = (9 + this.levels * 2) * 20;
+            return i;
+        }
+    }
+
+    public List getHumansInRange() {
+        {
+            double d0 = (double) (this.levels * 10 + 10);
+
+            int j = this.pos.getX();
+            int k = this.pos.getY();
+            int l = this.pos.getZ();
+            AxisAlignedBB axisalignedbb = (new AxisAlignedBB((double) j, (double) k, (double) l, (double) (j + 1), (double) (k + 1), (double) (l + 1))).grow(d0).expand(0.0D, (double) this.world.getHeight(), 0.0D);
+            List list = this.world.getEntitiesWithinAABB(EntityPlayer.class, axisalignedbb);
+
+            return list;
+        }
+    }
+
+    private void applyEffect(List list, Potion effects, int i, int b0) {
+        applyEffect(list, effects, i, b0, true);
+    }
+
+    private void applyEffect(List list, Potion effects, int i, int b0, boolean isPrimary) {
+        // Paper - BeaconEffectEvent
+        {
+            Iterator iterator = list.iterator();
+
+            EntityPlayer entityhuman;
+
+            // Paper start - BeaconEffectEvent
+            org.bukkit.block.Block block = world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+            org.bukkit.potion.PotionEffect effect = CraftPotionUtil.toBukkit(new PotionEffect(effects, i, b0, true, true));
+            // Paper end
+
+            while (iterator.hasNext()) {
+                entityhuman = (EntityPlayer) iterator.next();
+                // Paper start - BeaconEffectEvent
+                entityhuman.getBukkitEntity().addPotionEffect(effect, true);
+                // Paper end
+            }
+        }
+    }
+
+    private boolean hasSecondaryEffect() {
+        {
+            if (this.levels >= 4 && this.primaryEffect != this.secondaryEffect && this.secondaryEffect != null) {
+                return true;
+            }
+
+            return false;
+        }
+    }
+    // CraftBukkit end
 
     public void update()
     {
@@ -285,8 +392,10 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
     public void readFromNBT(NBTTagCompound compound)
     {
         super.readFromNBT(compound);
-        this.primaryEffect = isBeaconEffect(compound.getInteger("Primary"));
-        this.secondaryEffect = isBeaconEffect(compound.getInteger("Secondary"));
+        // Craftbukkit start - persist manually set non-default beacon effects (SPIGOT-3598)
+        this.primaryEffect = Potion.getPotionById(compound.getInteger("Primary"));
+        this.secondaryEffect = Potion.getPotionById(compound.getInteger("Secondary"));
+        // Craftbukkit end
         this.levels = compound.getInteger("Levels");
     }
 

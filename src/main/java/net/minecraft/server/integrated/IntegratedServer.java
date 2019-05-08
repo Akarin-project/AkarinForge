@@ -17,6 +17,7 @@ import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.profiler.Snooper;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.dedicated.PropertyManager;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.util.CryptManager;
 import net.minecraft.util.HttpUtil;
@@ -48,7 +49,7 @@ public class IntegratedServer extends MinecraftServer
 
     public IntegratedServer(Minecraft clientIn, String folderNameIn, String worldNameIn, WorldSettings worldSettingsIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
     {
-        super(new File(clientIn.mcDataDir, "saves"), clientIn.getProxy(), clientIn.getDataFixer(), authServiceIn, sessionServiceIn, profileRepoIn, profileCacheIn);
+        super(null, clientIn.getProxy(), clientIn.getDataFixer(), authServiceIn, sessionServiceIn, profileRepoIn, profileCacheIn);
         this.setServerOwner(clientIn.getSession().getUsername());
         this.setFolderName(folderNameIn);
         this.setWorldName(worldNameIn);
@@ -104,14 +105,14 @@ public class IntegratedServer extends MinecraftServer
                 }
                 else
                 {
-                    this.worlds[i] = (WorldServer)(new WorldServer(this, isavehandler, worldinfo, j, this.profiler)).init();
+                    this.worlds[i] = (WorldServer) null;
                 }
 
                 this.worlds[i].initialize(this.worldSettings);
             }
             else
             {
-                this.worlds[i] = (WorldServer)(new WorldServerMulti(this, isavehandler, j, this.worlds[0], this.profiler)).init();
+                this.worlds[i] = null;
             }
 
             this.worlds[i].addEventListener(new ServerWorldEventHandler(this, this.worlds[i]));
@@ -119,11 +120,11 @@ public class IntegratedServer extends MinecraftServer
         }// Forge: End Dead Code
 
         WorldServer overWorld = (isDemo() ? (WorldServer)(new WorldServerDemo(this, isavehandler, worldinfo, 0, this.profiler)).init() :
-                                            (WorldServer)(new WorldServer(this, isavehandler, worldinfo, 0, this.profiler)).init());
+                                            null);
         overWorld.initialize(this.worldSettings);
         for (int dim : net.minecraftforge.common.DimensionManager.getStaticDimensionIDs())
         {
-            WorldServer world = (dim == 0 ? overWorld : (WorldServer)(new WorldServerMulti(this, isavehandler, dim, overWorld, this.profiler)).init());
+            WorldServer world = (dim == 0 ? overWorld : null);
             world.addEventListener(new ServerWorldEventHandler(this, world));
             if (!this.isSinglePlayer())
             {
@@ -422,5 +423,11 @@ public class IntegratedServer extends MinecraftServer
     public int getOpPermissionLevel()
     {
         return 4;
+    }
+
+    @Override
+    public PropertyManager getPropertyManager() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -4,6 +4,14 @@ import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+
+import org.bukkit.Location;
+import org.bukkit.entity.Vehicle;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
+import org.bukkit.util.Vector;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRailBase;
 import net.minecraft.block.BlockRailPowered;
@@ -72,6 +80,16 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
     protected float maxSpeedAirLateral = defaultMaxSpeedAirLateral;
     protected float maxSpeedAirVertical = defaultMaxSpeedAirVertical;
     protected double dragAir = defaultDragAir;
+    // CraftBukkit start
+    public boolean slowWhenEmpty = true;
+    private double derailedX = 0.5;
+    private double derailedY = 0.5;
+    private double derailedZ = 0.5;
+    private double flyingX = defaultDragAir;
+    private double flyingY = defaultDragAir;
+    private double flyingZ = defaultDragAir;
+    public double maxSpeed = 0.4D;
+    // CraftBukkit end
 
     public EntityMinecart(World worldIn)
     {
@@ -162,6 +180,19 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
             }
             else
             {
+                // CraftBukkit start - fire VehicleDamageEvent
+                Vehicle vehicle = (Vehicle) this.getBukkitEntity();
+                org.bukkit.entity.Entity passenger = (source.getTrueSource() == null) ? null : source.getTrueSource().getBukkitEntity();
+
+                VehicleDamageEvent event = new VehicleDamageEvent(vehicle, passenger, amount);
+                this.world.getServer().getPluginManager().callEvent(event);
+
+                if (event.isCancelled()) {
+                    return true;
+                }
+
+                amount = (float) event.getDamage();
+                // CraftBukkit end
                 this.setRollingDirection(-this.getRollingDirection());
                 this.setRollingAmplitude(10);
                 this.markVelocityChanged();
@@ -170,6 +201,15 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
 
                 if (flag || this.getDamage() > 40.0F)
                 {
+                    // CraftBukkit start
+                    VehicleDestroyEvent destroyEvent = new VehicleDestroyEvent(vehicle, passenger);
+                    this.world.getServer().getPluginManager().callEvent(destroyEvent);
+
+                    if (destroyEvent.isCancelled()) {
+                        this.setDamage(40); // Maximize damage so this doesn't get triggered again right away
+                        return true;
+                    }
+                    // CraftBukkit end
                     this.removePassengers();
 
                     if (flag && !this.hasCustomName())
@@ -228,6 +268,13 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
 
     public void onUpdate()
     {
+        // CraftBukkit start
+        double prevX = this.posX;
+        double prevY = this.posY;
+        double prevZ = this.posZ;
+        float prevYaw = this.rotationYaw;
+        float prevPitch = this.rotationPitch;
+        // CraftBukkit end
         if (this.getRollingAmplitude() > 0)
         {
             this.setRollingAmplitude(this.getRollingAmplitude() - 1);
@@ -243,6 +290,8 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
             this.outOfWorld();
         }
 
+        // Akarin - handled in postTick
+        /*
         if (!this.world.isRemote && this.world instanceof WorldServer)
         {
             this.world.profiler.startSection("portal");
@@ -294,6 +343,8 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
 
             this.world.profiler.endSection();
         }
+        */
+        // Akarin end
 
         if (this.world.isRemote)
         {
@@ -376,6 +427,18 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
             }
 
             this.setRotation(this.rotationYaw, this.rotationPitch);
+            // CraftBukkit start
+            org.bukkit.World bworld = this.world.getWorld();
+            Location from = new Location(bworld, prevX, prevY, prevZ, prevYaw, prevPitch);
+            Location to = new Location(bworld, this.posX, this.posY, this.posZ, this.rotationYaw, this.rotationPitch);
+            Vehicle vehicle = (Vehicle) this.getBukkitEntity();
+
+            this.world.getServer().getPluginManager().callEvent(new org.bukkit.event.vehicle.VehicleUpdateEvent(vehicle));
+
+            if (!from.equals(to)) {
+                this.world.getServer().getPluginManager().callEvent(new org.bukkit.event.vehicle.VehicleMoveEvent(vehicle, from, to));
+            }
+            // CraftBukkit end
 
             AxisAlignedBB box;
             if (getCollisionHandler() != null) box = getCollisionHandler().getMinecartCollisionBox(this);
@@ -393,10 +456,26 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
 
                         if (!(entity1 instanceof EntityPlayer) && !(entity1 instanceof EntityIronGolem) && !(entity1 instanceof EntityMinecart) && !this.isBeingRidden() && !entity1.isRiding())
                         {
+                            // CraftBukkit start
+                            VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent(vehicle, entity1.getBukkitEntity());
+                            this.world.getServer().getPluginManager().callEvent(collisionEvent);
+
+                            if (collisionEvent.isCancelled()) {
+                                continue;
+                            }
+                            // CraftBukkit end
                             entity1.startRiding(this);
                         }
                         else
                         {
+                            // CraftBukkit start
+                            VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent(vehicle, entity1.getBukkitEntity());
+                            this.world.getServer().getPluginManager().callEvent(collisionEvent);
+
+                            if (collisionEvent.isCancelled()) {
+                                continue;
+                            }
+                            // CraftBukkit end
                             entity1.applyEntityCollision(this);
                         }
                     }
@@ -408,6 +487,14 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
                 {
                     if (!this.isPassenger(entity) && entity.canBePushed() && entity instanceof EntityMinecart)
                     {
+                        // CraftBukkit start
+                        VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent(vehicle, entity.getBukkitEntity());
+                        this.world.getServer().getPluginManager().callEvent(collisionEvent);
+
+                        if (collisionEvent.isCancelled()) {
+                            continue;
+                        }
+                        // CraftBukkit end
                         entity.applyEntityCollision(this);
                     }
                 }
@@ -420,7 +507,7 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
 
     protected double getMaximumSpeed()
     {
-        return 0.4D;
+        return this.maxSpeed; // CraftBukkit
     }
 
     public void onActivatorRailPass(int x, int y, int z, boolean receivingPower)
@@ -446,18 +533,22 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
 
         if (this.onGround)
         {
-            this.motionX *= 0.5D;
-            this.motionY *= 0.5D;
-            this.motionZ *= 0.5D;
+            // CraftBukkit start - replace magic numbers with our variables
+            this.motionX *= this.derailedX;
+            this.motionY *= this.derailedY;
+            this.motionZ *= this.derailedZ;
+            // CraftBukkit end
         }
 
         this.move(MoverType.SELF, this.motionX, moveY, this.motionZ);
 
         if (!this.onGround)
         {
-            this.motionX *= getDragAir();
-            this.motionY *= getDragAir();
-            this.motionZ *= getDragAir();
+            // Akarin start
+            this.motionX *= (this.flyingX == defaultDragAir ? getDragAir() : this.flyingX);
+            this.motionY *= (this.flyingY == defaultDragAir ? getDragAir() : this.flyingZ);
+            this.motionZ *= (this.flyingY == defaultDragAir ? getDragAir() : this.flyingZ);
+            // Akarin end
         }
     }
 
@@ -668,7 +759,7 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
 
     protected void applyDrag()
     {
-        if (this.isBeingRidden())
+        if (this.isBeingRidden() || !this.slowWhenEmpty) // CraftBukkit - add !this.slowWhenEmpty
         {
             this.motionX *= 0.996999979019165D;
             this.motionY *= 0.0D;
@@ -868,6 +959,14 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
             {
                 if (!this.isPassenger(entityIn))
                 {
+                    // CraftBukkit start
+                    VehicleEntityCollisionEvent collisionEvent = new VehicleEntityCollisionEvent((Vehicle) this.getBukkitEntity(), entityIn.getBukkitEntity());
+                    this.world.getServer().getPluginManager().callEvent(collisionEvent);
+
+                    if (collisionEvent.isCancelled()) {
+                        return;
+                    }
+                    // CraftBukkit end
                     double d0 = entityIn.posX - this.posX;
                     double d1 = entityIn.posZ - this.posZ;
                     double d2 = d0 * d0 + d1 * d1;
@@ -1322,4 +1421,25 @@ public abstract class EntityMinecart extends Entity implements IWorldNameable
             }
         }
     }
+    // CraftBukkit start - Methods for getting and setting flying and derailed velocity modifiers
+    public Vector getFlyingVelocityMod() {
+        return new Vector(flyingX, flyingY, flyingZ);
+    }
+
+    public void setFlyingVelocityMod(Vector flying) {
+        flyingX = flying.getX();
+        flyingY = flying.getY();
+        flyingZ = flying.getZ();
+    }
+
+    public Vector getDerailedVelocityMod() {
+        return new Vector(derailedX, derailedY, derailedZ);
+    }
+
+    public void setDerailedVelocityMod(Vector derailed) {
+        derailedX = derailed.getX();
+        derailedY = derailed.getY();
+        derailedZ = derailed.getZ();
+    }
+    // CraftBukkit end
 }

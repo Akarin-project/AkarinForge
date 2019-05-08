@@ -25,6 +25,7 @@ import net.minecraft.entity.projectile.EntityShulkerBullet;
 import net.minecraft.entity.projectile.EntitySmallFireball;
 import net.minecraft.entity.projectile.EntitySnowball;
 import net.minecraft.entity.item.EntityExpBottle;
+import net.minecraft.entity.passive.EntityLlama;
 import net.minecraft.entity.projectile.EntityTippedArrow;
 import net.minecraft.entity.projectile.EntitySpectralArrow;
 import net.minecraft.entity.boss.EntityWither;
@@ -43,6 +44,7 @@ import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.inventory.CraftEntityEquipment;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.potion.CraftPotionUtil;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.DragonFireball;
 import org.bukkit.entity.Egg;
@@ -69,7 +71,6 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionData;
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.BlockIterator;
@@ -251,11 +252,11 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         return getHandle().attackingPlayer == null ? null : (Player) getHandle().attackingPlayer.getBukkitEntity();
     }
 
-    public boolean addPotionEffect(PotionEffect effect) {
+    public boolean addPotionEffect(org.bukkit.potion.PotionEffect effect) {
         return addPotionEffect(effect, false);
     }
 
-    public boolean addPotionEffect(PotionEffect effect, boolean force) {
+    public boolean addPotionEffect(org.bukkit.potion.PotionEffect effect, boolean force) {
         if (hasPotionEffect(effect.getType())) {
             if (!force) {
                 return false;
@@ -358,7 +359,7 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
 
             launch = new EntityLlamaSpit(world);
 
-            ((EntityLlamaSpit) launch).owner = getHandle();
+            ((EntityLlamaSpit) launch).owner = (EntityLlama) getHandle();
             ((EntityLlamaSpit) launch).shoot(direction.getX(), direction.getY(), direction.getZ(), 1.5F, 10.0F); // EntityLlama
             launch.setLocationAndAngles(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         } else if (ShulkerBullet.class.isAssignableFrom(projectile)) {

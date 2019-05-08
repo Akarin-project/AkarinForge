@@ -1,29 +1,49 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Animals;
+public interface Rabbit extends Animals {
 
-public interface Rabbit
-extends Animals {
+    /**
+     * @return The type of rabbit.
+     */
     public Type getRabbitType();
 
-    public void setRabbitType(Type var1);
+    /**
+     * @param type Sets the type of rabbit for this entity.
+     */
+    public void setRabbitType(Type type);
 
-    public static enum Type {
+    /**
+     * Represents the various types a Rabbit might be.
+     */
+    public enum Type {
+
+        /**
+         * Chocolate colored rabbit.
+         */
         BROWN,
+        /**
+         * Pure white rabbit.
+         */
         WHITE,
+        /**
+         * Black rabbit.
+         */
         BLACK,
+        /**
+         * Black with white patches, or white with black patches?
+         */
         BLACK_AND_WHITE,
+        /**
+         * Golden bunny.
+         */
         GOLD,
+        /**
+         * Salt and pepper colored, whatever that means.
+         */
         SALT_AND_PEPPER,
-        THE_KILLER_BUNNY;
-        
-
-        private Type() {
-        }
+        /**
+         * Rabbit with pure white fur, blood red horizontal eyes, and is hostile to players.
+         */
+        THE_KILLER_BUNNY
     }
-
 }
-

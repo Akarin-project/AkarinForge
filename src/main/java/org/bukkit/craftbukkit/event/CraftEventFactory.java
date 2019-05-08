@@ -20,6 +20,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.craftbukkit.block.CraftBlockState;
 import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
@@ -798,7 +799,7 @@ public class CraftEventFactory {
 
     public static EntityChangeBlockEvent callEntityChangeBlockEvent(Entity entity, BlockPos position, net.minecraft.block.Block type, int data) {
         Block block = entity.world.getWorld().getBlockAt(position.getX(), position.getY(), position.getZ());
-        Material material = CraftMagicNumbers.getMaterial(type);
+        Material material = org.bukkit.craftbukkit.util.CraftMagicNumbers.getMaterial(type);
 
         return callEntityChangeBlockEvent(entity.getBukkitEntity(), block, material, data);
     }
@@ -893,7 +894,7 @@ public class CraftEventFactory {
             hitBlock = entity.getBukkitEntity().getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
         }
 
-        ProjectileHitEvent event = new ProjectileHitEvent((Projectile) entity.getBukkitEntity(), position.entityHit == null ? null : position.entityHit.getBukkitEntity(), hitBlock, position.sideHit == null ? null : CraftBlock.notchToBlockFace(position.sideHit)); // Paper - add BlockFace parameter
+        ProjectileHitEvent event = new ProjectileHitEvent((Projectile) entity.getBukkitEntity(), position.entityHit == null ? null : position.entityHit.getBukkitEntity(), hitBlock); 
         entity.world.getServer().getPluginManager().callEvent(event);
         return event;
     }

@@ -63,7 +63,7 @@ public class PlayerInteractionManager
         this.gameType = type;
         type.configurePlayerCapabilities(this.player.capabilities);
         this.player.sendPlayerAbilities();
-        this.player.mcServer.getPlayerList().sendPacketToAllPlayers(new SPacketPlayerListItem(SPacketPlayerListItem.Action.UPDATE_GAME_MODE, new EntityPlayerMP[] {this.player}), this.player); // CraftBukkit
+        this.player.mcServer.getPlayerList().sendAll(new SPacketPlayerListItem(SPacketPlayerListItem.Action.UPDATE_GAME_MODE, new EntityPlayerMP[] {this.player}), this.player); // CraftBukkit
         this.world.updateAllPlayersSleepingFlag();
     }
 
@@ -151,8 +151,8 @@ public class PlayerInteractionManager
     public void onBlockClicked(BlockPos pos, EnumFacing side)
     {
         // CraftBukkit start
-        PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_BLOCK, pos, side, this.player.inventory.getCurrentItem(), EnumHand.MAIN_HAND);
-        if (event.isCancelled()) {
+        PlayerInteractEvent bevent = CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_BLOCK, pos, side, this.player.inventory.getCurrentItem(), EnumHand.MAIN_HAND);
+        if (bevent.isCancelled()) {
             // Let the client know the block still exists
             ((EntityPlayerMP) this.player).connection.sendPacket(new SPacketBlockChange(this.world, pos));
             // Update any tile entity data for this block
@@ -212,7 +212,7 @@ public class PlayerInteractionManager
             float f = 1.0F;
 
             // CraftBukkit start - Swings at air do *NOT* exist.
-            if (event.useInteractedBlock() == Event.Result.DENY) {
+            if (bevent.useInteractedBlock() == Event.Result.DENY) {
                 // If we denied a door from opening, we need to send a correcting update to the client, as it already opened the door.
                 IBlockState data = this.world.getBlockState(pos);
                 if (block == Blocks.OAK_DOOR) {
@@ -238,7 +238,7 @@ public class PlayerInteractionManager
                 f = iblockstate.getPlayerRelativeBlockHardness(this.player, this.player.world, pos);
             }
 
-            if (event.useItemInHand() == Event.Result.DENY) {
+            if (bevent.useItemInHand() == Event.Result.DENY) {
                 // If we 'insta destroyed' then the client needs to be informed.
                 if (f > 1.0f) {
                     ((EntityPlayerMP) this.player).connection.sendPacket(new SPacketBlockChange(this.world, pos));

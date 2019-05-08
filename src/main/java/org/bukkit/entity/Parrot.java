@@ -1,31 +1,47 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Animals;
-import org.bukkit.entity.Sittable;
-import org.bukkit.entity.Tameable;
+/**
+ * Represents a Parrot.
+ */
+public interface Parrot extends Animals, Tameable, Sittable {
 
-public interface Parrot
-extends Animals,
-Tameable,
-Sittable {
+    /**
+     * Get the variant of this parrot.
+     *
+     * @return parrot variant
+     */
     public Variant getVariant();
 
-    public void setVariant(Variant var1);
+    /**
+     * Set the variant of this parrot.
+     *
+     * @param variant parrot variant
+     */
+    public void setVariant(Variant variant);
 
-    public static enum Variant {
+    /**
+     * Represents the variant of a parrot - ie its color.
+     */
+    public enum Variant {
+        /**
+         * Classic parrot - red with colored wingtips.
+         */
         RED,
+        /**
+         * Royal blue colored parrot.
+         */
         BLUE,
+        /**
+         * Green colored parrot.
+         */
         GREEN,
+        /**
+         * Cyan colored parrot.
+         */
         CYAN,
+        /**
+         * Gray colored parrot.
+         */
         GRAY;
-        
-
-        private Variant() {
-        }
     }
-
 }
-

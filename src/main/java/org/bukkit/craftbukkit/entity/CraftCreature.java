@@ -4,14 +4,14 @@ import net.minecraft.entity.EntityCreature;
 
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.entity.Creature;
+import org.bukkit.entity.LivingEntity;
 
 public class CraftCreature extends CraftLivingEntity implements Creature {
     public CraftCreature(CraftServer server, EntityCreature entity) {
         super(server, entity);
     }
-
-    // Paper start - move down to SentientNPC
-    /*public void setTarget(LivingEntity target) {
+    
+    public void setTarget(LivingEntity target) {
         EntityCreature entity = getHandle();
         if (target == null) {
             entity.setGoalTarget(null, null, false);
@@ -21,11 +21,10 @@ public class CraftCreature extends CraftLivingEntity implements Creature {
     }
 
     public CraftLivingEntity getTarget() {
-        if (getHandle().getGoalTarget() == null) return null;
+        if (getHandle().getAttackTarget() == null) return null;
 
-        return (CraftLivingEntity) getHandle().getGoalTarget().getBukkitEntity();
-    }*/
-    // Paper end
+        return (CraftLivingEntity) getHandle().getAttackTarget().getBukkitEntity();
+    }
 
     @Override
     public EntityCreature getHandle() {

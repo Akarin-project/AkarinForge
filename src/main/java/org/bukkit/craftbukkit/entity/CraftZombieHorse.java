@@ -1,11 +1,11 @@
 package org.bukkit.craftbukkit.entity;
 
-import net.minecraft.entity.passive.EntityZombieHorse;
-
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse.Variant;
 import org.bukkit.entity.ZombieHorse;
+
+import net.minecraft.entity.passive.EntityZombieHorse;
 
 public class CraftZombieHorse extends CraftAbstractHorse implements ZombieHorse {
 

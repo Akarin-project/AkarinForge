@@ -1,13 +1,12 @@
 package org.bukkit.craftbukkit.entity;
 
-import com.destroystokyo.paper.entity.CraftRangedEntity;
 import net.minecraft.entity.monster.EntityIllusionIllager;
 
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Illusioner;
 
-public class CraftIllusioner extends CraftSpellcaster implements Illusioner, CraftRangedEntity<EntityIllusionIllager> { // Paper
+public class CraftIllusioner extends CraftSpellcaster implements Illusioner {
 
     public CraftIllusioner(CraftServer server, EntityIllusionIllager entity) {
         super(server, entity);

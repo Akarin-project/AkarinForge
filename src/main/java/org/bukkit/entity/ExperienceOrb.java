@@ -1,14 +1,21 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Entity;
+/**
+ * Represents an Experience Orb.
+ */
+public interface ExperienceOrb extends Entity {
 
-public interface ExperienceOrb
-extends Entity {
+    /**
+     * Gets how much experience is contained within this orb
+     *
+     * @return Amount of experience
+     */
     public int getExperience();
 
-    public void setExperience(int var1);
+    /**
+     * Sets how much experience is contained within this orb
+     *
+     * @param value Amount of experience
+     */
+    public void setExperience(int value);
 }
-

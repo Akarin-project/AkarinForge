@@ -1288,7 +1288,7 @@ public class WorldServer extends World implements IThreadListener
     public Explosion newExplosion(@Nullable Entity entityIn, double x, double y, double z, float strength, boolean isFlaming, boolean isSmoking)
     {
         // Akarin start
-        Explosion explosion = super.newExplosion(this, entityIn, x, y, z, strength, isFlaming, isSmoking);
+        Explosion explosion = super.newExplosion(entityIn, x, y, z, strength, isFlaming, isSmoking);
         
         if (explosion.wasCanceled) {
             return explosion;

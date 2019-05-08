@@ -1,11 +1,6 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Zombie;
-
-public interface Husk
-extends Zombie {
-}
-
+/**
+ * Represents a Husk - variant of {@link Zombie}.
+ */
+public interface Husk extends Zombie { }

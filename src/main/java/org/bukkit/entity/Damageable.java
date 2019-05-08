@@ -1,27 +1,72 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.entity;
 
-import org.bukkit.entity.Entity;
+import org.bukkit.attribute.Attribute;
 
-public interface Damageable
-extends Entity {
-    public void damage(double var1);
+/**
+ * Represents an {@link Entity} that has health and can take damage.
+ */
+public interface Damageable extends Entity {
+    /**
+     * Deals the given amount of damage to this entity.
+     *
+     * @param amount Amount of damage to deal
+     */
+    void damage(double amount);
 
-    public void damage(double var1, Entity var3);
+    /**
+     * Deals the given amount of damage to this entity, from a specified
+     * entity.
+     *
+     * @param amount Amount of damage to deal
+     * @param source Entity which to attribute this damage from
+     */
+    void damage(double amount, Entity source);
 
-    public double getHealth();
+    /**
+     * Gets the entity's health from 0 to {@link #getMaxHealth()}, where 0 is dead.
+     *
+     * @return Health represented from 0 to max
+     */
+    double getHealth();
 
-    public void setHealth(double var1);
+    /**
+     * Sets the entity's health from 0 to {@link #getMaxHealth()}, where 0 is
+     * dead.
+     *
+     * @param health New health represented from 0 to max
+     * @throws IllegalArgumentException Thrown if the health is {@literal < 0 or >}
+     *     {@link #getMaxHealth()}
+     */
+    void setHealth(double health);
 
+    /**
+     * Gets the maximum health this entity has.
+     *
+     * @return Maximum health
+     * @deprecated use {@link Attribute#GENERIC_MAX_HEALTH}.
+     */
     @Deprecated
-    public double getMaxHealth();
+    double getMaxHealth();
 
+    /**
+     * Sets the maximum health this entity can have.
+     * <p>
+     * If the health of the entity is above the value provided it will be set
+     * to that value.
+     * <p>
+     * Note: An entity with a health bar ({@link Player}, {@link EnderDragon},
+     * {@link Wither}, etc...} will have their bar scaled accordingly.
+     *
+     * @param health amount of health to set the maximum to
+     * @deprecated use {@link Attribute#GENERIC_MAX_HEALTH}.
+     */
     @Deprecated
-    public void setMaxHealth(double var1);
+    void setMaxHealth(double health);
 
+    /**
+     * Resets the max health to the original amount.
+     * @deprecated use {@link Attribute#GENERIC_MAX_HEALTH}.
+     */
     @Deprecated
-    public void resetMaxHealth();
+    void resetMaxHealth();
 }
-

@@ -697,4 +697,11 @@ public class DedicatedServer extends MinecraftServer implements IServer
         this.commandManager.executeCommand(this.rconConsoleSource, command);
         return this.rconConsoleSource.getLogContents();
     }
+
+    // Akarin start
+    @Override
+    public PropertyManager getPropertyManager() {
+        return settings;
+    }
+    // Akarin end
 }

@@ -37,7 +37,7 @@ import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommandYamlParser;
 import org.bukkit.command.SimpleCommandMap;
-import org.bukkit.craftbukkit.entity.CraftFuckPlayer;
+import org.bukkit.craftbukkit.entity.CraftFakePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
@@ -408,7 +408,7 @@ implements PluginManager {
      */
     @Override
     public void callEvent(Event event) {
-        if (AkarinForge.fakePlayerEventPass && event instanceof PlayerEvent && ((PlayerEvent)event).getPlayer() instanceof CraftFuckPlayer) {
+        if (AkarinForge.fakePlayerEventPass && event instanceof PlayerEvent && ((PlayerEvent)event).getPlayer() instanceof CraftFakePlayer) {
             return;
         }
         if (event.isAsynchronous() || !Bukkit.isPrimaryThread()) {
