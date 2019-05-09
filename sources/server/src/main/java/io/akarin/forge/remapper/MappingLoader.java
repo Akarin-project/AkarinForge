@@ -1,11 +1,3 @@
-/*
- * Decompiled with CFR 0_119.
- * 
- * Could not load the following classes:
- *  net.md_5.specialsource.JarMapping
- *  net.md_5.specialsource.transformer.MappingTransformer
- *  net.md_5.specialsource.transformer.MavenShade
- */
 package io.akarin.forge.remapper;
 
 import java.io.BufferedReader;
@@ -28,7 +20,7 @@ public class MappingLoader {
     private static void loadNmsMappings(JarMapping jarMapping, String obfVersion) throws IOException {
         HashMap<String, String> relocations = new HashMap<String, String>();
         relocations.put("net.minecraft.server", "net.minecraft.server." + obfVersion);
-        jarMapping.loadMappings(new BufferedReader(new InputStreamReader(MappingLoader.class.getClassLoader().getResourceAsStream("mappings/" + obfVersion + "/cb2srg.srg"))), (MappingTransformer)new MavenShade(relocations), null, false);
+        jarMapping.loadMappings(new BufferedReader(new InputStreamReader(MappingLoader.class.getClassLoader().getResourceAsStream("mappings/" + obfVersion + "/spigot.asrg"))), (MappingTransformer)new MavenShade(relocations), null, false);
     }
 
     public static JarMapping loadMapping() {

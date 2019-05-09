@@ -1,28 +1,3 @@
-/*
- * Akarin Forge
- * 
- * Could not load the following classes:
- *  com.google.common.base.Charsets
- *  com.google.common.base.Function
- *  com.google.common.base.Preconditions
- *  com.google.common.collect.ImmutableList
- *  com.google.common.collect.Iterators
- *  com.google.common.collect.Lists
- *  com.google.common.collect.MapMaker
- *  com.mojang.authlib.GameProfile
- *  io.netty.buffer.ByteBuf
- *  io.netty.buffer.ByteBufOutputStream
- *  io.netty.buffer.Unpooled
- *  io.netty.handler.codec.base64.Base64
- *  jline.console.ConsoleReader
- *  joptsimple.OptionSet
- *  net.md_5.bungee.api.chat.BaseComponent
- *  org.apache.commons.lang3.Validate
- *  org.yaml.snakeyaml.Yaml
- *  org.yaml.snakeyaml.constructor.BaseConstructor
- *  org.yaml.snakeyaml.constructor.SafeConstructor
- *  org.yaml.snakeyaml.error.MarkedYAMLException
- */
 package org.bukkit.craftbukkit.v1_12_R1;
 
 import com.google.common.base.Charsets;

@@ -1,6 +1,3 @@
-/*
- * Decompiled with CFR 0_119.
- */
 package io.akarin.forge.remapper;
 
 import java.lang.reflect.Field;

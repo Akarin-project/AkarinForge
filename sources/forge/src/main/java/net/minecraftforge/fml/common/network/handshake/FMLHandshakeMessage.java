@@ -152,7 +152,7 @@ public abstract class FMLHandshakeMessage {
 
         public String modListAsString()
         {
-            return Joiner.on(',').withKeyValueSeparator("@").join(modTags);
+            return Joiner.on(", ").withKeyValueSeparator(" @ ").join(modTags);
         }
 
         public int modListSize()

@@ -473,7 +473,7 @@ public class LibraryManager
             if (!base.isDirectory() || !base.exists())
                 continue;
 
-            FMLLog.log.info("Searching {} for mods", base.getAbsolutePath());
+            //FMLLog.log.info("Searching {} for mods", base.getAbsolutePath());
             for (File f : base.listFiles(MOD_FILENAME_FILTER))
             {
                 if (!list.contains(f))

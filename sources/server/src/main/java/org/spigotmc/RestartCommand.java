@@ -94,7 +94,7 @@ public class RestartCommand extends Command
             }
 
             // Actually stop the JVM
-            FMLCommonHandler.instance().exitJava(0, false);
+            System.exit(0);
 
         } else
         {
@@ -117,7 +117,7 @@ public class RestartCommand extends Command
 
             // If the server hasn't stopped by now, assume worse case and kill
             closeSocket();
-            FMLCommonHandler.instance().exitJava(0, false);
+            System.exit(0);
         }
     }
 

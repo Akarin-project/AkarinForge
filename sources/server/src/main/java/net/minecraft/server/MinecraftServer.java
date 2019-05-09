@@ -344,7 +344,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         this.setResourcePackFromWorld(this.getFolderName(), isavehandler);
         WorldInfo worldinfo = isavehandler.loadWorldInfo();
         // Akarin start
-        this.worlds = new WorldServer[3];
         
         WorldSettings worldsettings = new WorldSettings(seed, this.getGameType(), this.canStructuresSpawn(), this.isHardcore(), type);
         worldsettings.setGeneratorOptions(generatorOptions);
@@ -356,10 +355,10 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
                 return o1 == 0 ? -1 : Math.max(o1, o2);
             }
         });
-        int worldConunter = 0;
         
         Integer[] arrinteger = dimIds;
         int n2 = arrinteger.length;
+        this.worlds = new WorldServer[n2];
         for (int i2 = 0; i2 < n2; ++i2) {
             WorldInfo worlddata;
             ISaveHandler idatamanager;
@@ -405,7 +404,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
                 
                 worlddata.checkName(worldNameIn);
                 world = new WorldServer(this, idatamanager, worlddata, dim, this.profiler, worldEnvironment, gen).init();
-                worlds[0] = (WorldServer) world;
                 world.initialize(worldsettings);
                 
                 this.server.scoreboardManager = new CraftScoreboardManager(this, world.getScoreboard());
@@ -420,11 +418,12 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
                 
                 worlddata.checkName(name);
                 world = new WorldServerMulti(this, idatamanager, dim, this.worlds[0], this.profiler, worlddata, Environment.getEnvironment(dim), gen).init();
-                
-                if (++worldConunter < 3)
-                    worlds[worldConunter] = (WorldServer) world;
             }
             
+            Bukkit.getLogger().warning("world: " + world.getWorldInfo().getWorldName() + " (" + ((WorldServer) world).dimension + ")");
+            Bukkit.getLogger().warning(Bukkit.getWorlds().toString());
+            
+            this.worlds[i2] = (WorldServer) world;
             world.addEventListener(new ServerWorldEventHandler(this, (WorldServer) world));
             world.getWorldInfo().setGameType(this.getGameType());
             worldServers.add((WorldServer) world);
@@ -1008,14 +1007,13 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         //Integer[] ids = net.minecraftforge.common.DimensionManager.getIDs(this.tickCounter % 200 == 0);
         for (int x = 0; x < this.worldServers.size(); x++)
         {
-            WorldServer worldServer = this.worldServers.get(x);
-            int id = worldServer.dimension;
+            WorldServer worldserver = this.worldServers.get(x);
+            int id = worldserver.dimension;
             // Akarin end
             long i = System.nanoTime();
 
-            if (id == 0 || this.getAllowNether())
+            if (true || id == 0 || this.getAllowNether())
             {
-                WorldServer worldserver = net.minecraftforge.common.DimensionManager.getWorld(id);
                 this.profiler.func_194340_a(() ->
                 {
                     return worldserver.getWorldInfo().getWorldName();
@@ -1066,7 +1064,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         }
 
         this.profiler.endStartSection("dim_unloading");
-        net.minecraftforge.common.DimensionManager.unloadWorlds(worldTickTimes);
+        //net.minecraftforge.common.DimensionManager.unloadWorlds(worldTickTimes);
         this.profiler.endStartSection("connection");
         this.getNetworkSystem().networkTick();
         this.profiler.endStartSection("players");

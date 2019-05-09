@@ -124,7 +124,7 @@ public class CatHandleLookup {
 
     static {
         try {
-            CatHandleLookup.loadMappings(new BufferedReader(new InputStreamReader(MappingLoader.class.getClassLoader().getResourceAsStream("mappings/" + AkarinForge.getNativeVersion() + "/cb2srg.srg"))));
+            CatHandleLookup.loadMappings(new BufferedReader(new InputStreamReader(MappingLoader.class.getClassLoader().getResourceAsStream("mappings/" + AkarinForge.getNativeVersion() + "/spigot.asrg"))));
         }
         catch (IOException e2) {
             e2.printStackTrace();

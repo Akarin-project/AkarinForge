@@ -389,7 +389,7 @@ public class OreDictionary
             ItemStack.EMPTY //So the above can have a comma and we don't have to keep editing extra lines.
         };
 
-        FMLLog.log.info("Starts to replace vanilla recipe ingredients with ore ingredients.");
+        FMLLog.log.debug("Starts to replace vanilla recipe ingredients with ore ingredients.");
         int replaced = 0;
         // Search vanilla recipes for recipes to replace
         for(IRecipe obj : CraftingManager.REGISTRY)
@@ -421,7 +421,7 @@ public class OreDictionary
                                 matches = true;
                                 if (oreName != null && !oreName.equals(ent.getValue()))
                                 {
-                                    FMLLog.log.info("Invalid recipe found with multiple oredict ingredients in the same ingredient..."); //TODO: Write a dumper?
+                                    FMLLog.log.debug("Invalid recipe found with multiple oredict ingredients in the same ingredient..."); //TODO: Write a dumper?
                                     skip = true;
                                     break;
                                 }
@@ -456,7 +456,7 @@ public class OreDictionary
             }
         }
 
-        FMLLog.log.info("Replaced {} ore ingredients", replaced);
+        FMLLog.log.debug("Replaced {} ore ingredients", replaced);
     }
 
     /**

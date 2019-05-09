@@ -71,7 +71,10 @@ public class TerminalTransformer implements IClassTransformer
                                    clsName.startsWith("com/jcraft/jogg/") ||
                                    clsName.startsWith("scala/sys/") ||
                                    clsName.startsWith("net/minecraft/server/gui/MinecraftServerGui") ||
-                                   clsName.startsWith("com/sun/jna/")
+                                   clsName.startsWith("com/sun/jna/") ||
+                                   clsName.startsWith("org/spigotmc/") ||
+                                   clsName.startsWith("net/md_5/") ||
+                                   clsName.startsWith("io/akarin/")
                                    );
 
             return new MethodVisitor(Opcodes.ASM5, super.visitMethod(mAccess, mName, mDesc, mSignature, mExceptions))

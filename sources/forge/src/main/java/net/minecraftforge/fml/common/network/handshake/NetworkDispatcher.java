@@ -240,7 +240,7 @@ public class NetworkDispatcher extends SimpleChannelInboundHandler<Packet<?>> im
     private void completeClientSideConnection(ConnectionType type)
     {
         this.connectionType = type;
-        FMLLog.log.info("[{}] Client side {} connection established", Thread.currentThread().getName(), this.connectionType.name().toLowerCase(Locale.ENGLISH));
+        FMLLog.log.debug("[{}] Client side {} connection established", Thread.currentThread().getName(), this.connectionType.name().toLowerCase(Locale.ENGLISH));
         this.state = ConnectionState.CONNECTED;
         MinecraftForge.EVENT_BUS.post(new FMLNetworkEvent.ClientConnectedToServerEvent(manager, this.connectionType.name()));
     }
@@ -248,7 +248,7 @@ public class NetworkDispatcher extends SimpleChannelInboundHandler<Packet<?>> im
     private synchronized void completeServerSideConnection(ConnectionType type)
     {
         this.connectionType = type;
-        FMLLog.log.info("[{}] Server side {} connection established", Thread.currentThread().getName(), this.connectionType.name().toLowerCase(Locale.ENGLISH));
+        FMLLog.log.debug("[{}] Server side {} connection established", Thread.currentThread().getName(), this.connectionType.name().toLowerCase(Locale.ENGLISH));
         this.state = ConnectionState.CONNECTED;
         if (DEBUG_HANDSHAKE)
             manager.closeChannel(new TextComponentString("Handshake Complete review log file for details."));

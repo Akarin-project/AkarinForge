@@ -425,7 +425,8 @@ public class Loader
         mods.addAll(discoverer.identifyMods());
         identifyDuplicates(mods);
         namedMods = Maps.uniqueIndex(mods, ModContainer::getModId);
-        FMLLog.log.info("Forge Mod Loader has identified {} mod{} to load", mods.size(), mods.size() != 1 ? "s" : "");
+        if (mods.size() > 4)
+        FMLLog.log.info("Forge Mod Loader has identified {} mod{} to load", mods.size() - 4, (mods.size() - 4) != 1 ? "s" : "");
         return discoverer;
     }
 
@@ -880,6 +881,7 @@ public class Loader
         return getIndexedModList().get(modId).getCustomModProperties();
     }
 
+    int setupSteps = -2;
     boolean checkRemoteModList(Map<String, String> modList, Side side)
     {
         Set<String> remoteModIds = modList.keySet();
@@ -896,7 +898,7 @@ public class Loader
             }
         }
 
-        if (difference.size() > 0)
+        if (difference.size() > 0 && ++setupSteps > 0)
             FMLLog.log.info("Attempting connection with missing mods {} at {}", difference, side);
         return true;
     }

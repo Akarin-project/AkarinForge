@@ -265,6 +265,7 @@ public class FMLServerHandler implements IFMLSidedHandler
         }
         catch (FileNotFoundException e)
         {
+            if (!container.getModId().equals("FML"))
             FMLLog.log.warn("Missing English translation for {}: {}", container.getModId(), e.getMessage());
         }
         catch (IOException e)
