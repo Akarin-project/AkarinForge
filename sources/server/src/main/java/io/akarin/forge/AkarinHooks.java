@@ -392,11 +392,13 @@ public abstract class AkarinHooks {
             }
             
             if (wait > 0) {
-                Thread.sleep(wait / 1000000);
+            	long target = wait / 1000000;
+            	long park = System.nanoTime();
+            	while ((System.nanoTime() - park) < target);
                 curTime = System.nanoTime();
                 wait = MinecraftServer.TICK_TIME - (curTime - lastTick);
             }
-
+            
             catchupTime = Math.min(MinecraftServer.MAX_CATCHUP_BUFFER, catchupTime - wait);
             if (++MinecraftServer.currentTick % MinecraftServer.SAMPLE_INTERVAL == 0) {
                 final long diff = curTime - tickSection;

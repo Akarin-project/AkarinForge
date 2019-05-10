@@ -309,6 +309,12 @@ public class SpigotConfig {
     }
 
     private static void debug() {
+    	// Akarin start - reset before load
+        LoggerContext ctx0 = (LoggerContext) LogManager.getContext(false);
+        Configuration conf0 = ctx0.getConfiguration();
+        conf0.getLoggerConfig("").setLevel(Level.INFO);
+        ctx0.updateLoggers(conf0);
+    	// Akarin end
         debug = SpigotConfig.getBoolean("settings.debug", false);
         if (debug && !LogManager.getRootLogger().isTraceEnabled()) {
             LoggerContext ctx = (LoggerContext)LogManager.getContext((boolean)false);
@@ -319,7 +325,7 @@ public class SpigotConfig {
         if (LogManager.getRootLogger().isTraceEnabled()) {
             Bukkit.getLogger().info("Debug logging is enabled");
         } else {
-            Bukkit.getLogger().info("Debug logging is disabled");
+            Bukkit.getLogger().fine("Debug logging is disabled"); // Akarin - down to fine
         }
     }
 

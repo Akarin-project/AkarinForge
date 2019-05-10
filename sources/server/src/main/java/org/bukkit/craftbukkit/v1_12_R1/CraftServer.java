@@ -12,6 +12,7 @@ import com.mojang.authlib.GameProfile;
 import io.akarin.forge.AkarinForge;
 import io.akarin.forge.AkarinHooks;
 import io.akarin.forge.command.CraftSimpleCommandMap;
+import io.akarin.forge.logging.LogWrapper;
 import io.akarin.forge.remapper.ReflectionTransformer;
 import io.akarin.forge.utils.MCUtil;
 import io.netty.buffer.ByteBuf;
@@ -203,7 +204,7 @@ implements Server {
     private final String serverName = "AkarinForge";
     private final String serverVersion;
     private final String bukkitVersion = Versioning.getBukkitVersion();
-    private final Logger logger = Logger.getLogger("Minecraft");
+    private final Logger logger = LogWrapper.getLogger("Bukkit"); // Akarin - use log4j
     private final ServicesManager servicesManager = new SimpleServicesManager();
     private final CraftScheduler scheduler = new CraftScheduler();
     private final CraftSimpleCommandMap craftCommandMap;
@@ -795,7 +796,7 @@ implements Server {
         }
 
         if (perms == null) {
-            getLogger().log(Level.INFO, "Server permissions file " + file + " is empty, ignoring it");
+            //getLogger().log(Level.INFO, "Server permissions file " + file + " is empty, ignoring it"); // Akarin - silent it
             return;
         }
 

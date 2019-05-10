@@ -421,7 +421,7 @@ public class OreDictionary
                                 matches = true;
                                 if (oreName != null && !oreName.equals(ent.getValue()))
                                 {
-                                    FMLLog.log.info("Invalid recipe found with multiple oredict ingredients in the same ingredient..."); //TODO: Write a dumper?
+                                    FMLLog.log.debug("Invalid recipe found with multiple oredict ingredients in the same ingredient..."); //TODO: Write a dumper? // Akarin - down to debug
                                     skip = true;
                                     break;
                                 }

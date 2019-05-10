@@ -11,8 +11,6 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.Set;
 
-import org.bukkit.command.CommandSender.Spigot;
-
 public abstract class ServerCommandSender implements CommandSender {
     private static PermissibleBase blockPermInst;
     private final PermissibleBase perm;

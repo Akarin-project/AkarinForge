@@ -753,7 +753,7 @@ public class Loader
         modController.transition(LoaderState.AVAILABLE, false);
         modController.distributeStateMessage(LoaderState.AVAILABLE);
         GameData.freezeData();
-        FMLLog.log.info("Forge Mod Loader has successfully loaded {} mod{}", mods.size(), mods.size() == 1 ? "" : "s");
+        if (mods.size() > 4) FMLLog.log.info("Forge Mod Loader has successfully loaded {} mod{}", mods.size() - 4, mods.size() - 4 == 1 ? "" : "s"); // Akarin - ignore internal stuffs
         progressBar.step("Completing Minecraft initialization");
     }
 

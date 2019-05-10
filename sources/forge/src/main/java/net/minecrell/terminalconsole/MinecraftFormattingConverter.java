@@ -75,7 +75,9 @@ public class MinecraftFormattingConverter extends LogEventPatternConverter {
      * {@code true}, all Minecraft formatting codes will be replaced
      * or stripped from the console output.</p>
      */
+    public static final String KEEP_FORMATTING_PROPERTY = TerminalConsoleAppender.PROPERTY_PREFIX + ".keepMinecraftFormatting";
 
+    private static final boolean KEEP_FORMATTING = PropertiesUtil.getProperties().getBooleanProperty(KEEP_FORMATTING_PROPERTY);
 
     private static final String ANSI_RESET = "\u001B[39;0m";
 
@@ -124,7 +126,19 @@ public class MinecraftFormattingConverter extends LogEventPatternConverter {
 
     @Override
     public void format(LogEvent event, StringBuilder toAppendTo) {
+        int start = toAppendTo.length();
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0, size = formatters.size(); i < size; i++) {
+            formatters.get(i).format(event, toAppendTo);
+        }
 
+        if (KEEP_FORMATTING || toAppendTo.length() == start) {
+            // Skip replacement if disabled or if the content is empty
+            return;
+        }
+
+        String content = toAppendTo.substring(start);
+        format(content, toAppendTo, start, ansi && TerminalConsoleAppender.isAnsiSupported());
     }
 
     private static void format(String s, StringBuilder result, int start, boolean ansi) {

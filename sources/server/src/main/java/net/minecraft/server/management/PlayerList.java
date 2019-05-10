@@ -77,6 +77,7 @@ import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.storage.IPlayerFileData;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.common.chunkio.ChunkIOExecutor;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
@@ -86,7 +87,6 @@ import org.bukkit.Location;
 import org.bukkit.TravelAgent;
 import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_12_R1.chunkio.ChunkIOExecutor;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_12_R1.util.CraftChatMessage;
 import org.bukkit.entity.Player;
@@ -454,7 +454,6 @@ public abstract class PlayerList
             }
         }
 
-        ChunkIOExecutor.adjustPoolSize(getCurrentPlayerCount());
         SPacketPlayerListItem packet = new SPacketPlayerListItem(SPacketPlayerListItem.Action.ADD_PLAYER, playerIn);
 
         for (int i = 0; i < this.playerEntityList.size(); ++i) {
