@@ -1,6 +1,3 @@
-/*
- * Akarin reference
- */
 package net.minecraft.server.management;
 
 import com.google.common.base.Predicate;
@@ -13,7 +10,6 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -24,7 +20,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.common.util.ChunkCoordComparator;
 
 public class PlayerChunkMap
 {
@@ -53,7 +48,7 @@ public class PlayerChunkMap
     private long previousTotalWorldTime;
     private boolean sortMissingChunks = true;
     private boolean sortSendToPlayers = true;
-    // Akarin start
+    // CraftBukkit start - add method
     public final boolean isChunkInUse(int x, int z) {
         PlayerChunkMapEntry pi = getEntry(x, z);
         if (pi != null) {
@@ -61,7 +56,7 @@ public class PlayerChunkMap
         }
         return false;
     }
-    // Akarin end
+    // CraftBukkit end
 
     public PlayerChunkMap(WorldServer serverWorld)
     {
@@ -183,6 +178,8 @@ public class PlayerChunkMap
 
                     if (playerchunkmapentry1.providePlayerChunk(flag))
                     {
+                        iterator.remove();
+
                         if (playerchunkmapentry1.sendToPlayers())
                         {
                             this.pendingSendToPlayers.remove(playerchunkmapentry1);
@@ -195,8 +192,6 @@ public class PlayerChunkMap
                             break;
                         }
                     }
-                } else {
-                	iterator.remove(); // Akarin
                 }
             }
         }
@@ -290,20 +285,13 @@ public class PlayerChunkMap
         player.managedPosX = player.posX;
         player.managedPosZ = player.posZ;
 
-        List<ChunkPos> chunkList = new LinkedList<ChunkPos>(); // Akarin - Load nearby chunks first
         for (int k = i - this.playerViewRadius; k <= i + this.playerViewRadius; ++k)
         {
             for (int l = j - this.playerViewRadius; l <= j + this.playerViewRadius; ++l)
             {
-                chunkList.add(new ChunkPos(k, l)); // Akarin
+                this.getOrCreateEntry(k, l).addPlayer(player);
             }
         }
-        // Akarin start
-        Collections.sort(chunkList, new ChunkCoordComparator(player));
-        for (ChunkPos pair : chunkList) {
-            this.getOrCreateEntry(pair.x, pair.z).addPlayer(player);
-        }
-        // Akarin end
 
         this.players.add(player);
         this.markSortPending();
@@ -362,7 +350,6 @@ public class PlayerChunkMap
             int j1 = i - k;
             int k1 = j - l;
 
-            List<ChunkPos> chunksToLoad = new LinkedList<ChunkPos>(); // Akarin
             if (j1 != 0 || k1 != 0)
             {
                 for (int l1 = i - i1; l1 <= i + i1; ++l1)
@@ -371,7 +358,7 @@ public class PlayerChunkMap
                     {
                         if (!this.overlaps(l1, i2, k, l, i1))
                         {
-                            chunksToLoad.add(new ChunkPos(l1, i2)); // Akarin
+                            this.getOrCreateEntry(l1, i2).addPlayer(player);
                         }
 
                         if (!this.overlaps(l1 - j1, i2 - k1, i, j, i1))
@@ -389,12 +376,6 @@ public class PlayerChunkMap
                 player.managedPosX = player.posX;
                 player.managedPosZ = player.posZ;
                 this.markSortPending();
-                // Akarin start - send nearest chunks first
-                Collections.sort(chunksToLoad, new ChunkCoordComparator(player));
-                for (ChunkPos pair : chunksToLoad) {
-                    this.getOrCreateEntry(pair.x, pair.z).addPlayer(player);
-                }
-                // Akarin end
             }
         }
     }

@@ -1302,7 +1302,7 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
         // Akarin end
         this.player.mountEntityAndWakeUp();
         // Akarin start
-        String quitMessage = this.serverController.getPlayerList().playerLoggedOut(this.player);
+        String quitMessage = this.serverController.getPlayerList().disconnect(this.player); // Akarin
         if ((quitMessage != null) && (quitMessage.length() > 0)) {
             this.serverController.getPlayerList().sendMessage(CraftChatMessage.fromString(quitMessage));
         }

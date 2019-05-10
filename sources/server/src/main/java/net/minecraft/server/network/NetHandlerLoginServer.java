@@ -160,7 +160,7 @@ public class NetHandlerLoginServer implements INetHandlerLoginServer, ITickable
         // Spigot end
 
         // CraftBukkit start - fire PlayerLoginEvent
-        EntityPlayerMP s = this.server.getPlayerList().allowUserToConnect(this, this.loginGameProfile, hostname);
+        EntityPlayerMP s = this.server.getPlayerList().attemptLogin(this, this.loginGameProfile, hostname); // Akarin
 
         if (s == null) // Akarin
         {

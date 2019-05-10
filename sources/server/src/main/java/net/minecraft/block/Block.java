@@ -1,13 +1,7 @@
-/*
- * Akarin reference
- */
 package net.minecraft.block;
 
-import com.google.common.collect.Sets;
-import com.google.common.collect.UnmodifiableIterator;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import javax.annotation.Nullable;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.MapColor;
