@@ -41,6 +41,8 @@ import org.bukkit.plugin.messaging.PluginMessageRecipient;
 import org.bukkit.util.Consumer;
 import org.bukkit.util.Vector;
 
+import io.akarin.forge.AkarinHooks;
+
 public interface World
 extends PluginMessageRecipient,
 Metadatable {
@@ -334,13 +336,12 @@ Metadatable {
             lookup.put(env.getId(), env);
         }
 
-        @Deprecated
         public int getId() {
             return this.id;
         }
 
-        public static Environment getEnvironment(int id2) {
-            return lookup.get(id2);
+        public static Environment getEnvironment(int id) {
+        	return AkarinHooks.lookupEnvironment(lookup, id);
         }
 
         static {
