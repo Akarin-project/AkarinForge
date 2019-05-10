@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.Proxy;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -11,9 +12,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.World.Environment;
 import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_12_R1.Main;
 import org.bukkit.craftbukkit.v1_12_R1.scoreboard.CraftScoreboardManager;
+import org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v1_12_R1.util.Waitable;
+import org.bukkit.event.block.BlockCanBuildEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.world.WorldInitEvent;
@@ -30,14 +35,19 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 
 import io.akarin.forge.api.bukkit.I18nManager;
 import joptsimple.OptionSet;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
+import net.minecraft.network.play.server.SPacketWorldBorder;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedPlayerList;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.dedicated.PendingCommand;
 import net.minecraft.server.management.PlayerProfileCache;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.datafix.DataFixesManager;
 import net.minecraft.util.math.BlockPos;
@@ -48,11 +58,16 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldServerMulti;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
+import net.minecraft.world.border.IBorderListener;
+import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.storage.AnvilSaveHandler;
 import net.minecraft.world.storage.ISaveHandler;
+import net.minecraft.world.storage.MapData;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.world.WorldEvent;
 
 public abstract class AkarinHooks {
@@ -435,5 +450,115 @@ public abstract class AkarinHooks {
         }
 
         return result.toString();
+	}
+	
+	public static void handleWorldBorder(World world) {
+		world.getWorldBorder().world = (WorldServer) world;
+		world.getWorldBorder().addListener(new IBorderListener() {
+            public void onSizeChanged(WorldBorder worldborder, double d0) {
+            	world.getServer().getHandle().sendAll(new SPacketWorldBorder(worldborder, SPacketWorldBorder.Action.SET_SIZE), worldborder.world);
+            }
+
+            public void onTransitionStarted(WorldBorder worldborder, double d0, double d1, long i) {
+            	world.getServer().getHandle().sendAll(new SPacketWorldBorder(worldborder, SPacketWorldBorder.Action.LERP_SIZE), worldborder.world);
+            }
+
+            public void onCenterChanged(WorldBorder worldborder, double d0, double d1) {
+            	world.getServer().getHandle().sendAll(new SPacketWorldBorder(worldborder, SPacketWorldBorder.Action.SET_CENTER), worldborder.world);
+            }
+
+            public void onWarningTimeChanged(WorldBorder worldborder, int i) {
+            	world.getServer().getHandle().sendAll(new SPacketWorldBorder(worldborder, SPacketWorldBorder.Action.SET_WARNING_TIME), worldborder.world);
+            }
+
+            public void onWarningDistanceChanged(WorldBorder worldborder, int i) {
+            	world.getServer().getHandle().sendAll(new SPacketWorldBorder(worldborder, SPacketWorldBorder.Action.SET_WARNING_BLOCKS), worldborder.world);
+            }
+
+            public void onDamageAmountChanged(WorldBorder worldborder, double d0) {}
+
+            public void onDamageBufferChanged(WorldBorder worldborder, double d0) {}
+        });
+	}
+	
+	public static boolean capatureTreeGeneration(World world, BlockPos pos, IBlockState newState, int flags) {
+        if (world.captureTreeGeneration) {
+            BlockSnapshot blocksnapshot = null;
+            
+            // Clean previous snapshot at the pos
+            for (BlockSnapshot previous : world.capturedBlockSnapshots) {
+                if (!previous.getPos().equals(pos))
+                	continue;
+                
+                blocksnapshot = previous;
+                break;
+            }
+            if (blocksnapshot != null) {
+            	world.capturedBlockSnapshots.remove(blocksnapshot);
+            }
+            
+            world.capturedBlockSnapshots.add(new BlockSnapshot(world, pos, newState, flags));
+            return true;
+        }
+        
+        return false;
+	}
+	
+	public static boolean handleBlockPhysicsEvent(World world, Block blockIn, BlockPos pos) {
+        CraftWorld cworld = ((WorldServer) world).getWorld();
+        if (cworld != null) {
+            BlockPhysicsEvent event = new BlockPhysicsEvent(cworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ()), CraftMagicNumbers.getId(blockIn));
+            world.getServer().getPluginManager().callEvent(event);
+
+            if (event.isCancelled()) {
+                return false;
+            }
+        }
+        
+        return true;
+	}
+	
+	public static void removePlayerFromMap(World world, Entity entityIn) {
+		for (WorldSavedData o : world.mapStorage.loadedDataList) {
+			if (o instanceof MapData) {
+				MapData map = (MapData) o;
+				map.playersHashMap.remove(entityIn);
+				for (Iterator<MapData.MapInfo> iter = (Iterator<MapData.MapInfo>) map.playersArrayList.iterator(); iter
+						.hasNext();) {
+					if (iter.next().player == entityIn) {
+						map.mapDecorations.remove(entityIn.getName());
+						iter.remove();
+					}
+				}
+			}
+		}
+	}
+	
+	public static void updateEntity(Entity entityIn, boolean forceUpdate) {
+        if (forceUpdate) {
+            ++entityIn.ticksExisted;
+            entityIn.inactiveTick();
+            return;
+        }
+	}
+	
+	public static void addTileEntity(World world, TileEntity tileentity) {
+        if (!world.loadedTileEntityList.contains(tileentity))
+        	world.addTileEntity(tileentity);
+	}
+	
+	public static void updatePlayersWeather(World world) {
+        for (int idx = 0; idx < world.playerEntities.size(); ++idx) {
+            if (((EntityPlayerMP) world.playerEntities.get(idx)).world == world) {
+                ((EntityPlayerMP) world.playerEntities.get(idx)).tickWeather();
+            }
+        }
+	}
+	
+	public static boolean handleBlockCanBuildEvent(World world, Block blockIn, BlockPos pos, boolean defaultReturn) {
+        BlockCanBuildEvent event = new BlockCanBuildEvent(world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()), CraftMagicNumbers.getId(blockIn), defaultReturn);
+        world.getServer().getPluginManager().callEvent(event);
+
+        return event.isBuildable();
 	}
 }

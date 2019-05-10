@@ -4,6 +4,10 @@ import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
+
+import io.akarin.forge.AkarinHooks;
+import io.akarin.forge.server.AkarinWorld;
+
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Iterator;
@@ -13,6 +17,16 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
+
+import org.bukkit.World.Environment;
+import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.generator.ChunkGenerator;
+import org.spigotmc.SpigotWorldConfig;
+
 import net.minecraft.advancements.AdvancementManager;
 import net.minecraft.advancements.FunctionManager;
 import net.minecraft.block.Block;
@@ -25,6 +39,16 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.INpc;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.EntityXPOrb;
+import net.minecraft.entity.monster.EntityGhast;
+import net.minecraft.entity.monster.EntityGolem;
+import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.monster.EntitySlime;
+import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Biomes;
@@ -55,6 +79,7 @@ import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.MapStorage;
@@ -64,7 +89,7 @@ import net.minecraft.world.storage.loot.LootTableManager;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class World implements IBlockAccess, net.minecraftforge.common.capabilities.ICapabilityProvider
+public abstract class World extends AkarinWorld implements IBlockAccess, net.minecraftforge.common.capabilities.ICapabilityProvider
 {
     /**
      * Used in the getEntitiesWithinAABB functions to expand the search area for entities.
@@ -101,7 +126,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     protected final ISaveHandler saveHandler;
     protected WorldInfo worldInfo;
     protected boolean findingSpawnPoint;
-    protected MapStorage mapStorage;
+    public MapStorage mapStorage; // Akarin
     public VillageCollection villageCollection;
     protected LootTableManager lootTable;
     protected AdvancementManager advancementManager;
@@ -121,9 +146,29 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public java.util.ArrayList<net.minecraftforge.common.util.BlockSnapshot> capturedBlockSnapshots = new java.util.ArrayList<net.minecraftforge.common.util.BlockSnapshot>();
     private net.minecraftforge.common.capabilities.CapabilityDispatcher capabilities;
     private net.minecraftforge.common.util.WorldCapabilityData capabilityData;
+    // Akarin start
+    public Chunk getChunkIfLoaded(BlockPos blockposition) {
+        return ((ChunkProviderServer) this.chunkProvider).getChunkIfLoaded(blockposition.getX() >> 4, blockposition.getZ() >> 4);
+    }
+    
+    public Chunk getChunkIfLoaded(int x, int z) {
+        return ((ChunkProviderServer) this.chunkProvider).getChunkIfLoaded(x, z);
+    }
+    
+    public void checkSleepStatus() {
+        this.updateAllPlayersSleepingFlag();
+    }
+    // Akarin end
 
-    protected World(ISaveHandler saveHandlerIn, WorldInfo info, WorldProvider providerIn, Profiler profilerIn, boolean client)
+    protected World(ISaveHandler saveHandlerIn, WorldInfo info, WorldProvider providerIn, Profiler profilerIn, boolean client, ChunkGenerator gen, Environment env)
     {
+        // Akarin start
+        this.spigotConfig = new SpigotWorldConfig(info.getWorldName());
+        this.generator = gen;
+        this.world = new CraftWorld((WorldServer) this, gen, env);
+        this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns();
+        this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns();
+        // Akarin end
         this.eventListeners = Lists.newArrayList(this.pathListener);
         this.calendar = Calendar.getInstance();
         this.worldScoreboard = new Scoreboard();
@@ -137,6 +182,10 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         this.isRemote = client;
         this.worldBorder = providerIn.createWorldBorder();
         perWorldStorage = new MapStorage((ISaveHandler)null);
+        // Akarin start
+        AkarinHooks.handleWorldBorder(this);
+        this.getServer().addWorld(this.world);
+        // Akarin end
     }
 
     public World init()
@@ -317,6 +366,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
     public boolean setBlockState(BlockPos pos, IBlockState newState, int flags)
     {
+    	if (AkarinHooks.capatureTreeGeneration(this, pos, newState, flags)) return true;
         if (this.isOutsideBuildHeight(pos))
         {
             return false;
@@ -437,6 +487,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     {
         if (this.worldInfo.getTerrainType() != WorldType.DEBUG_ALL_BLOCK_STATES)
         {
+        	if (populating) return; // Akarin
             this.notifyNeighborsOfStateChange(pos, blockType, p_175722_3_);
         }
     }
@@ -548,8 +599,15 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
             try
             {
+            	if (!AkarinHooks.handleBlockPhysicsEvent(this, blockIn, pos)) return;
                 iblockstate.neighborChanged(this, pos, blockIn, fromPos);
             }
+            // Akarin start
+            catch (StackOverflowError stackoverflowerror) {
+                haveWeSilencedAPhysicsCrash = true;
+                blockLocation = pos.getX() + ", " + pos.getY() + ", " + pos.getZ();
+            }
+            // Akarin end
             catch (Throwable throwable)
             {
                 CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Exception while updating neighbours");
@@ -1178,6 +1236,71 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
     public boolean spawnEntity(Entity entityIn)
     {
+    	// Akarin start
+        return this.addEntity(entityIn, CreatureSpawnEvent.SpawnReason.DEFAULT);
+    }
+
+    public boolean addEntity(Entity entityIn, CreatureSpawnEvent.SpawnReason spawnReason) {
+        if (entityIn == null) {
+            return false;
+        }
+        if (this.restoringBlockSnapshots) {
+            return true;
+        }
+        Cancellable event = null;
+        if (entityIn instanceof EntityLivingBase && !(entityIn instanceof EntityPlayerMP)) {
+            boolean isAnimal = entityIn instanceof EntityAnimal || entityIn instanceof EntityWaterMob || entityIn instanceof EntityGolem;
+            boolean isMonster = entityIn instanceof EntityMob || entityIn instanceof EntityGhast || entityIn instanceof EntitySlime;
+            boolean isNpc = entityIn instanceof INpc;
+            
+            if (spawnReason != SpawnReason.CUSTOM) {
+                if (isAnimal && !spawnPeacefulMobs || isMonster && !spawnHostileMobs || isNpc && !getServer().getServer().getCanSpawnNPCs()) {
+                    entityIn.isDead = true;
+                    return false;
+                }
+            }
+            
+            event = CraftEventFactory.callCreatureSpawnEvent((EntityLivingBase) entityIn, spawnReason);
+        } else if (entityIn instanceof EntityItem) {
+            event = CraftEventFactory.callItemSpawnEvent((EntityItem) entityIn);
+        } else if (entityIn.getBukkitEntity() instanceof org.bukkit.entity.Projectile) {
+            // Not all projectiles extend EntityProjectile, so check for Bukkit interface instead
+            event = CraftEventFactory.callProjectileLaunchEvent(entityIn);
+        } else if (entityIn.getBukkitEntity() instanceof org.bukkit.entity.Vehicle){
+            event = CraftEventFactory.callVehicleCreateEvent(entityIn);
+        } else if (entityIn instanceof EntityXPOrb) {
+            EntityXPOrb xp = (EntityXPOrb) entityIn;
+            double radius = this.spigotConfig.expMerge;
+            if (radius > 0.0) {
+                final int maxValue = 5;
+                if (xp.xpValue < maxValue) {
+                    
+                    List<Entity> entities = this.getEntitiesWithinAABBExcludingEntity(entityIn, entityIn.getEntityBoundingBox().grow(radius, radius, radius));
+                    for (Entity e : entities) {
+                        if (e instanceof EntityXPOrb) {
+                            EntityXPOrb loopItem = (EntityXPOrb) e;
+                            if (!loopItem.isDead && !(maxValue > 0 && loopItem.xpValue >= maxValue)) {
+                                long newTotal = (long)xp.xpValue + (long)loopItem.xpValue;
+                                if ((int) newTotal < 0) continue; // Overflow
+                                if (maxValue > 0 && newTotal > (long)maxValue) {
+                                    loopItem.xpValue = (int) (newTotal - maxValue);
+                                    xp.xpValue = maxValue;
+                                } else {
+                                    xp.xpValue += loopItem.xpValue;
+                                    loopItem.setDead();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (event != null && (event.isCancelled() || entityIn.isDead)) {
+            entityIn.isDead = true;
+            return false;
+        }
+        // Akarin end
         // do not drop any items while restoring blocksnapshots. Prevents dupes
         if (!this.isRemote && (entityIn == null || (entityIn instanceof net.minecraft.entity.item.EntityItem && this.restoringBlockSnapshots))) return false;
 
@@ -1219,6 +1342,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
             ((IWorldEventListener)this.eventListeners.get(i)).onEntityAdded(entityIn);
         }
         entityIn.onAddedToWorld();
+        entityIn.valid = true; // Akarin
     }
 
     public void onEntityRemoved(Entity entityIn)
@@ -1228,6 +1352,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
             ((IWorldEventListener)this.eventListeners.get(i)).onEntityRemoved(entityIn);
         }
         entityIn.onRemovedFromWorld();
+        entityIn.valid = false; // Akarin
     }
 
     public void removeEntity(Entity entityIn)
@@ -1247,6 +1372,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         if (entityIn instanceof EntityPlayer)
         {
             this.playerEntities.remove(entityIn);
+            AkarinHooks.removePlayerFromMap(this, entityIn);
             this.updateAllPlayersSleepingFlag();
             this.onEntityRemoved(entityIn);
         }
@@ -1879,10 +2005,14 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
                 if (!tileentity1.isInvalid())
                 {
+                	// Akarin start
+                	/*
                     if (!this.loadedTileEntityList.contains(tileentity1))
                     {
                         this.addTileEntity(tileentity1);
                     }
+                    */
+                	// Akarin end
 
                     if (this.isBlockLoaded(tileentity1.getPos()))
                     {
@@ -1890,6 +2020,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                         IBlockState iblockstate = chunk.getBlockState(tileentity1.getPos());
                         chunk.addTileEntity(tileentity1.getPos(), tileentity1);
                         this.notifyBlockUpdate(tileentity1.getPos(), iblockstate, iblockstate, 3);
+                        AkarinHooks.addTileEntity(this, tileentity1); // Akarin
                     }
                 }
             }
@@ -1972,6 +2103,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                 return;
             }
         }
+        AkarinHooks.updateEntity(entityIn, forceUpdate); // Akarin
 
         entityIn.lastTickPosX = entityIn.posX;
         entityIn.lastTickPosY = entityIn.posY;
@@ -1991,6 +2123,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
             {
                 if(!entityIn.updateBlocked)
                 entityIn.onUpdate();
+                entityIn.postTick(); // Akarin
             }
         }
 
@@ -2657,6 +2790,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                 }
 
                 this.rainingStrength = MathHelper.clamp(this.rainingStrength, 0.0F, 1.0F);
+                AkarinHooks.updatePlayersWeather(this); // Akarin
             }
         }
     }
@@ -2846,7 +2980,10 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
     public boolean checkLightFor(EnumSkyBlock lightType, BlockPos pos)
     {
-        if (!this.isAreaLoaded(pos, 16, false))
+        // Akarin start
+        Chunk chunk = this.getChunkIfLoaded(pos.getX() >> 4, pos.getZ() >> 4);
+        if (chunk == null || !chunk.areNeighborsLoaded(1))
+        // Akarin end
         {
             return false;
         }
@@ -3171,15 +3308,15 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         if (!((placer instanceof EntityPlayer) || !net.minecraftforge.event.ForgeEventFactory.onBlockPlace(placer, new net.minecraftforge.common.util.BlockSnapshot(this, pos, blockIn.getDefaultState()), sidePlacedOn).isCanceled())) return false;
         if (axisalignedbb != Block.NULL_AABB && !this.checkNoEntityCollision(axisalignedbb.offset(pos))) // Forge: Remove second parameter, we patch placer to be non-null, passing it here skips collision checks for the placer
         {
-            return false;
+            return AkarinHooks.handleBlockCanBuildEvent(this, blockIn, pos, false); // Akarin
         }
         else if (iblockstate1.getMaterial() == Material.CIRCUITS && blockIn == Blocks.ANVIL)
         {
-            return true;
+            return AkarinHooks.handleBlockCanBuildEvent(this, blockIn, pos, true); // Akarin
         }
         else
         {
-            return iblockstate1.getBlock().isReplaceable(this, pos) && blockIn.canPlaceBlockOnSide(this, pos, sidePlacedOn);
+            return AkarinHooks.handleBlockCanBuildEvent(this, blockIn, pos, iblockstate1.getBlock().isReplaceable(this, pos) && blockIn.canPlaceBlockOnSide(this, pos, sidePlacedOn)); // Akarin
         }
     }
 
@@ -3344,6 +3481,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         for (int j2 = 0; j2 < this.playerEntities.size(); ++j2)
         {
             EntityPlayer entityplayer1 = this.playerEntities.get(j2);
+            if (entityplayer1 == null || entityplayer1.isDead) continue; // Akarin
 
             if (p_190525_9_.apply(entityplayer1))
             {

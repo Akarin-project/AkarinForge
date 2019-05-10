@@ -50,7 +50,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
     private final int[] precipitationHeightMap;
     private final boolean[] updateSkylightColumns;
     private boolean loaded;
-    private final World world;
+    public final World world; // Akarin
     private final int[] heightMap;
     public final int x;
     public final int z;
