@@ -45,6 +45,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multiset;
 
+import io.akarin.forge.AkarinHooks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.DedicatedPlayerList;
@@ -275,6 +276,10 @@ public class DimensionManager
     
     public static void initDimension(int dim)
     {
+    	// Akarin start
+    	AkarinHooks.initalizeWorld(dim);
+    	
+    	/*
         WorldServer overworld = getWorld(0);
         if (overworld == null)
         {
@@ -291,7 +296,6 @@ public class DimensionManager
         }
         MinecraftServer mcServer = overworld.getMinecraftServer();
         ISaveHandler savehandler = overworld.getSaveHandler();
-        // Akarin start
         String name;
         WorldSettings worldSettings = new WorldSettings(overworld.getWorldInfo());
         Environment env = Environment.getEnvironment(dim);
@@ -322,7 +326,6 @@ public class DimensionManager
         worldServers.add(world);
         mcServer.worlds = worldServers.toArray(new WorldServer[0]);
         mcServer.getPlayerList().setPlayerManager(mcServer.worlds);
-        // Akarin end
         world.addEventListener(new ServerWorldEventHandler(mcServer, world));
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(world));
         
@@ -332,64 +335,15 @@ public class DimensionManager
         }
 
         mcServer.setDifficultyForAllWorlds(mcServer.getDifficulty());
+        */
+    	// Akarin end
     }
 
     // Akarin start
-    public static WorldServer initDimension(WorldCreator creator, WorldSettings worldSettings)
-    {
-        WorldServer overworld = DimensionManager.getWorld(0);
-        if (overworld == null) {
-            throw new RuntimeException("Cannot Hotload Dim: Overworld is not Loaded!");
-        }
-        MinecraftServer mcServer = overworld.getMinecraftServer();
-        DimensionType type = DimensionType.OVERWORLD;
-        try {
-            if (creator.environment() != null) {
-                type = DimensionType.getById(creator.environment().getId());
-            }
-        }
-        catch (IllegalArgumentException illegalArgumentException) {
-            // empty catch block
-        }
-        Environment env = creator.environment();
-        String name = creator.name();
-        
-        int savedDim;
-        int dim = 0;
-        SaveHandler saveHandler = new AnvilSaveHandler(mcServer.server.getWorldContainer(), name, true, mcServer.getDataFixer());
-        if (saveHandler.loadWorldInfo() != null && (savedDim = saveHandler.loadWorldInfo().getDimension()) != 0 && savedDim != -1 && savedDim != 1) {
-            dim = savedDim;
-        }
-        if (dim == 0) {
-            dim = DimensionManager.getNextFreeDimId();
-        }
-        if (!DimensionManager.isDimensionRegistered(dim)) {
-            DimensionManager.registerDimension(dim, type);
-            DimensionManager.addBukkitDimension(dim);
-        }
-        
-        ChunkGenerator gen = mcServer.server.getGenerator(name);
-        if (mcServer instanceof DedicatedServer) {
-            worldSettings.setGeneratorOptions(((DedicatedServer) mcServer).getStringProperty("generator-settings", ""));
-        }
-        
-        WorldInfo worldInfo = new WorldInfo(worldSettings, name);
-        WorldServer world = dim == 0 ? overworld : (WorldServer)(new WorldServerMulti(mcServer, saveHandler, dim, overworld, mcServer.profiler, worldInfo, env, gen).init());
-        List<WorldServer> worldServers = Lists.newArrayList(mcServer.worlds);
-        worldServers.add(world);
-        mcServer.worlds = worldServers.toArray(new WorldServer[0]);
-        mcServer.getPlayerList().setPlayerManager(mcServer.worlds);
-        world.addEventListener(new ServerWorldEventHandler(mcServer, (WorldServer) world));
-        MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(world));
-        
-        mcServer.server.getPluginManager().callEvent(new WorldLoadEvent(world.getWorld()));
-        world.getWorldInfo().setGameType(mcServer.getGameType());
-        mcServer.setDifficultyForAllWorlds(mcServer.getDifficulty());
-        // Akarin end
-        return world;
+    public static WorldServer initDimension(WorldCreator creator, WorldSettings worldSettings) {
+        return AkarinHooks.initalizeWorld(creator, worldSettings);
     }
 
-    // Akarin start
     public static Environment registerBukkitDimension(int dim, String worldType) {
         Environment env = Environment.getEnvironment(dim);
         if (env == null) {

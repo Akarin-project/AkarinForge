@@ -10,6 +10,7 @@ import com.google.common.collect.MapMaker;
 import com.mojang.authlib.GameProfile;
 
 import io.akarin.forge.AkarinForge;
+import io.akarin.forge.AkarinHooks;
 import io.akarin.forge.command.CraftSimpleCommandMap;
 import io.akarin.forge.remapper.ReflectionTransformer;
 import io.akarin.forge.utils.MCUtil;
@@ -845,6 +846,10 @@ implements Server {
         if (world != null) {
             return world;
         }
+        // Akarin start
+        return AkarinHooks.initalizeWorld(creator).getWorld();
+        
+        /*
         boolean hardcore = false;
         WorldSettings worldSettings = new WorldSettings(creator.seed(), GameType.getByID(getDefaultGameMode().getValue()), generateStructures, hardcore, type);
         WorldServer worldserver = DimensionManager.initDimension(creator, worldSettings);
@@ -872,6 +877,8 @@ implements Server {
         }
         this.pluginManager.callEvent(new WorldLoadEvent(worldserver.getWorld()));
         return worldserver.getWorld();
+        */
+        // Akarin end
     }
 
     @Override

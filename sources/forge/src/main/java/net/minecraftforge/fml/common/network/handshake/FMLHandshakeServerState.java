@@ -59,7 +59,7 @@ enum FMLHandshakeServerState implements IHandshakeState<FMLHandshakeServerState>
             // Hello packet first
             if (msg instanceof FMLHandshakeMessage.ClientHello)
             {
-                FMLLog.log.info("Client protocol version {}", Integer.toHexString(((FMLHandshakeMessage.ClientHello)msg).protocolVersion()));
+                FMLLog.log.debug("Client protocol version {}", Integer.toHexString(((FMLHandshakeMessage.ClientHello)msg).protocolVersion())); // Akarin
                 return;
             }
 

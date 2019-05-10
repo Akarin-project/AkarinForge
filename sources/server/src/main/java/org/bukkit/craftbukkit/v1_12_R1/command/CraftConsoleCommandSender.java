@@ -7,6 +7,8 @@ import org.bukkit.conversations.ConversationAbandonedEvent;
 import org.bukkit.conversations.ManuallyAbandonedConversationCanceller;
 import org.bukkit.craftbukkit.v1_12_R1.conversations.ConversationTracker;
 
+import net.minecraft.server.MinecraftServer;
+
 /**
  * Represents CLI input from a console
  */
@@ -23,7 +25,7 @@ public class CraftConsoleCommandSender extends ServerCommandSender implements Co
     }
 
     public void sendRawMessage(String message) {
-        System.out.println(ChatColor.stripColor(message));
+        MinecraftServer.LOGGER.info(message);
     }
 
     public void sendMessage(String[] messages) {

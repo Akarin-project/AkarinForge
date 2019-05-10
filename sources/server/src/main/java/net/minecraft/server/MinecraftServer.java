@@ -114,7 +114,7 @@ import org.bukkit.plugin.PluginLoadOrder;
 
 public abstract class MinecraftServer implements ICommandSender, Runnable, IThreadListener, ISnooperInfo
 {
-    public static final Logger LOGGER = LogManager.getLogger(); // Akarin
+    public static final Logger LOGGER = LogManager.getLogger("Minecraft");
     public static final File USER_CACHE_FILE = new File("usercache.json");
     protected ISaveFormat anvilConverterForAnvilFile;
     private final Snooper usageSnooper = new Snooper("server", this, getCurrentTimeMillis());
@@ -1083,7 +1083,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
     public void sendMessage(ITextComponent component)
     {
-        LOGGER.info(component.getUnformattedText());
+        LOGGER.info(component.getFormattedText()); // Akarin
     }
 
     public boolean canUseCommand(int permLevel, String commandName)

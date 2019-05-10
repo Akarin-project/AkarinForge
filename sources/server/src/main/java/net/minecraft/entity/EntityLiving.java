@@ -197,7 +197,7 @@ public abstract class EntityLiving extends EntityLivingBase
                 reason = getAttackTarget().isEntityAlive() ? EntityTargetEvent.TargetReason.FORGOT_TARGET : EntityTargetEvent.TargetReason.TARGET_DIED;
             }
             if (reason == EntityTargetEvent.TargetReason.UNKNOWN) {
-                world.getServer().getLogger().log(java.util.logging.Level.WARNING, "Unknown target reason, please report on the issue tracker", new Exception());
+                world.getServer().getLogger().log(java.util.logging.Level.WARNING, "Unknown target reason, please report on the issue tracker"); // TODO - Akarin
             }
             CraftLivingEntity ctarget = null;
             if (entityliving != null) {

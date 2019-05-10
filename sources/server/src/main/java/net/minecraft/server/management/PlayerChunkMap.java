@@ -195,8 +195,9 @@ public class PlayerChunkMap
                             break;
                         }
                     }
+                } else {
+                	iterator.remove(); // Akarin
                 }
-                iterator.remove(); // Akarin
             }
         }
 

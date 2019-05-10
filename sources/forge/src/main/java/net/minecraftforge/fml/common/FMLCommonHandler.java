@@ -300,6 +300,7 @@ public class FMLCommonHandler
     public void handleServerStarted()
     {
         Loader.instance().serverStarted();
+        MinecraftServer.LOGGER.info("Ready for connection!");
         sidedDelegate.allowLogins();
     }
 
@@ -633,7 +634,7 @@ public class FMLCommonHandler
         if (!shouldAllowPlayerLogins())
         {
             TextComponentString text = new TextComponentString("Server is still starting! Please wait before reconnecting.");
-            FMLLog.log.info("Disconnecting Player: {}", text.getUnformattedText());
+            FMLLog.log.debug("Disconnecting Player: {}", text.getUnformattedText()); // Akarin - spammy when starting
             manager.sendPacket(new SPacketDisconnect(text));
             manager.closeChannel(text);
             return false;
