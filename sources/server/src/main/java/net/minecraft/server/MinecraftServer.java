@@ -9,10 +9,15 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+
+import io.akarin.forge.BukkitInjector;
+import io.akarin.forge.api.bukkit.I18nManager;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
+import joptsimple.OptionSet;
+
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -23,8 +28,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
@@ -55,6 +62,7 @@ import net.minecraft.profiler.ISnooperInfo;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.profiler.Snooper;
 import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.server.dedicated.PropertyManager;
 import net.minecraft.server.management.PlayerList;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.util.IProgressUpdate;
@@ -73,6 +81,7 @@ import net.minecraft.world.GameType;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldServerDemo;
 import net.minecraft.world.WorldServerMulti;
@@ -82,11 +91,24 @@ import net.minecraft.world.chunk.storage.AnvilSaveConverter;
 import net.minecraft.world.storage.ISaveFormat;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.Bukkit;
+import org.bukkit.World.Environment;
+import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.command.RemoteConsoleCommandSender;
+import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_12_R1.scoreboard.CraftScoreboardManager;
+import org.bukkit.craftbukkit.v1_12_R1.util.ServerShutdownThread;
+import org.bukkit.event.world.WorldInitEvent;
+import org.bukkit.generator.ChunkGenerator;
 
 public abstract class MinecraftServer implements ICommandSender, Runnable, IThreadListener, ISnooperInfo
 {
@@ -94,7 +116,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     public static final File USER_CACHE_FILE = new File("usercache.json");
     private final ISaveFormat anvilConverterForAnvilFile;
     private final Snooper usageSnooper = new Snooper("server", this, getCurrentTimeMillis());
-    private final File anvilFile;
+    public File anvilFile; // Akarin
     private final List<ITickable> tickables = Lists.<ITickable>newArrayList();
     public final ICommandManager commandManager;
     public final Profiler profiler = new Profiler();
@@ -149,18 +171,93 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     protected long currentTime = getCurrentTimeMillis();
     @SideOnly(Side.CLIENT)
     private boolean worldIconSet;
+    // CraftBukkit start
+    public ConsoleCommandSender console;
+    public RemoteConsoleCommandSender remoteConsole;
+    public CraftServer server;
+    public OptionSet options;
+    public Thread primaryThread;
+    public Queue<Runnable> processQueue = Queues.newConcurrentLinkedQueue();
+    public int autosavePeriod;
+    private boolean hasStopped;
+    private final Object stopLock;
+    public static int currentTick = (int) (System.currentTimeMillis() / 50);
+    
+    private static final int TPS = 20;
+    private static final long SEC_IN_NANO = 1000000000;
+    public static final long TICK_TIME = SEC_IN_NANO / TPS;
+    private static final long MAX_CATCHUP_BUFFER = TICK_TIME * TPS * 60L;
+    private static final int SAMPLE_INTERVAL = 20;
+    public final RollingAverage tps1 = new RollingAverage(60);
+    public final RollingAverage tps5 = new RollingAverage(60 * 5);
+    public final RollingAverage tps15 = new RollingAverage(60 * 15);
+    public double[] recentTps = new double[3];
+    
+    private static MinecraftServer SERVER;
+    
+    public static class RollingAverage {
+        private final int size;
+        private long time;
+        private double total;
+        private int index = 0;
+        private final double[] samples;
+        private final long[] times;
 
-    public MinecraftServer(File anvilFileIn, Proxy proxyIn, DataFixer dataFixerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
+        RollingAverage(int size) {
+            this.size = size;
+            this.time = size * SEC_IN_NANO;
+            this.total = TPS * SEC_IN_NANO * size;
+            this.samples = new double[size];
+            this.times = new long[size];
+            for (int i = 0; i < size; i++) {
+                this.samples[i] = TPS;
+                this.times[i] = SEC_IN_NANO;
+            }
+        }
+
+        public void add(double x, long t) {
+            time -= times[index];
+            total -= samples[index] * times[index];
+            samples[index] = x;
+            times[index] = t;
+            time += t;
+            total += x * t;
+            if (++index == size) {
+                index = 0;
+            }
+        }
+
+        public double getAverage() {
+            return total / time;
+        }
+    }
+    
+    public static MinecraftServer getServerInst() {
+        return SERVER;
+    }
+    
+    public abstract PropertyManager getPropertyManager();
+    // CraftBukkit end
+
+    // Akarin start
+    public MinecraftServer(OptionSet options, Proxy proxyIn, DataFixer dataFixerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
     {
+        SERVER = this;
+        this.stopLock = new Object();
+        this.recentTps = new double[3];
+        
+        Runtime.getRuntime().addShutdownHook(new ServerShutdownThread(this));
+        this.serverThread = this.primaryThread = new Thread(SidedThreadGroups.SERVER, this, "Server thread");
+        // Akarin end
         this.serverProxy = proxyIn;
         this.authService = authServiceIn;
         this.sessionService = sessionServiceIn;
         this.profileRepo = profileRepoIn;
         this.profileCache = profileCacheIn;
-        this.anvilFile = anvilFileIn;
+        this.options = options; // Akarin
         this.networkSystem = new NetworkSystem(this);
         this.commandManager = this.createCommandManager();
-        this.anvilConverterForAnvilFile = new AnvilSaveConverter(anvilFileIn, dataFixerIn);
+        this.anvilConverterForAnvilFile = this.getActiveAnvilConverter(); // Akarin
         this.dataFixer = dataFixerIn;
     }
 
@@ -225,6 +322,99 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         this.setUserMessage("menu.loadingLevel");
         ISaveHandler isavehandler = this.anvilConverterForAnvilFile.getSaveLoader(saveName, true);
         this.setResourcePackFromWorld(this.getFolderName(), isavehandler);
+        // Akarin start
+        this.createCommandManager();
+        
+        WorldSettings worldsettings = new WorldSettings(seed, this.getGameType(), this.canStructuresSpawn(), this.isHardcore(), type);
+        worldsettings.setGeneratorOptions(generatorOptions);
+        Integer[] dimIds = DimensionManager.getStaticDimensionIDs();
+        
+        Arrays.sort(dimIds, new Comparator<Integer>(){
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return o1 == 0 ? -1 : Math.max(o1, o2);
+            }
+        });
+        
+        Integer[] arrinteger = dimIds;
+        int n2 = arrinteger.length;
+        this.worlds = new WorldServer[n2];
+        for (int i2 = 0; i2 < n2; i2++) {
+            WorldInfo worlddata;
+            ISaveHandler idatamanager;
+            World world;
+            String worldType;
+            int dim = arrinteger[i2];
+            
+            if (dim != 0 && (dim == -1 && !this.getAllowNether() || dim == 1 && !this.server.getAllowEnd()))
+                continue;
+            
+            Environment worldEnvironment = Environment.getEnvironment(dim);
+            if (worldEnvironment == null) {
+                WorldProvider provider = DimensionManager.createProviderFor(dim);
+                worldType = provider.getClass().getSimpleName().toLowerCase();
+                worldType = worldType.replace("worldprovider", "");
+                worldType = worldType.replace("provider", "");
+                worldEnvironment = Environment.getEnvironment(DimensionManager.getProviderType(dim).getId());
+            } else {
+                worldType = worldEnvironment.toString().toLowerCase();
+            }
+            
+            String name = dim == 0 ? saveName : "DIM" + dim;
+            ChunkGenerator gen = null;
+            
+            if (dim == 0) {
+                idatamanager = new net.minecraft.world.chunk.storage.AnvilSaveHandler(this.server.getWorldContainer(), worldNameIn, true, this.dataFixer);
+                worlddata = idatamanager.loadWorldInfo();
+                
+                if (!BukkitInjector.initializedBukkit) {
+                    BukkitInjector.injectBlockBukkitMaterials();
+                    BukkitInjector.injectItemBukkitMaterials();
+                    BukkitInjector.injectBiomes();
+                    BukkitInjector.injectEntityType();
+                    BukkitInjector.registerEnchantments();
+                    BukkitInjector.registerPotions();
+                    BukkitInjector.initializedBukkit = true;
+                    I18nManager.loadI18n();
+                }
+                
+                if (worlddata == null) {
+                    worlddata = new WorldInfo(worldsettings, worldNameIn);
+                }
+                
+                worlddata.checkName(worldNameIn);
+                world = new WorldServer(this, idatamanager, worlddata, dim, this.profiler, worldEnvironment, gen).init();
+                world.initialize(worldsettings);
+                
+                this.server.scoreboardManager = new CraftScoreboardManager(this, world.getScoreboard());
+            } else {
+                gen = this.server.getGenerator(name);
+                idatamanager = new net.minecraft.world.chunk.storage.AnvilSaveHandler(this.server.getWorldContainer(), name, true, this.dataFixer);
+                worlddata = idatamanager.loadWorldInfo();
+                
+                if (worlddata == null) {
+                    worlddata = new WorldInfo(worldsettings, name);
+                }
+                
+                worlddata.checkName(name);
+                world = new WorldServerMulti(this, idatamanager, dim, this.worlds[0], this.profiler, worlddata, Environment.getEnvironment(dim), gen).init();
+            }
+            
+            Bukkit.getLogger().warning("world: " + world.getWorldInfo().getWorldName() + " (" + ((WorldServer) world).dimension + ")");
+            Bukkit.getLogger().warning(Bukkit.getWorlds().toString());
+            
+            this.worlds[i2] = (WorldServer) world;
+            world.addEventListener(new ServerWorldEventHandler(this, (WorldServer) world));
+            world.getWorldInfo().setGameType(this.getGameType());
+            
+            this.server.getPluginManager().callEvent(new WorldInitEvent(world.getWorld()));
+            MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(world));
+        }
+        
+        getPlayerList().setPlayerManager(worlds);
+        this.setDifficultyForAllWorlds(this.getDifficulty());
+        this.initialWorldChunkLoad();
+        /*
         WorldInfo worldinfo = isavehandler.loadWorldInfo();
         WorldSettings worldsettings;
 
@@ -312,6 +502,8 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         this.playerList.setPlayerManager(new WorldServer[]{ overWorld });
         this.setDifficultyForAllWorlds(this.getDifficulty());
         this.initialWorldChunkLoad();
+        */
+        // Akarin end
     }
 
     public void initialWorldChunkLoad()
