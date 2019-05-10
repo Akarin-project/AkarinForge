@@ -1106,7 +1106,7 @@ public class ForgeChunkManager
         temp.setMinValue(0);
         dormantChunkCacheSize = temp.getInt(0);
         propOrder.add("dormantChunkCacheSize");
-        FMLLog.log.info("Configured a dormant chunk cache size of {}", temp.getInt(0));
+        if (temp.getInt(0) != 0) FMLLog.log.info("Configured a dormant chunk cache size of {}", temp.getInt(0)); // Akarin - silent by default
 
         temp = config.get("defaults", "asyncChunkLoading", true);
         temp.setComment("Load chunks asynchronously for players, reducing load on the server thread.\n" +

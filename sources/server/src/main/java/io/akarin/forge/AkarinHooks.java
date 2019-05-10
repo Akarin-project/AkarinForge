@@ -51,7 +51,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
 import net.minecraft.network.play.server.SPacketWorldBorder;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.dedicated.DedicatedPlayerList;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.dedicated.PendingCommand;
 import net.minecraft.server.management.PlayerProfileCache;
@@ -63,7 +62,6 @@ import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameType;
 import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldServerMulti;
 import net.minecraft.world.WorldSettings;
@@ -86,7 +84,7 @@ import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public abstract class AkarinHooks {
-	private static final Logger LOGGER = LogManager.getLogger("Akarin");
+	private static final Logger LOGGER = LogManager.getLogger();
 	
 	private static boolean initalizedConnection;
 	private static int initalizeConnectionSteps = 2;
@@ -218,8 +216,8 @@ public abstract class AkarinHooks {
             long start = MinecraftServer.getCurrentTimeMillis();
             
             int chunks = 0;
-            for (int x = -192; x <= 1920 && server.isServerRunning(); x += 16) {
-                for (int z = -192; z <= 1920 && server.isServerRunning(); z += 16) {
+            for (int x = -192; x <= 192 && server.isServerRunning(); x += 16) {
+                for (int z = -192; z <= 192 && server.isServerRunning(); z += 16) {
                     world.getChunkProvider().provideChunk(spawn.getX() + x >> 4, spawn.getZ() + z >> 4);
                     
                     long current = MinecraftServer.getCurrentTimeMillis();
@@ -271,7 +269,7 @@ public abstract class AkarinHooks {
         
         int dim = info != null ? info.getDimension() : 0;
             dim = dim == -1 || dim == 0 || dim == 1 ? DimensionManager.getNextFreeDimId() : dim;
-            
+        
         return initalizeWorld(dim, worldName, worldCreator.environment(), worldSettings);
 	}
 	
@@ -315,12 +313,12 @@ public abstract class AkarinHooks {
         
         world.addEventListener(new ServerWorldEventHandler(server, world));
         
+        world.getWorldInfo().setGameType(server.getGameType());
+        server.setDifficultyForAllWorlds(server.getDifficulty());
+        
         // Events
         server.server.getPluginManager().callEvent(new WorldInitEvent(world.getWorld()));
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(world));
-        
-        world.getWorldInfo().setGameType(server.getGameType());
-        server.setDifficultyForAllWorlds(server.getDifficulty());
         
 		// ----------- Chunk Initalization ----------
         
@@ -331,8 +329,8 @@ public abstract class AkarinHooks {
             long start = MinecraftServer.getCurrentTimeMillis();
             
             int chunks = 0;
-            for (int x = -192; x <= 1920 && server.isServerRunning(); x += 16) {
-                for (int z = -192; z <= 1920 && server.isServerRunning(); z += 16) {
+            for (int x = -192; x <= 192 && server.isServerRunning(); x += 16) {
+                for (int z = -192; z <= 192 && server.isServerRunning(); z += 16) {
                     world.getChunkProvider().provideChunk(spawn.getX() + x >> 4, spawn.getZ() + z >> 4);
                     
                     long current = MinecraftServer.getCurrentTimeMillis();

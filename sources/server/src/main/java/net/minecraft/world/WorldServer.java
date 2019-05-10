@@ -140,6 +140,7 @@ public class WorldServer extends World implements IThreadListener
         super(saveHandlerIn, info, net.minecraftforge.common.DimensionManager.createProviderFor(dimensionId), profilerIn, false, gen, worldEnvironment);
         this.pvpMode = server.isPVPEnabled();
         info.world = this;
+        info.setDimension(dimensionId);
         this.dimension = dimensionId;
         // Akarin end
         this.mcServer = server;

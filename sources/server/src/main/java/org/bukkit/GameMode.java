@@ -23,12 +23,10 @@ public enum GameMode {
         this.value = value;
     }
 
-    @Deprecated
     public int getValue() {
         return this.value;
     }
 
-    @Deprecated
     public static GameMode getByValue(int value) {
         return BY_ID.get(value);
     }
