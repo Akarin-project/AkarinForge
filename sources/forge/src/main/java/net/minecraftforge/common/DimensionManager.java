@@ -318,8 +318,10 @@ public class DimensionManager
         
         WorldInfo worldInfo = new WorldInfo(worldSettings, name);
         WorldServer world = (dim == 0 ? overworld : (WorldServer)(new WorldServerMulti(mcServer, savehandler, dim, overworld, mcServer.profiler, worldInfo, env, gen).init()));
-        mcServer.worldServers.add((WorldServer) world);
-        mcServer.getPlayerList().setPlayerManager(mcServer.worldServers.toArray(new WorldServer[mcServer.worldServers.size()]));
+        List<WorldServer> worldServers = Lists.newArrayList(mcServer.worlds);
+        worldServers.add(world);
+        mcServer.worlds = worldServers.toArray(new WorldServer[0]);
+        mcServer.getPlayerList().setPlayerManager(mcServer.worlds);
         // Akarin end
         world.addEventListener(new ServerWorldEventHandler(mcServer, world));
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(world));
@@ -373,8 +375,10 @@ public class DimensionManager
         
         WorldInfo worldInfo = new WorldInfo(worldSettings, name);
         WorldServer world = dim == 0 ? overworld : (WorldServer)(new WorldServerMulti(mcServer, saveHandler, dim, overworld, mcServer.profiler, worldInfo, env, gen).init());
-        mcServer.worldServers.add(world);
-        mcServer.getPlayerList().setPlayerManager(mcServer.worldServers.toArray(new WorldServer[mcServer.worldServers.size()]));
+        List<WorldServer> worldServers = Lists.newArrayList(mcServer.worlds);
+        worldServers.add(world);
+        mcServer.worlds = worldServers.toArray(new WorldServer[0]);
+        mcServer.getPlayerList().setPlayerManager(mcServer.worlds);
         world.addEventListener(new ServerWorldEventHandler(mcServer, (WorldServer) world));
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(world));
         

@@ -229,6 +229,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
             }
             else
             {
+            	this.anvilConverterForAnvilFile = new net.minecraft.world.chunk.storage.AnvilSaveConverter(server.getWorldContainer(), this.dataFixer); // Akarin
                 net.minecraftforge.fml.common.FMLCommonHandler.instance().onServerStarted();
                 // this.setPlayerList(new DedicatedPlayerList(this)); // Akarin
                 long j = System.nanoTime();
@@ -309,6 +310,8 @@ public class DedicatedServer extends MinecraftServer implements IServer
                 }
                 AkarinHooks.handleBukkitSpawnRadius(this); // Akarin
 
+                // Akarin start
+                /*
                 if (this.getMaxTickTime() > 0L)
                 {
                     Thread thread1 = new Thread(new ServerHangWatchdog(this));
@@ -316,6 +319,8 @@ public class DedicatedServer extends MinecraftServer implements IServer
                     thread1.setDaemon(true);
                     thread1.start();
                 }
+                */
+                // Akarin end
 
                 Items.AIR.getSubItems(CreativeTabs.SEARCH, NonNullList.create());
                 // <3 you Grum for this, saves us ~30 patch files! --^

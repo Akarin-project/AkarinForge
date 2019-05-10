@@ -23,7 +23,7 @@ public class PlayerChunkMapEntry
 {
     private static final Logger LOGGER = LogManager.getLogger();
     private final PlayerChunkMap playerChunkMap;
-    private final List<EntityPlayerMP> players = Lists.<EntityPlayerMP>newArrayList();
+    final List<EntityPlayerMP> players = Lists.<EntityPlayerMP>newArrayList();
     private final ChunkPos pos;
     private short[] changedBlocks = new short[64];
     @Nullable

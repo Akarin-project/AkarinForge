@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.Bukkit;
 import org.bukkit.World.Environment;
 import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
@@ -32,6 +33,7 @@ import org.spigotmc.AsyncCatcher;
 import org.spigotmc.SpigotConfig;
 import org.spigotmc.WatchdogThread;
 
+import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
@@ -137,16 +139,17 @@ public abstract class AkarinHooks {
         Arrays.sort(dimIds, new Comparator<Integer>(){
             @Override
             public int compare(Integer dim1, Integer dim2) {
-                return dim1 == 0 || dim2 == 0 ? -1 : // Always set dim 0 to the first
-                	  (dim1 < dim2 ? -1 : 1); 
+                return dim1 == 0 ? -1 : Math.max(dim1, dim2); // Always set dim 0 to the first
             }
         });
+        Bukkit.getLogger().warning(Lists.newArrayList(dimIds).toString());
         
         // Prepare worlds array with same size
         server.worlds = new WorldServer[dimIds.length];
         
         for (int index = 0; index < dimIds.length; index++) {
             int dim = dimIds[index];
+        	Bukkit.getLogger().warning("at " + dim);
             
             // Skip not allowed nether or end
             if (dim != 0 && (dim == -1 && !server.getAllowNether() || dim == 1 && !server.server.getAllowEnd()))
@@ -573,13 +576,16 @@ public abstract class AkarinHooks {
         BlockSand.fallInstantly = true;
         
         try {
+            // Populate vanilla terrain
+    		generator.populate(chunk.x, chunk.z);
+        	
             Random random = new Random();
             random.setSeed(chunk.world.getSeed());
             long xRand = random.nextLong() / 2 * 2 + 1;
             long zRand = random.nextLong() / 2 * 2 + 1;
             random.setSeed((long) chunk.x * xRand + (long) chunk.z * zRand ^ chunk.world.getSeed());
             
-            // Populate bukkit first
+            // Populate bukkit
             org.bukkit.World world = chunk.world.getWorld();
             if (world != null) {
             	chunk.world.populating = true;

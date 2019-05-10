@@ -797,12 +797,12 @@ public abstract class EntityLiving extends EntityLivingBase
                 double d2 = entity.posZ - this.posZ;
                 double d3 = d0 * d0 + d1 * d1 + d2 * d2;
 
-                if (d3  > world.paperConfig.hardDespawnDistance) // Akarin
+                if (d3  > 256) // Akarin
                 {
                     this.setDead();
                 }
 
-                if (this.idleTime > 600 && this.rand.nextInt(800) == 0 && d3 > world.paperConfig.softDespawnDistance) // Akarin
+                if (this.idleTime > 600 && this.rand.nextInt(800) == 0 && d3 > 128) // Akarin
                 {
                     this.setDead();
                 }

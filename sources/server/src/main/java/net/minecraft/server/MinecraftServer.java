@@ -116,7 +116,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 {
     public static final Logger LOGGER = LogManager.getLogger(); // Akarin
     public static final File USER_CACHE_FILE = new File("usercache.json");
-    private final ISaveFormat anvilConverterForAnvilFile;
+    protected ISaveFormat anvilConverterForAnvilFile;
     private final Snooper usageSnooper = new Snooper("server", this, getCurrentTimeMillis());
     public File anvilFile; // Akarin
     private final List<ITickable> tickables = Lists.<ITickable>newArrayList();

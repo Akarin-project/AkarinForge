@@ -105,14 +105,14 @@ public class IntegratedServer extends MinecraftServer
                 }
                 else
                 {
-                    this.worlds[i] = (WorldServer)(new WorldServer(this, isavehandler, worldinfo, j, this.profiler)).init();
+                    this.worlds[i] = null;
                 }
 
                 this.worlds[i].initialize(this.worldSettings);
             }
             else
             {
-                this.worlds[i] = (WorldServer)(new WorldServerMulti(this, isavehandler, j, this.worlds[0], this.profiler)).init();
+                this.worlds[i] = null;
             }
 
             this.worlds[i].addEventListener(new ServerWorldEventHandler(this, this.worlds[i]));
@@ -120,11 +120,11 @@ public class IntegratedServer extends MinecraftServer
         }// Forge: End Dead Code
 
         WorldServer overWorld = (isDemo() ? (WorldServer)(new WorldServerDemo(this, isavehandler, worldinfo, 0, this.profiler)).init() :
-                                            (WorldServer)(new WorldServer(this, isavehandler, worldinfo, 0, this.profiler)).init());
+                                            (null));
         overWorld.initialize(this.worldSettings);
         for (int dim : net.minecraftforge.common.DimensionManager.getStaticDimensionIDs())
         {
-            WorldServer world = (dim == 0 ? overWorld : (WorldServer)(new WorldServerMulti(this, isavehandler, dim, overWorld, this.profiler)).init());
+            WorldServer world = (dim == 0 ? overWorld : null);
             world.addEventListener(new ServerWorldEventHandler(this, world));
             if (!this.isSinglePlayer())
             {

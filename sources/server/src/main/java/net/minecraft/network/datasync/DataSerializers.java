@@ -314,12 +314,12 @@ public class DataSerializers
     @Nullable
     public static DataSerializer<?> getSerializer(int id)
     {
-        return net.minecraftforge.common.ForgeHooks.getSerializer(id, REGISTRY);
+        return REGISTRY.get(id);
     }
 
     public static int getSerializerId(DataSerializer<?> serializer)
     {
-        return net.minecraftforge.common.ForgeHooks.getSerializerId(serializer, REGISTRY);
+        return REGISTRY.getId(serializer);
     }
 
     static

@@ -52,6 +52,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.gen.structure.StructureStrongholdPieces.Stronghold.Door;
 import net.minecraftforge.classloading.FMLForgePlugin;
 import org.apache.commons.lang3.ArrayUtils;
+import org.bukkit.World.Environment;
 
 import javax.annotation.Nullable;
 
@@ -63,6 +64,13 @@ public class EnumHelper
     private static Method newFieldAccessor       = null;
     private static Method fieldAccessorSet       = null;
     private static boolean isSetup               = false;
+    
+    public static Environment addBukkitEnvironment(int id2, String name) {
+        if (!isSetup) {
+            EnumHelper.setup();
+        }
+        return EnumHelper.addEnum(Environment.class, name, new Class[]{Integer.TYPE}, new Object[]{id2});
+    }
 
     //Some enums are decompiled with extra arguments, so lets check for that
     private static Class<?>[][] commonTypes =
@@ -250,8 +258,6 @@ public class EnumHelper
     {
         blankField(enumClass, "enumConstantDirectory");
         blankField(enumClass, "enumConstants");
-        //Open J9
-        blankField(enumClass, "enumVars");
     }
 
     @Nullable
