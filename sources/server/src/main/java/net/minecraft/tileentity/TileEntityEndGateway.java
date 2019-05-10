@@ -27,7 +27,7 @@ import org.apache.logging.log4j.Logger;
 
 public class TileEntityEndGateway extends TileEntityEndPortal implements ITickable
 {
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getRootLogger(); // Akarin
     private long age;
     private int teleportCooldown;
     public BlockPos exitPortal; // Akarin

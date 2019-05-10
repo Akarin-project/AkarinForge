@@ -84,7 +84,7 @@ import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public abstract class AkarinHooks {
-	private static final Logger LOGGER = LogManager.getLogger();
+	private static final Logger LOGGER = LogManager.getRootLogger();
 	
 	private static boolean initalizedConnection;
 	private static int initalizeConnectionSteps = 2;

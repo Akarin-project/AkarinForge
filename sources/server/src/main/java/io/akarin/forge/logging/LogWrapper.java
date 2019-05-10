@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class LogWrapper extends Logger {
-	private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger();
+	private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getRootLogger();
 	
 	public static LogWrapper getLogger() {
 		return new LogWrapper("", null);
