@@ -49,8 +49,6 @@ import net.minecraftforge.fml.relauncher.Side;
 
 import com.google.common.collect.ImmutableList;
 
-import io.akarin.forge.AkarinHooks;
-
 import org.apache.commons.io.IOUtils;
 
 /**
