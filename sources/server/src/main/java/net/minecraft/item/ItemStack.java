@@ -1,3 +1,6 @@
+/*
+ * Akarin reference
+ */
 package net.minecraft.item;
 
 import com.google.common.collect.HashMultimap;
@@ -30,6 +33,7 @@ import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.stats.StatList;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
@@ -56,7 +60,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
     public static final DecimalFormat DECIMALFORMAT = new DecimalFormat("#.##");
     private int stackSize;
     private int animationsToGo;
-    private final Item item;
+    private Item item;
     private NBTTagCompound stackTagCompound;
     private boolean isEmpty;
     int itemDamage;
@@ -94,6 +98,73 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
     {
         this(itemIn, amount, 0);
     }
+    
+    // Akarin start
+    private static final java.util.Comparator<NBTTagCompound> enchantSorter = java.util.Comparator.comparingInt(o -> o.getShort("id"));
+    private void processEnchantOrder(NBTTagCompound tag) {
+        if (tag == null || !tag.hasKey("ench", 9)) {
+            return;
+        }
+        NBTTagList list = tag.getTagList("ench", 10);
+        if (list.tagCount() < 2) {
+            return;
+        }
+        try {
+            list.sort(enchantSorter); // Paper
+        } catch (Exception ignored) {}
+    }
+
+    public ItemStack(Item item, int i, int j, boolean convert) {
+        // CraftBukkit end
+        this.item = item;
+        this.itemDamage = j;
+        this.stackSize = i;
+        // CraftBukkit start - Pass to setData to do filtering
+        if (MinecraftServer.getServerInst() != null) {
+            this.setItemDamage(j);
+        }
+        if (convert) {
+            this.convertStack();
+        }
+        // CraftBukkit end
+        if (this.itemDamage < 0) {
+            // this.damage = 0; // CraftBukkit - remove this.
+        }
+
+        this.updateEmptyState();
+    }
+    
+
+    // Called to run this stack through the data converter to handle older storage methods and serialized items
+    public void convertStack() {
+        if (MinecraftServer.getServerInst() != null) {
+            // Don't convert beds - both the old and new data values are valid
+            // Conversion would make getting white beds (data value 0) impossible
+            if (this.item == Items.BED) {
+                return;
+            }
+
+            NBTTagCompound savedStack = new NBTTagCompound();
+            this.writeToNBT(savedStack);
+            MinecraftServer.getServerInst().dataFixer.process(FixTypes.ITEM_INSTANCE, savedStack); // PAIL: convert
+            this.load(savedStack);
+        }
+    }
+
+    public void load(NBTTagCompound nbttagcompound) {
+        this.item = nbttagcompound.hasKey("id", 8) ? Item.getByNameOrId(nbttagcompound.getString("id")) : Item.getItemFromBlock(Blocks.AIR); // Paper - fix NumberFormatException caused by attempting to read an EMPTY ItemStack
+        this.stackSize = nbttagcompound.getByte("Count");
+        this.setItemDamage(nbttagcompound.getShort("Damage"));
+
+        if (nbttagcompound.hasKey("tag", 10)) {
+            this.stackTagCompound = (NBTTagCompound) nbttagcompound.getCompoundTag("tag").copy();
+            processEnchantOrder(this.stackTagCompound); // Paper
+            if (this.item != null) {
+                this.item.updateItemStackNBT(this.stackTagCompound);
+            }
+        }
+    }
+    // Akarin end
 
     public ItemStack(Item itemIn, int amount, int meta){ this(itemIn, amount, meta, null); }
     public ItemStack(Item itemIn, int amount, int meta, @Nullable NBTTagCompound capNBT)
@@ -119,6 +190,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
 
     public ItemStack(NBTTagCompound compound)
     {
+        this.load(compound); // Akarin
         this.capNBT = compound.hasKey("ForgeCaps") ? compound.getCompoundTag("ForgeCaps") : null;
         this.item = compound.hasKey("id", 8) ? Item.getByNameOrId(compound.getString("id")) : Items.AIR; //Forge fix tons of NumberFormatExceptions that are caused by deserializing EMPTY ItemStacks.
         this.stackSize = compound.getByte("Count");
@@ -1041,6 +1113,11 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
         }
 
         nbttaglist.appendTag(nbttagcompound);
+    }
+    
+    public void setItem(Item item) {
+        this.item = item;
+        this.setItemDamage(this.getMetadata()); // CraftBukkit - Set data again to ensure it is filtered properly
     }
 
     public ITextComponent getTextComponent()

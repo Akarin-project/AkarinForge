@@ -1,5 +1,8 @@
 package net.minecraft.inventory;
 
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryFurnace;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryView;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -15,6 +18,21 @@ public class ContainerFurnace extends Container
     private int totalCookTime;
     private int furnaceBurnTime;
     private int currentItemBurnTime;
+    // CraftBukkit start
+    private CraftInventoryView bukkitEntity = null;
+    private InventoryPlayer player;
+
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (bukkitEntity != null) {
+            return bukkitEntity;
+        }
+
+        CraftInventoryFurnace inventory = new CraftInventoryFurnace((TileEntityFurnace) this.tileFurnace);
+        bukkitEntity = new CraftInventoryView(this.player.player.getBukkitEntity(), inventory, this);
+        return bukkitEntity;
+    }
+    // CraftBukkit end
 
     public ContainerFurnace(InventoryPlayer playerInventory, IInventory furnaceInventory)
     {
@@ -22,6 +40,7 @@ public class ContainerFurnace extends Container
         this.addSlotToContainer(new Slot(furnaceInventory, 0, 56, 17));
         this.addSlotToContainer(new SlotFurnaceFuel(furnaceInventory, 1, 56, 53));
         this.addSlotToContainer(new SlotFurnaceOutput(playerInventory.player, furnaceInventory, 2, 116, 35));
+        this.player = playerInventory; // CraftBukkit - save player
 
         for (int i = 0; i < 3; ++i)
         {
@@ -86,6 +105,7 @@ public class ContainerFurnace extends Container
 
     public boolean canInteractWith(EntityPlayer playerIn)
     {
+        if (!this.checkReachable) return true; // CraftBukkit
         return this.tileFurnace.isUsableByPlayer(playerIn);
     }
 

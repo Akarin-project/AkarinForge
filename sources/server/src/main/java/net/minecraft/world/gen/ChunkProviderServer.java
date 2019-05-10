@@ -33,7 +33,7 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 public class ChunkProviderServer implements IChunkProvider
 {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final Set<Long> droppedChunksSet = Sets.<Long>newHashSet();
+    public final Set<Long> droppedChunksSet = Sets.<Long>newHashSet(); // Akarin
     public final IChunkGenerator chunkGenerator;
     public final IChunkLoader chunkLoader;
     public final Long2ObjectMap<Chunk> id2ChunkMap = new Long2ObjectOpenHashMap<Chunk>(8192);

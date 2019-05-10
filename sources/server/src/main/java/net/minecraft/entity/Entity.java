@@ -2960,7 +2960,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             // Akarin start
             WorldServer exitWorld = null;
             if (this.dimension < 10) {
-                for (WorldServer world : minecraftserver.worldServers) {
+                for (WorldServer world : minecraftserver.worlds) {
                     if (world.dimension != dimensionIn) continue;
                     exitWorld = world;
                 }

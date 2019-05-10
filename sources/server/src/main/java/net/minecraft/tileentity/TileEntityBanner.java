@@ -19,8 +19,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class TileEntityBanner extends TileEntity implements IWorldNameable
 {
     private String name;
-    private EnumDyeColor baseColor = EnumDyeColor.BLACK;
-    private NBTTagList patterns;
+    public EnumDyeColor baseColor = EnumDyeColor.BLACK; // Akarin
+    public NBTTagList patterns; // Akarin
     private boolean patternDataSet;
     private List<BannerPattern> patternList;
     private List<EnumDyeColor> colorList;

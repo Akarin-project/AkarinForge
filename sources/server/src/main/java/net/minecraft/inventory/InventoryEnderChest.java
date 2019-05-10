@@ -1,5 +1,8 @@
 package net.minecraft.inventory;
 
+import org.bukkit.Location;
+import org.bukkit.inventory.InventoryHolder;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -14,6 +17,24 @@ public class InventoryEnderChest extends InventoryBasic
     {
         super("container.enderchest", false, 27);
     }
+    // Akarin start
+    private EntityPlayer owner;
+
+    public InventoryHolder getBukkitOwner() {
+        return this.owner == null ? null : owner.getBukkitEntity();
+    }
+
+    @Override
+    public Location getLocation() {
+        return new Location(this.owner.getWorld().getWorld(), this.owner.getPosition().getX(), this.owner.getPosition().getY(), this.owner.getPosition().getZ());
+    }
+    
+    public InventoryEnderChest(EntityPlayer owner)
+    {
+        this();
+        this.owner = owner;
+    }
+    // Akarin end
 
     public void setChestTileEntity(TileEntityEnderChest chestTileEntity)
     {

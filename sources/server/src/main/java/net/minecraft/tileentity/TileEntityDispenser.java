@@ -1,6 +1,11 @@
 package net.minecraft.tileentity;
 
+import java.util.List;
 import java.util.Random;
+
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
+import org.bukkit.entity.HumanEntity;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
@@ -17,6 +22,30 @@ public class TileEntityDispenser extends TileEntityLockableLoot
 {
     private static final Random RNG = new Random();
     private NonNullList<ItemStack> stacks = NonNullList.<ItemStack>withSize(9, ItemStack.EMPTY);
+    // CraftBukkit start - add fields and methods
+    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
+    private int maxStack = 64;
+
+    public List<ItemStack> getContents() {
+        return this.stacks;
+    }
+
+    public void onOpen(CraftHumanEntity who) {
+        transaction.add(who);
+    }
+
+    public void onClose(CraftHumanEntity who) {
+        transaction.remove(who);
+    }
+
+    public List<HumanEntity> getViewers() {
+        return transaction;
+    }
+
+    public void setMaxStackSize(int size) {
+        maxStack = size;
+    }
+    // CraftBukkit end
 
     public int getSizeInventory()
     {
@@ -112,7 +141,7 @@ public class TileEntityDispenser extends TileEntityLockableLoot
 
     public int getInventoryStackLimit()
     {
-        return 64;
+        return maxStack; // CraftBukkit
     }
 
     public String getGuiID()

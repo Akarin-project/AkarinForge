@@ -66,7 +66,7 @@ public class EntitySlime extends EntityLiving implements IMob
         this.dataManager.register(SLIME_SIZE, Integer.valueOf(1));
     }
 
-    protected void setSlimeSize(int size, boolean resetHealth)
+    public void setSlimeSize(int size, boolean resetHealth)
     {
         this.dataManager.set(SLIME_SIZE, Integer.valueOf(size));
         this.setSize(0.51000005F * (float)size, 0.51000005F * (float)size);

@@ -1,12 +1,39 @@
 package net.minecraft.inventory;
 
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventory;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryView;
+
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
 public class ContainerChest extends Container
 {
     private final IInventory lowerChestInventory;
     private final int numRows;
+    // CraftBukkit start
+    private CraftInventoryView bukkitEntity = null;
+    private InventoryPlayer player;
+
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (bukkitEntity != null) {
+            return bukkitEntity;
+        }
+
+        CraftInventory inventory;
+        if (this.lowerChestInventory instanceof InventoryPlayer) {
+            inventory = new org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryPlayer((InventoryPlayer) this.lowerChestInventory);
+        } else if (this.lowerChestInventory instanceof InventoryLargeChest) {
+            inventory = new org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryDoubleChest((InventoryLargeChest) this.lowerChestInventory);
+        } else {
+            inventory = new CraftInventory(this.lowerChestInventory);
+        }
+
+        bukkitEntity = new CraftInventoryView(this.player.player.getBukkitEntity(), inventory, this);
+        return bukkitEntity;
+    }
+    // CraftBukkit end
 
     public ContainerChest(IInventory playerInventory, IInventory chestInventory, EntityPlayer player)
     {
@@ -14,6 +41,9 @@ public class ContainerChest extends Container
         this.numRows = chestInventory.getSizeInventory() / 9;
         chestInventory.openInventory(player);
         int i = (this.numRows - 4) * 18;
+        // CraftBukkit start - Save player
+        this.player = (InventoryPlayer) playerInventory;
+        // CraftBukkit end
 
         for (int j = 0; j < this.numRows; ++j)
         {
@@ -39,6 +69,7 @@ public class ContainerChest extends Container
 
     public boolean canInteractWith(EntityPlayer playerIn)
     {
+        if (!this.checkReachable) return true; // CraftBukkit
         return this.lowerChestInventory.isUsableByPlayer(playerIn);
     }
 

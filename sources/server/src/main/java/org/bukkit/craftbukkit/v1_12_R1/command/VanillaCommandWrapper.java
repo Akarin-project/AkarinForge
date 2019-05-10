@@ -77,11 +77,11 @@ public final class VanillaCommandWrapper extends BukkitCommand {
         // so we must temporarily populate it with the world of the commandsender
         WorldServer[] prev = MinecraftServer.getServerInst().worlds;
         MinecraftServer server = MinecraftServer.getServerInst();
-        server.worlds = new WorldServer[server.worldServers.size()];
+        server.worlds = new WorldServer[server.worlds.length];
         server.worlds[0] = (WorldServer) icommandlistener.getEntityWorld();
         int bpos = 0;
-        for (int pos = 1; pos < server.worldServers.size(); pos++) {
-            WorldServer world = server.worldServers.get(bpos++);
+        for (int pos = 1; pos < server.worlds.length; pos++) {
+            WorldServer world = server.worlds[bpos++];
             if (server.worlds[0] == world) {
                 pos--;
                 continue;

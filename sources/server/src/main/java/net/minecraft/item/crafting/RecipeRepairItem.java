@@ -2,14 +2,21 @@ package net.minecraft.item.crafting;
 
 import com.google.common.collect.Lists;
 import java.util.List;
+
+import net.minecraft.init.Items;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 
-public class RecipeRepairItem extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<IRecipe> implements IRecipe
+public class RecipeRepairItem extends ShapelessRecipes implements IRecipe // CraftBukkit - added extends
 {
+    // CraftBukkit start - Delegate to new parent class
+    public RecipeRepairItem() {
+        super("", new ItemStack(Items.LEATHER_HELMET), NonNullList.from(Ingredient.EMPTY, Ingredient.fromItem(Items.LEATHER_HELMET)));
+    }
+    // CraftBukkit end
     public boolean matches(InventoryCrafting inv, World worldIn)
     {
         List<ItemStack> list = Lists.<ItemStack>newArrayList();

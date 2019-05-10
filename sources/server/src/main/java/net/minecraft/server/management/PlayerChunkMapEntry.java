@@ -27,7 +27,7 @@ public class PlayerChunkMapEntry
     private final ChunkPos pos;
     private short[] changedBlocks = new short[64];
     @Nullable
-    private Chunk chunk;
+	public Chunk chunk; // Akarin
     private int changes;
     private int changedSectionFilter;
     private long lastUpdateInhabitedTime;

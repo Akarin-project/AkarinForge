@@ -17,6 +17,7 @@ import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.profiler.Snooper;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.dedicated.PropertyManager;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.util.CryptManager;
 import net.minecraft.util.HttpUtil;
@@ -48,7 +49,7 @@ public class IntegratedServer extends MinecraftServer
 
     public IntegratedServer(Minecraft clientIn, String folderNameIn, String worldNameIn, WorldSettings worldSettingsIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
     {
-        super(new File(clientIn.mcDataDir, "saves"), clientIn.getProxy(), clientIn.getDataFixer(), authServiceIn, sessionServiceIn, profileRepoIn, profileCacheIn);
+        super(null, clientIn.getProxy(), clientIn.getDataFixer(), authServiceIn, sessionServiceIn, profileRepoIn, profileCacheIn);
         this.setServerOwner(clientIn.getSession().getUsername());
         this.setFolderName(folderNameIn);
         this.setWorldName(worldNameIn);
@@ -423,4 +424,9 @@ public class IntegratedServer extends MinecraftServer
     {
         return 4;
     }
+
+	@Override
+	public PropertyManager getPropertyManager() {
+		return null;
+	}
 }

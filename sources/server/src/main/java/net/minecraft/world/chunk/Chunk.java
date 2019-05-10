@@ -58,12 +58,12 @@ public class Chunk extends AkarinChunk implements net.minecraftforge.common.capa
     private final boolean[] updateSkylightColumns;
     private boolean loaded;
     public final World world; // Akarin
-    private final int[] heightMap;
+    public final int[] heightMap; // Akarin
     public final int x;
     public final int z;
     private boolean isGapLightingUpdated;
-    private final Map<BlockPos, TileEntity> tileEntities;
-    private final ClassInheritanceMultiMap<Entity>[] entityLists;
+    public final Map<BlockPos, TileEntity> tileEntities;
+    public final ClassInheritanceMultiMap<Entity>[] entityLists; // Akarin
     private boolean isTerrainPopulated;
     private boolean isLightPopulated;
     private boolean ticked;

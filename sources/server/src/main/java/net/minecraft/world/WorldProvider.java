@@ -1,21 +1,19 @@
+/*
+ * Akarin reference
+ */
 package net.minecraft.world;
 
 import javax.annotation.Nullable;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
-import net.minecraft.world.biome.BiomeProviderSingle;
 import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.gen.ChunkGeneratorDebug;
-import net.minecraft.world.gen.ChunkGeneratorFlat;
-import net.minecraft.world.gen.ChunkGeneratorOverworld;
-import net.minecraft.world.gen.FlatGeneratorInfo;
 import net.minecraft.world.gen.IChunkGenerator;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -31,6 +29,11 @@ public abstract class WorldProvider
     protected boolean hasSkyLight;
     protected final float[] lightBrightnessTable = new float[16];
     private final float[] colorsSunriseSunset = new float[4];
+    // Akarin start
+    public static WorldProvider getProviderForDimension(int dimensionId) {
+        return DimensionManager.createProviderFor(dimensionId);
+    }
+    // Akarin end
 
     public final void setWorld(World worldIn)
     {

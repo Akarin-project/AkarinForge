@@ -1,3 +1,6 @@
+/*
+ * Akarin reference
+ */
 package net.minecraft.block;
 
 import com.google.common.collect.Sets;

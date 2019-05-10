@@ -119,12 +119,12 @@ public abstract class World extends AkarinWorld implements IBlockAccess, net.min
     public float thunderingStrength;
     private int lastLightningBolt;
     public final Random rand = new Random();
-    public final WorldProvider provider;
+    public WorldProvider provider; // Akarin
     protected PathWorldListener pathListener = new PathWorldListener();
     protected List<IWorldEventListener> eventListeners;
-    protected IChunkProvider chunkProvider;
+    public IChunkProvider chunkProvider; // Akarin
     protected final ISaveHandler saveHandler;
-    protected WorldInfo worldInfo;
+    public WorldInfo worldInfo; // Akarin
     protected boolean findingSpawnPoint;
     public MapStorage mapStorage; // Akarin
     public VillageCollection villageCollection;
@@ -135,8 +135,8 @@ public abstract class World extends AkarinWorld implements IBlockAccess, net.min
     private final Calendar calendar;
     protected Scoreboard worldScoreboard;
     public final boolean isRemote;
-    protected boolean spawnHostileMobs;
-    protected boolean spawnPeacefulMobs;
+    public boolean spawnHostileMobs; // Akarin
+    public boolean spawnPeacefulMobs; // Akarin
     private boolean processingLoadedTiles;
     private final WorldBorder worldBorder;
     int[] lightUpdateBlockList;
@@ -347,7 +347,7 @@ public abstract class World extends AkarinWorld implements IBlockAccess, net.min
         }
     }
 
-    protected abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty);
+    public abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty); // Akarin - public
 
     public Chunk getChunkFromBlockCoords(BlockPos pos)
     {

@@ -76,21 +76,7 @@ public class HighlightErrorConverter extends LogEventPatternConverter {
 
     @Override
     public void format(LogEvent event, StringBuilder toAppendTo) {
-        if (TerminalConsoleAppender.isAnsiSupported()) {
-            Level level = event.getLevel();
-            if (level.isMoreSpecificThan(Level.ERROR)) {
-                format(ANSI_ERROR, event, toAppendTo);
-                return;
-            } else if (level.isMoreSpecificThan(Level.WARN)) {
-                format(ANSI_WARN, event, toAppendTo);
-                return;
-            }
-        }
 
-        //noinspection ForLoopReplaceableByForEach
-        for (int i = 0, size = formatters.size(); i < size; i++) {
-            formatters.get(i).format(event, toAppendTo);
-        }
     }
 
     private void format(String style, LogEvent event, StringBuilder toAppendTo) {

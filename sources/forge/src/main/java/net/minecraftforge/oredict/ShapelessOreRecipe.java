@@ -38,6 +38,8 @@ import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import javax.annotation.Nonnull;
 
+import org.bukkit.inventory.Recipe;
+
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -156,5 +158,15 @@ public class ShapelessOreRecipe extends IForgeRegistryEntry.Impl<IRecipe> implem
 
         ItemStack itemstack = CraftingHelper.getItemStack(JsonUtils.getJsonObject(json, "result"), context);
         return new ShapelessOreRecipe(group.isEmpty() ? null : new ResourceLocation(group), ings, itemstack);
+    }
+    @Override
+    public Recipe toBukkitRecipe() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    @Override
+    public void setKey(ResourceLocation key) {
+        // TODO Auto-generated method stub
+        
     }
 }

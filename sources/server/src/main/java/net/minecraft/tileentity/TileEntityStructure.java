@@ -37,19 +37,19 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class TileEntityStructure extends TileEntity
 {
     private String name = "";
-    private String author = "";
-    private String metadata = "";
-    private BlockPos position = new BlockPos(0, 1, 0);
-    private BlockPos size = BlockPos.ORIGIN;
-    private Mirror mirror = Mirror.NONE;
-    private Rotation rotation = Rotation.NONE;
+    public String author = ""; // Akarin
+    public String metadata = ""; // Akarin
+    public BlockPos position = new BlockPos(0, 1, 0); // Akarin
+    public BlockPos size = BlockPos.ORIGIN; // Akarin
+    public Mirror mirror = Mirror.NONE; // Akarin
+    public Rotation rotation = Rotation.NONE; // Akarin
     private TileEntityStructure.Mode mode = TileEntityStructure.Mode.DATA;
-    private boolean ignoreEntities = true;
+    public boolean ignoreEntities = true; // Akarin
     private boolean powered;
-    private boolean showAir;
-    private boolean showBoundingBox = true;
-    private float integrity = 1.0F;
-    private long seed;
+    public boolean showAir; // Akarin
+    public boolean showBoundingBox = true; // Akarin
+    public float integrity = 1.0F; // Akarin
+    public long seed; // Akarin
 
     public NBTTagCompound writeToNBT(NBTTagCompound compound)
     {

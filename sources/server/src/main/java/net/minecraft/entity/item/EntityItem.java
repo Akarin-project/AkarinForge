@@ -32,7 +32,7 @@ public class EntityItem extends Entity
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DataParameter<ItemStack> ITEM = EntityDataManager.<ItemStack>createKey(EntityItem.class, DataSerializers.ITEM_STACK);
     private int age;
-    private int pickupDelay;
+    public int pickupDelay; // Akarin
     private int health;
     private String thrower;
     private String owner;

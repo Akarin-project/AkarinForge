@@ -1549,18 +1549,17 @@ implements World {
     }
 
     public boolean getKeepSpawnInMemory() {
-        return world.keepSpawnInMemory;
+        return true;
     }
 
     @Override
     public void setKeepSpawnInMemory(boolean keepLoaded) {
-        world.keepSpawnInMemory = keepLoaded;
         // Grab the worlds spawn chunk
         BlockPos chunkcoordinates = this.world.getSpawnPoint();
         int chunkCoordX = chunkcoordinates.getX() >> 4;
         int chunkCoordZ = chunkcoordinates.getZ() >> 4;
         // Cycle through the 25x25 Chunks around it to load/unload the chunks.
-        int radius = world.paperConfig.keepLoadedRange / 16; // Paper
+        int radius = 196 / 16; // Paper
         for (int x = -radius; x <= radius; x++) { // Paper
             for (int z = -radius; z <= radius; z++) { // Paper
                 if (keepLoaded) {

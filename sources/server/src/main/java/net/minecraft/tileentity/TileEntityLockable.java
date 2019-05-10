@@ -10,6 +10,13 @@ import net.minecraft.world.LockCode;
 public abstract class TileEntityLockable extends TileEntity implements ILockableContainer
 {
     private LockCode code = LockCode.EMPTY_CODE;
+    // CraftBukkit start
+    @Override
+    public org.bukkit.Location getLocation() {
+        if (world == null) return null;
+        return new org.bukkit.Location(world.getWorld(), pos.getX(), pos.getY(), pos.getZ());
+    }
+    // CraftBukkit end
 
     public void readFromNBT(NBTTagCompound compound)
     {

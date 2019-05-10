@@ -1,7 +1,17 @@
+/*
+ * Akarin reference
+ */
 package net.minecraft.entity.item;
 
+import java.util.List;
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.inventory.InventoryHolder;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
@@ -26,10 +36,45 @@ import net.minecraft.world.storage.loot.LootTable;
 
 public abstract class EntityMinecartContainer extends EntityMinecart implements ILockableContainer, ILootContainer
 {
-    private NonNullList<ItemStack> minecartContainerItems = NonNullList.<ItemStack>withSize(36, ItemStack.EMPTY);
+    private NonNullList<ItemStack> minecartContainerItems = NonNullList.<ItemStack>withSize(this.getSizeInventory(), ItemStack.EMPTY); // Akarin
     public boolean dropContentsWhenDead = true;
     private ResourceLocation lootTable;
     private long lootTableSeed;
+    // CraftBukkit start
+    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
+    private int maxStack = 64;
+
+    public List<ItemStack> getContents() {
+        return this.minecartContainerItems;
+    }
+
+    public void onOpen(CraftHumanEntity who) {
+        transaction.add(who);
+    }
+
+    public void onClose(CraftHumanEntity who) {
+        transaction.remove(who);
+    }
+
+    public List<HumanEntity> getViewers() {
+        return transaction;
+    }
+
+    public InventoryHolder getOwner() {
+        org.bukkit.entity.Entity cart = getBukkitEntity();
+        if(cart instanceof InventoryHolder) return (InventoryHolder) cart;
+        return null;
+    }
+
+    public void setMaxStackSize(int size) {
+        maxStack = size;
+    }
+
+    @Override
+    public Location getLocation() {
+        return getBukkitEntity().getLocation();
+    }
+    // CraftBukkit end
 
     public EntityMinecartContainer(World worldIn)
     {
@@ -134,7 +179,7 @@ public abstract class EntityMinecartContainer extends EntityMinecart implements 
 
     public int getInventoryStackLimit()
     {
-        return 64;
+        return maxStack;
     }
 
     @Nullable

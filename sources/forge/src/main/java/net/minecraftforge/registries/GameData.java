@@ -84,6 +84,7 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Level;
+import org.bukkit.inventory.Recipe;
 
 /**
  * INTERNAL ONLY
@@ -485,6 +486,12 @@ public class GameData
             @Override public boolean canFit(int width, int height) { return false; }
             @Override public ItemStack getRecipeOutput() { return result; }
             @Override public boolean isDynamic() { return true; }
+			@Override
+			public Recipe toBukkitRecipe() {
+				return null;
+			}
+			@Override
+			public void setKey(ResourceLocation key) {}
         }
     }
 

@@ -1,5 +1,12 @@
 package net.minecraft.inventory;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
+import org.bukkit.entity.HumanEntity;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -12,8 +19,49 @@ import net.minecraft.world.LockCode;
 public class InventoryLargeChest implements ILockableContainer
 {
     private final String name;
-    private final ILockableContainer upperChest;
-    private final ILockableContainer lowerChest;
+    public final ILockableContainer upperChest; // Akarin
+    public final ILockableContainer lowerChest; // Akarin
+    // CraftBukkit start - add fields and methods
+    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
+
+    public List<ItemStack> getContents() {
+        List<ItemStack> result = new ArrayList<ItemStack>(this.getSizeInventory());
+        for (int i = 0; i < this.getSizeInventory(); i++) {
+            result.add(this.getStackInSlot(i));
+        }
+        return result;
+    }
+
+    public void onOpen(CraftHumanEntity who) {
+        this.upperChest.onOpen(who);
+        this.lowerChest.onOpen(who);
+        transaction.add(who);
+    }
+
+    public void onClose(CraftHumanEntity who) {
+        this.upperChest.onClose(who);
+        this.lowerChest.onClose(who);
+        transaction.remove(who);
+    }
+
+    public List<HumanEntity> getViewers() {
+        return transaction;
+    }
+
+    public org.bukkit.inventory.InventoryHolder getOwner() {
+        return null; // This method won't be called since CraftInventoryDoubleChest doesn't defer to here
+    }
+
+    public void setMaxStackSize(int size) {
+        this.upperChest.setMaxStackSize(size);
+        this.lowerChest.setMaxStackSize(size);
+    }
+
+    @Override
+    public Location getLocation() {
+        return upperChest.getLocation(); // TODO: right?
+    }
+    // CraftBukkit end
 
     public InventoryLargeChest(String nameIn, ILockableContainer upperChestIn, ILockableContainer lowerChestIn)
     {

@@ -1,3 +1,6 @@
+/*
+ * Akarin reference
+ */
 package net.minecraft.network;
 
 import com.google.common.collect.Queues;
@@ -77,11 +80,23 @@ public class NetworkManager extends SimpleChannelInboundHandler < Packet<? >>
     private final Queue<NetworkManager.InboundHandlerTuplePacketListener> outboundPacketsQueue = Queues.<NetworkManager.InboundHandlerTuplePacketListener>newConcurrentLinkedQueue();
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private Channel channel;
-    private SocketAddress socketAddress;
+    public SocketAddress socketAddress;
     private INetHandler packetListener;
     private ITextComponent terminationReason;
     private boolean isEncrypted;
     private boolean disconnected;
+    // Spigot Start // PAIL
+    public java.util.UUID spoofedUUID;
+    public com.mojang.authlib.properties.Property[] spoofedProfile;
+    public boolean preparing = true;
+    
+    // Spigot Start
+    public SocketAddress getRawAddress()
+    {
+        return this.channel.remoteAddress();
+    }
+    // Spigot End
+    // Spigot End
 
     public NetworkManager(EnumPacketDirection packetDirection)
     {
@@ -98,6 +113,9 @@ public class NetworkManager extends SimpleChannelInboundHandler < Packet<? >>
         super.channelActive(p_channelActive_1_);
         this.channel = p_channelActive_1_.channel();
         this.socketAddress = this.channel.remoteAddress();
+        // Spigot Start
+        this.preparing = false;
+        // Spigot End
 
         try
         {
@@ -298,6 +316,9 @@ public class NetworkManager extends SimpleChannelInboundHandler < Packet<? >>
 
     public void closeChannel(ITextComponent message)
     {
+        // Spigot Start
+        this.preparing = false;
+        // Spigot End
         if (this.channel.isOpen())
         {
             this.channel.close().awaitUninterruptibly();

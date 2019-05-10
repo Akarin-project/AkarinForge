@@ -31,6 +31,9 @@ import javax.annotation.Nonnull;
 public class ItemStackHandler implements IItemHandler, IItemHandlerModifiable, INBTSerializable<NBTTagCompound>
 {
     protected NonNullList<ItemStack> stacks;
+    public NonNullList<ItemStack> getStacksList() {
+        return this.stacks;
+    }
 
     public ItemStackHandler()
     {

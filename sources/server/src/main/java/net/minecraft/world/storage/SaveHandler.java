@@ -1,3 +1,6 @@
+/*
+ * Akarin reference
+ */
 package net.minecraft.world.storage;
 
 import java.io.DataInputStream;
@@ -6,8 +9,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.UUID;
+
 import javax.annotation.Nullable;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
@@ -19,6 +26,7 @@ import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.gen.structure.template.TemplateManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 
 public class SaveHandler implements ISaveHandler, IPlayerFileData
 {
@@ -221,6 +229,16 @@ public class SaveHandler implements ISaveHandler, IPlayerFileData
 
         if (nbttagcompound != null)
         {
+            // Akarin start
+            if (player instanceof EntityPlayerMP) {
+                CraftPlayer cplayer = (CraftPlayer) player.getBukkitEntity();
+                // Only update first played if it is older than the one we have
+                long modified = new File(this.playersDirectory, player.getUniqueID().toString() + ".dat").lastModified();
+                if (modified < cplayer.getFirstPlayed()) {
+                    cplayer.setFirstPlayed(modified);
+                }
+            }
+            // Akarin end
             player.readFromNBT(this.dataFixer.process(FixTypes.PLAYER, nbttagcompound));
         }
 
@@ -284,4 +302,67 @@ public class SaveHandler implements ISaveHandler, IPlayerFileData
         }
         return null;
     }
+    // Akarin start
+    private UUID uuid = null; // CraftBukkit
+    
+    @Override
+    public UUID getUUID() {
+        if (uuid != null) return uuid;
+        File file1 = new File(this.worldDirectory, "uid.dat");
+        if (file1.exists()) {
+            DataInputStream dis = null;
+            try {
+                dis = new DataInputStream(new FileInputStream(file1));
+                return uuid = new UUID(dis.readLong(), dis.readLong());
+            } catch (IOException ex) {
+                LOGGER.warn("Failed to read " + file1 + ", generating new random UUID", ex);
+            } finally {
+                if (dis != null) {
+                    try {
+                        dis.close();
+                    } catch (IOException ex) {
+                        // NOOP
+                    }
+                }
+            }
+        }
+        uuid = UUID.randomUUID();
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(file1));
+            dos.writeLong(uuid.getMostSignificantBits());
+            dos.writeLong(uuid.getLeastSignificantBits());
+        } catch (IOException ex) {
+            LOGGER.warn("Failed to write " + file1, ex);
+        } finally {
+            if (dos != null) {
+                try {
+                    dos.close();
+                } catch (IOException ex) {
+                    // NOOP
+                }
+            }
+        }
+        return uuid;
+    }
+    
+    public File getPlayerDir() {
+        return playersDirectory;
+    }
+    
+    public NBTTagCompound getPlayerData(String s) {
+        try {
+            File file1 = new File(this.playersDirectory, s + ".dat");
+
+            if (file1.exists()) {
+                return CompressedStreamTools.readCompressed((InputStream) (new FileInputStream(file1)));
+            }
+        } catch (Exception exception) {
+            LOGGER.warn("Failed to load player data for " + s);
+        }
+
+        return null;
+    }
+    
+    
 }

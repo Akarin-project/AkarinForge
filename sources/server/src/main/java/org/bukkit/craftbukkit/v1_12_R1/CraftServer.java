@@ -849,7 +849,7 @@ implements Server {
         WorldSettings worldSettings = new WorldSettings(creator.seed(), GameType.getByID(getDefaultGameMode().getValue()), generateStructures, hardcore, type);
         WorldServer worldserver = DimensionManager.initDimension(creator, worldSettings);
         this.pluginManager.callEvent(new WorldInitEvent(worldserver.getWorld()));
-        this.logger.info("Preparing start region for level " + (this.console.worldServers.size() - 1) + " (Dimension: " + worldserver.provider.getDimension() + ", Seed: " + worldserver.getSeed() + ")");
+        this.logger.info("Preparing start region for level " + (this.console.worlds.length - 1) + " (Dimension: " + worldserver.provider.getDimension() + ", Seed: " + worldserver.getSeed() + ")");
         if (worldserver.getWorld().getKeepSpawnInMemory()) {
             int short1 = 196;
             long i2 = System.currentTimeMillis();
@@ -885,7 +885,7 @@ implements Server {
             return false;
         }
         WorldServer handle = ((CraftWorld)world).getHandle();
-        if (!this.console.worldServers.contains(handle)) {
+        if (!Lists.newArrayList(this.console.worlds).contains(handle)) {
             return false;
         }
         if (handle.dimension == 0) {
@@ -1066,7 +1066,7 @@ implements Server {
 
     @Override
     public int getSpawnRadius() {
-        return ((DedicatedServer) console).settings.getIntProperty("spawn-protection", 16);
+        return ((DedicatedServer) console).getPropertyManager().getIntProperty("spawn-protection", 16);
     }
 
     @Override
