@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,8 +22,10 @@ import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
+import org.bukkit.event.world.ChunkPopulateEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.spigotmc.AsyncCatcher;
@@ -36,6 +39,7 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import io.akarin.forge.api.bukkit.I18nManager;
 import joptsimple.OptionSet;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockSand;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.entity.Entity;
@@ -60,7 +64,9 @@ import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.border.IBorderListener;
 import net.minecraft.world.border.WorldBorder;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilSaveHandler;
+import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.MapData;
 import net.minecraft.world.storage.WorldInfo;
@@ -69,6 +75,7 @@ import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public abstract class AkarinHooks {
 	private static final Logger LOGGER = LogManager.getLogger("AkarinHooks");
@@ -560,5 +567,41 @@ public abstract class AkarinHooks {
         world.getServer().getPluginManager().callEvent(event);
 
         return event.isBuildable();
+	}
+	
+	public static void populateChunk(Chunk chunk, IChunkGenerator generator) {
+        BlockSand.fallInstantly = true;
+        
+        try {
+            Random random = new Random();
+            random.setSeed(chunk.world.getSeed());
+            long xRand = random.nextLong() / 2 * 2 + 1;
+            long zRand = random.nextLong() / 2 * 2 + 1;
+            random.setSeed((long) chunk.x * xRand + (long) chunk.z * zRand ^ chunk.world.getSeed());
+            
+            // Populate bukkit first
+            org.bukkit.World world = chunk.world.getWorld();
+            if (world != null) {
+            	chunk.world.populating = true;
+                try {
+                    for (BlockPopulator populator : world.getPopulators()) {
+                        populator.populate(world, random, chunk.bukkitChunk);
+                    }
+                }
+                finally {
+                	chunk.world.populating = false;
+                }
+            }
+        } finally {
+        	// Handle this safer
+            BlockSand.fallInstantly = false;
+		}
+        
+        // Populate forge
+        chunk.world.getServer().getPluginManager().callEvent(new ChunkPopulateEvent(chunk.bukkitChunk));
+        
+        if (!AkarinForge.disableForgeGenWorld.contains(chunk.world.getWorldInfo().getWorldName())) {
+            GameRegistry.generateWorld(chunk.x, chunk.z, chunk.world, generator, chunk.world.getChunkProvider());
+        }
 	}
 }
