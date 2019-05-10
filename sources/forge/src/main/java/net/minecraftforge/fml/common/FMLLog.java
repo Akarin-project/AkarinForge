@@ -33,7 +33,7 @@ import org.apache.logging.log4j.Logger;
 public class FMLLog
 {
 
-    public static final Logger log = LogManager.getLogger(); // Akarin - FML do not need a header as it is primary
+    public static final Logger log = LogManager.getLogger("FML");
 
     public static void bigWarning(String format, Object... data)
     {

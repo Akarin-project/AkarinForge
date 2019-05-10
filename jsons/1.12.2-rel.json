@@ -166,7 +166,7 @@
       "serverreq":true
     },
     {
-      "name": "jline:jline:2.12.1",
+      "name": "net.minecrell:terminalconsoleappender:1.1.1",
       "url" : "http://hub.spigotmc.org/nexus/content/groups/public/",
       "serverreq":true
     }

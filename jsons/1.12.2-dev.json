@@ -109,7 +109,7 @@
       "url" : "http://hub.spigotmc.org/nexus/content/groups/public/"
     },
     {
-      "name": "jline:jline:2.12.1",
+      "name": "net.minecrell:terminalconsoleappender:1.1.1",
       "children" : ["sources"],
       "url" : "http://hub.spigotmc.org/nexus/content/groups/public/"
     }

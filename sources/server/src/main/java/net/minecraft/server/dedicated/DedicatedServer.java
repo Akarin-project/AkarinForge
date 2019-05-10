@@ -115,7 +115,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
         };
         thread.setDaemon(true);
         thread.start();
-        LOGGER.info("Starting minecraft server version 1.12.2");
+        LOGGER.info("Starting Minecraft server version 1.12.2"); // Akarin - fixes name case for better viewing
 
         if (Runtime.getRuntime().maxMemory() / 1024L / 1024L < 512L)
         {
