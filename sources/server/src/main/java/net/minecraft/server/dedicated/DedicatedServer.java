@@ -5,6 +5,7 @@ import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 
+import io.akarin.forge.AkarinHooks;
 import joptsimple.OptionSet;
 
 import java.io.BufferedReader;
@@ -50,6 +51,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.craftbukkit.v1_12_R1.command.CraftRemoteConsoleCommandSender;
+import org.bukkit.plugin.PluginLoadOrder;
 
 @SideOnly(Side.SERVER)
 public class DedicatedServer extends MinecraftServer implements IServer
@@ -58,7 +61,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
     private static final Pattern RESOURCE_PACK_SHA1_PATTERN = Pattern.compile("^[a-fA-F0-9]{40}$");
     public final List<PendingCommand> pendingCommandList = Collections.<PendingCommand>synchronizedList(Lists.newArrayList());
     private RConThreadQuery rconQueryThread;
-    private final RConConsoleSource rconConsoleSource = new RConConsoleSource(this);
+    public final RConConsoleSource rconConsoleSource = new RConConsoleSource(this); // Akarin
     private RConThreadMain rconThread;
     private PropertyManager settings;
     private ServerEula eula;
@@ -131,7 +134,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
         this.settings = new PropertyManager(new File("server.properties"));
         this.eula = new ServerEula(new File("eula.txt"));
 
-        if (!this.eula.hasAcceptedEULA())
+        if (false && !this.eula.hasAcceptedEULA()) // Akarin
         {
             LOGGER.info("You need to agree to the EULA in order to run the server. Go to eula.txt for more info.");
             this.eula.createEULAFile();
@@ -183,11 +186,16 @@ public class DedicatedServer extends MinecraftServer implements IServer
             {
                 this.setServerPort(this.settings.getIntProperty("server-port", 25565));
             }
+            // Akarin start
+            this.setPlayerList(new DedicatedPlayerList(this));
+            AkarinHooks.initalizeConfiguration(this);
+            // Akarin end
 
             LOGGER.info("Generating keypair");
             this.setKeyPair(CryptManager.generateKeyPair());
             LOGGER.info("Starting Minecraft server on {}:{}", this.getServerHostname().isEmpty() ? "*" : this.getServerHostname(), Integer.valueOf(this.getServerPort()));
 
+            if (!org.spigotmc.SpigotConfig.lateBind) { // Akarin
             try
             {
                 this.getNetworkSystem().addLanEndpoint(inetaddress, this.getServerPort());
@@ -199,6 +207,8 @@ public class DedicatedServer extends MinecraftServer implements IServer
                 LOGGER.warn("Perhaps a server is already running on that port?");
                 return false;
             }
+            } // Akarin
+            AkarinHooks.initalizePlugins(server); // Akarin
 
             if (!this.isServerInOnlineMode())
             {
@@ -220,7 +230,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
             else
             {
                 net.minecraftforge.fml.common.FMLCommonHandler.instance().onServerStarted();
-                this.setPlayerList(new DedicatedPlayerList(this));
+                // this.setPlayerList(new DedicatedPlayerList(this)); // Akarin
                 long j = System.nanoTime();
 
                 if (this.getFolderName() == null)
@@ -295,7 +305,9 @@ public class DedicatedServer extends MinecraftServer implements IServer
                     LOGGER.info("Starting remote control listener");
                     this.rconThread = new RConThreadMain(this);
                     this.rconThread.startThread();
+                    this.remoteConsole = new CraftRemoteConsoleCommandSender(this.rconConsoleSource); // CraftBukkit
                 }
+                AkarinHooks.handleBukkitSpawnRadius(this); // Akarin
 
                 if (this.getMaxTickTime() > 0L)
                 {
@@ -433,7 +445,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
         while (!this.pendingCommandList.isEmpty())
         {
             PendingCommand pendingcommand = this.pendingCommandList.remove(0);
-            this.getCommandManager().executeCommand(pendingcommand.sender, pendingcommand.command);
+            AkarinHooks.handleServerCommandEvent(this, pendingcommand); // Akarin
         }
     }
 
@@ -687,13 +699,26 @@ public class DedicatedServer extends MinecraftServer implements IServer
 
     public String getPlugins()
     {
-        return "";
+        return AkarinHooks.queryPlugins(this);
     }
 
     public String handleRConCommand(String command)
     {
+    	// Akarin start
+    	return AkarinHooks.handleRemoteServerCommandEvent(this, command);
+    	
+    	/*
         this.rconConsoleSource.resetLog();
         this.commandManager.executeCommand(this.rconConsoleSource, command);
         return this.rconConsoleSource.getLogContents();
+        */
+    	// Akarin end
     }
+    
+    // Akarin start
+    @Override
+    public PropertyManager getPropertyManager() {
+        return settings;
+    }
+    // Akarin end
 }

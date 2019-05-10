@@ -10,8 +10,12 @@ import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.World.Environment;
+import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
 import org.bukkit.craftbukkit.v1_12_R1.Main;
 import org.bukkit.craftbukkit.v1_12_R1.scoreboard.CraftScoreboardManager;
+import org.bukkit.craftbukkit.v1_12_R1.util.Waitable;
+import org.bukkit.event.server.RemoteServerCommandEvent;
+import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.ChunkGenerator;
@@ -30,7 +34,9 @@ import net.minecraft.crash.CrashReport;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.dedicated.DedicatedPlayerList;
 import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.server.dedicated.PendingCommand;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.datafix.DataFixesManager;
@@ -342,5 +348,92 @@ public abstract class AkarinHooks {
         } catch (Throwable throwable) {
             LOGGER.fatal("Failed to start the minecraft server", throwable);
         }
+	}
+	
+	public static void initalizeConfiguration(DedicatedServer server) {
+        org.spigotmc.SpigotConfig.init((File) server.options.valueOf("spigot-settings"));
+        org.spigotmc.SpigotConfig.registerCommands();
+        
+        com.destroystokyo.paper.PaperConfig.init((File) server.options.valueOf("paper-settings"));
+        com.destroystokyo.paper.PaperConfig.registerCommands();
+	}
+	
+	public static void initalizePlugins(CraftServer server) {
+        server.loadPlugins();
+        server.enablePlugins(PluginLoadOrder.STARTUP);
+	}
+	
+	public static void handleServerCommandEvent(MinecraftServer server, PendingCommand command) {
+        ServerCommandEvent event = new ServerCommandEvent(server.console, command.command);
+        server.server.getPluginManager().callEvent(event);
+        
+        if (event.isCancelled())
+        	return;
+        
+        command = new PendingCommand(event.getCommand(), command.sender);
+        server.server.dispatchServerCommand(server.console, command);
+	}
+	
+	public static String handleRemoteServerCommandEvent(DedicatedServer server, String command) {
+		Waitable<String> waitable = new Waitable<String>() {
+            @Override
+            protected String evaluate() {
+            	server.rconConsoleSource.resetLog();
+                RemoteServerCommandEvent event = new RemoteServerCommandEvent(server.remoteConsole, command);
+                server.server.getPluginManager().callEvent(event);
+                if (event.isCancelled()) {
+                    return "";
+                }
+                PendingCommand serverCommand = new PendingCommand(event.getCommand(), server.rconConsoleSource);
+                server.server.dispatchServerCommand(server.remoteConsole, serverCommand);
+                return server.rconConsoleSource.getLogContents();
+            }
+        };
+        server.processQueue.add(waitable);
+        try {
+            return waitable.get();
+        } catch (java.util.concurrent.ExecutionException e) {
+            throw new RuntimeException("Exception processing rcon command " + command, e.getCause());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Maintain interrupted state
+            throw new RuntimeException("Interrupted processing rcon command " + command, e);
+        }
+	}
+	
+	public static void handleBukkitSpawnRadius(DedicatedServer server) {
+        if (server.server.getBukkitSpawnRadius() > -1) {
+            LOGGER.debug("'settings.spawn-radius' in bukkit.yml has been moved to 'spawn-protection' in server.properties. I will move your config for you.");
+           
+            server.getPropertyManager().serverProperties.remove("spawn-protection");
+            server.getPropertyManager().getIntProperty("spawn-protection", server.server.getBukkitSpawnRadius());
+            
+            server.server.removeBukkitSpawnRadius();
+            server.getPropertyManager().saveProperties();
+        }
+	}
+	
+	public static String queryPlugins(DedicatedServer server) {
+		StringBuilder result = new StringBuilder();
+        org.bukkit.plugin.Plugin[] plugins = server.server.getPluginManager().getPlugins();
+
+        result.append(server.getName());
+        result.append(" on Bukkit ");
+        result.append(server.server.getBukkitVersion());
+
+        if (plugins.length > 0 && server.server.getQueryPlugins()) {
+            result.append(": ");
+
+            for (int i = 0; i < plugins.length; i++) {
+                if (i > 0) {
+                    result.append("; ");
+                }
+
+                result.append(plugins[i].getDescription().getName());
+                result.append(" ");
+                result.append(plugins[i].getDescription().getVersion().replaceAll(";", ","));
+            }
+        }
+
+        return result.toString();
 	}
 }
