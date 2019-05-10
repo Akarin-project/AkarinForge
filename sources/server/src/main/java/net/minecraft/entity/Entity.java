@@ -1,8 +1,13 @@
+/*
+ * Akarin reference
+ */
 package net.minecraft.entity;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,6 +37,7 @@ import net.minecraft.enchantment.EnchantmentProtection;
 import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
@@ -80,10 +86,39 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.capabilities.CapabilityDispatcher;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.TravelAgent;
+import org.bukkit.block.BlockFace;
+import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_12_R1.CraftTravelAgent;
+import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.entity.Hanging;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Vehicle;
+import org.bukkit.event.entity.EntityAirChangeEvent;
+import org.bukkit.event.entity.EntityCombustByBlockEvent;
+import org.bukkit.event.entity.EntityCombustByEntityEvent;
+import org.bukkit.event.entity.EntityCombustEvent;
+import org.bukkit.event.entity.EntityPortalEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.vehicle.VehicleBlockCollisionEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
+import org.bukkit.event.vehicle.VehicleExitEvent;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.projectiles.ProjectileSource;
+import org.spigotmc.ActivationRange;
+import org.spigotmc.CustomTimingsHandler;
 
 public abstract class Entity implements ICommandSender, net.minecraftforge.common.capabilities.ICapabilitySerializable<NBTTagCompound>
 {
@@ -94,7 +129,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     private static int nextEntityID;
     private int entityId;
     public boolean preventEntitySpawning;
-    private final List<Entity> riddenByEntities;
+    public final List<Entity> riddenByEntities; // Akarin
     protected int rideCooldown;
     private Entity ridingEntity;
     public boolean forceSpawn;
@@ -137,12 +172,12 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     public float entityCollisionReduction;
     protected Random rand;
     public int ticksExisted;
-    private int fire;
-    protected boolean inWater;
+    public int fire; // Akarin
+    public boolean inWater; // Akarin
     public int hurtResistantTime;
     protected boolean firstUpdate;
     protected boolean isImmuneToFire;
-    protected EntityDataManager dataManager;
+    public EntityDataManager dataManager; // Akarin
     protected static final DataParameter<Byte> FLAGS = EntityDataManager.<Byte>createKey(Entity.class, DataSerializers.BYTE);
     private static final DataParameter<Integer> AIR = EntityDataManager.<Integer>createKey(Entity.class, DataSerializers.VARINT);
     private static final DataParameter<String> CUSTOM_NAME = EntityDataManager.<String>createKey(Entity.class, DataSerializers.STRING);
@@ -172,7 +207,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     protected UUID entityUniqueID;
     protected String cachedUniqueIdString;
     private final CommandResultStats cmdResultStats;
-    protected boolean glowing;
+    public boolean glowing; // Akarin
     private final Set<String> tags;
     private boolean isPositionDirty;
     private final double[] pistonDeltas;
@@ -181,9 +216,130 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
      * Setting this to true will prevent the world from calling {@link #onUpdate()} for this entity.
      */
     public boolean updateBlocked;
+    // Akarin start
+    private static final int CURRENT_LEVEL = 2;
+    protected CraftEntity bukkitEntity;
+    public boolean valid;
+    public ProjectileSource projectileSource;
+    public boolean forceExplosionKnockback;
+    public CustomTimingsHandler tickTimer;
+    public final byte activationType;
+    public final boolean defaultActivationState;
+    public long activatedTick;
+    public boolean fromMobSpawner;
+    public boolean canAsync;
+    public boolean nmsEntity;
+
+    static boolean isLevelAtLeast(NBTTagCompound tag, int level) {
+        return tag.hasKey("Bukkit.updateLevel") && tag.getInteger("Bukkit.updateLevel") >= level;
+    }
+
+    public CraftEntity getBukkitEntity() {
+        if (this.bukkitEntity == null) {
+            this.bukkitEntity = CraftEntity.getEntity(this.world.getServer(), this);
+        }
+        return this.bukkitEntity;
+    }
+
+    public float getBukkitYaw() {
+        return this.rotationYaw;
+    }
+
+    public void inactiveTick() {
+    }
+    
+    public void postTick() {
+        // No clean way to break out of ticking once the entity has been copied to a new world, so instead we move the portalling later in the tick cycle
+        if (!this.world.isRemote && this.world instanceof WorldServer) {
+            this.world.profiler.startSection("portal");
+            if (this.inPortal) {
+                MinecraftServer minecraftserver = this.world.getMinecraftServer();
+
+                if (true || minecraftserver.getAllowNether()) { // CraftBukkit
+                    if (!this.isRiding()) {
+                        int i = this.getMaxInPortalTime();
+
+                        if (this.portalCounter++ >= i) {
+                            this.portalCounter = i;
+                            this.timeUntilPortal = this.getPortalCooldown();
+                            byte b0;
+
+                            if (this.world.provider.getDimensionType().getId() == -1) {
+                                b0 = 0;
+                            } else {
+                                b0 = -1;
+                            }
+
+                            this.changeDimension(b0);
+                        }
+                    }
+
+                    this.inPortal = false;
+                }
+            } else {
+                if (this.portalCounter > 0) {
+                    this.portalCounter -= 4;
+                }
+
+                if (this.portalCounter < 0) {
+                    this.portalCounter = 0;
+                }
+            }
+
+            this.decrementTimeUntilPortal();
+            this.world.profiler.endSection();
+        }
+    }
+    
+    private java.lang.ref.WeakReference<net.minecraft.world.chunk.Chunk> currentChunk = null;
+
+    public void setCurrentChunk(net.minecraft.world.chunk.Chunk chunk) {
+        this.currentChunk = chunk != null ? new java.lang.ref.WeakReference<>(chunk) : null;
+    }
+    
+    /**
+     * Returns the entities current registered chunk. If the entity is not added to a chunk yet, it will return null
+     */
+    public net.minecraft.world.chunk.Chunk getCurrentChunk() {
+        final net.minecraft.world.chunk.Chunk chunk = currentChunk != null ? currentChunk.get() : null;
+        return chunk != null && chunk.isLoaded() ? chunk : (addedToChunk ? world.getChunkIfLoaded(chunkCoordX, chunkCoordZ) : null);
+    }
+    
+    /**
+     * Returns the chunk at the location, using the entities local cache if avail
+     * Will only return null if the location specified is not loaded
+     */
+    public net.minecraft.world.chunk.Chunk getCurrentChunkAt(int x, int z) {
+        if (chunkCoordX == x && chunkCoordZ == z) {
+            net.minecraft.world.chunk.Chunk chunk = getCurrentChunk();
+            if (chunk != null) {
+                return chunk;
+            }
+        }
+        return world.getChunkIfLoaded(x, z);
+    }
+    
+    /**
+     * Returns the chunk at the entities current location, using the entities local cache if avail
+     * Will only return null if the location specified is not loaded
+     */
+    public net.minecraft.world.chunk.Chunk getChunkAtLocation() {
+        return getCurrentChunkAt((int)Math.floor(posX) >> 4, (int)Math.floor(posZ) >> 4);
+    }
 
     public Entity(World worldIn)
     {
+        this.world = worldIn;
+        this.activationType = ActivationRange.initializeEntityActivationType(this);
+        this.activatedTick = Integer.MIN_VALUE;
+        
+        if (worldIn != null) {
+            this.dimension = worldIn.provider.getDimension();
+            this.defaultActivationState = ActivationRange.initializeEntityActivationState(this, this.world.spigotConfig);
+        } else {
+            this.defaultActivationState = false;
+        }
+        // Akarin end
         this.entityId = nextEntityID++;
         this.riddenByEntities = Lists.<Entity>newArrayList();
         this.boundingBox = ZERO_AABB;
@@ -199,13 +355,17 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         this.cmdResultStats = new CommandResultStats();
         this.tags = Sets.<String>newHashSet();
         this.pistonDeltas = new double[] {0.0D, 0.0D, 0.0D};
-        this.world = worldIn;
+        //this.world = worldIn;
         this.setPosition(0.0D, 0.0D, 0.0D);
 
+        // Akarin start
+        /*
         if (worldIn != null)
         {
             this.dimension = worldIn.provider.getDimension();
         }
+        */
+        // Akarin end
 
         this.dataManager = new EntityDataManager(this);
         this.dataManager.register(FLAGS, Byte.valueOf((byte)0));
@@ -347,6 +507,32 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
 
     protected void setRotation(float yaw, float pitch)
     {
+        // Akarin start
+        if (Float.isNaN(yaw)) {
+            yaw = 0;
+        }
+
+        if (yaw == Float.POSITIVE_INFINITY || yaw == Float.NEGATIVE_INFINITY) {
+            if (this instanceof EntityPlayerMP) {
+                this.world.getServer().getLogger().warning(this.getName() + " was caught trying to crash the server with an invalid yaw");
+                ((CraftPlayer) this.getBukkitEntity()).kickPlayer("Infinite yaw (Hacking?)"); //Spigot "Nope" -> Descriptive reason
+            }
+            yaw = 0;
+        }
+
+        // pitch was sometimes set to NaN, so we need to set it back to 0
+        if (Float.isNaN(pitch)) {
+            pitch = 0;
+        }
+
+        if (pitch == Float.POSITIVE_INFINITY || pitch == Float.NEGATIVE_INFINITY) {
+            if (this instanceof EntityPlayerMP) {
+                this.world.getServer().getLogger().warning(this.getName() + " was caught trying to crash the server with an invalid pitch");
+                ((CraftPlayer) this.getBukkitEntity()).kickPlayer("Infinite pitch (Hacking?)"); //Spigot "Nope" -> Descriptive reason
+            }
+            pitch = 0;
+        }
+        // Akarin end
         this.rotationYaw = yaw % 360.0F;
         this.rotationPitch = pitch % 360.0F;
     }
@@ -410,6 +596,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         this.prevRotationPitch = this.rotationPitch;
         this.prevRotationYaw = this.rotationYaw;
 
+        // Akarin start
+        /*
         if (!this.world.isRemote && this.world instanceof WorldServer)
         {
             this.world.profiler.startSection("portal");
@@ -462,6 +650,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             this.decrementTimeUntilPortal();
             this.world.profiler.endSection();
         }
+        */
+        // Akarin end
 
         this.spawnRunningParticles();
         this.handleWaterMovement();
@@ -530,6 +720,26 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         if (!this.isImmuneToFire)
         {
             this.attackEntityFrom(DamageSource.LAVA, 4.0F);
+            // Akarin start
+            if (this instanceof EntityLivingBase) {
+                if (fire <= 0) {
+                    // not on fire yet
+                    // TODO: shouldn't be sending null for the block
+                    org.bukkit.block.Block damager = null; // ((WorldServer) this.l).getWorld().getBlockAt(i, j, k);
+                    org.bukkit.entity.Entity damagee = this.getBukkitEntity();
+                    EntityCombustEvent combustEvent = new EntityCombustByBlockEvent(damager, damagee, 15);
+                    this.world.getServer().getPluginManager().callEvent(combustEvent);
+
+                    if (!combustEvent.isCancelled()) {
+                        this.setFire(combustEvent.getDuration());
+                    }
+                } else {
+                    // This will be called every single tick the entity is in lava, so don't throw an event
+                    this.setFire(15);
+                }
+                return;
+            }
+            // Akarin end
             this.setFire(15);
         }
     }
@@ -579,6 +789,21 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         }
         else
         {
+            // Akarin start
+            try {
+                this.doBlockCollisions();
+            } catch (Throwable throwable) {
+                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
+                CrashReportCategory crashreportsystemdetails = crashreport.makeCategory("Entity being checked for collision");
+
+                this.addEntityCrashInfo(crashreportsystemdetails);
+                throw new ReportedException(crashreport);
+            }
+            // Check if we're moving
+            if (x == 0 && y == 0 && z == 0 && this.isBeingRidden() && this.isRiding()) {
+                return;
+            }
+            // Akarin end
             if (type == MoverType.PISTON)
             {
                 long i = this.world.getTotalWorldTime();
@@ -911,6 +1136,27 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             {
                 block.onLanded(this.world, this);
             }
+            // Akarin start
+            if (collidedHorizontally && getBukkitEntity() instanceof Vehicle) {
+                Vehicle vehicle = (Vehicle) this.getBukkitEntity();
+                org.bukkit.block.Block bl = this.world.getWorld().getBlockAt(MathHelper.floor(this.posX), MathHelper.floor(this.posY), MathHelper.floor(this.posZ));
+
+                if (d2 > x) {
+                    bl = bl.getRelative(BlockFace.EAST);
+                } else if (d2 < x) {
+                    bl = bl.getRelative(BlockFace.WEST);
+                } else if (d4 > z) {
+                    bl = bl.getRelative(BlockFace.SOUTH);
+                } else if (d4 < z) {
+                    bl = bl.getRelative(BlockFace.NORTH);
+                }
+
+                if (bl.getType() != org.bukkit.Material.AIR) {
+                    VehicleBlockCollisionEvent event = new VehicleBlockCollisionEvent(vehicle, bl);
+                    world.getServer().getPluginManager().callEvent(event);
+                }
+            }
+            // Akarin end
 
             if (this.canTriggerWalking() && (!this.onGround || !this.isSneaking() || !(this instanceof EntityPlayer)) && !this.isRiding())
             {
@@ -959,6 +1205,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 }
             }
 
+            // Akarin start
+            /*
             try
             {
                 this.doBlockCollisions();
@@ -970,6 +1218,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 this.addEntityCrashInfo(crashreportcategory);
                 throw new ReportedException(crashreport);
             }
+            */
+            // Akarin end
 
             boolean flag1 = this.isWet();
 
@@ -1148,11 +1398,18 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
 
     protected void dealFireDamage(int amount)
     {
+        // Akarin start
+        burn(amount);
+    }
+    
+    protected void burn(float amount)
+    {
         if (!this.isImmuneToFire)
         {
-            this.attackEntityFrom(DamageSource.IN_FIRE, (float)amount);
+            this.attackEntityFrom(DamageSource.IN_FIRE, amount);
         }
     }
+    // Akarin end
 
     public final boolean isImmuneToFire()
     {
@@ -1369,6 +1626,13 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
 
     public void setWorld(World worldIn)
     {
+        // Akarin start
+        if (world == null) {
+            setDead();
+            this.world = ((CraftWorld) Bukkit.getServer().getWorlds().get(0)).getHandle();
+            return;
+        }
+        // Akarin end
         this.world = worldIn;
     }
 
@@ -1687,6 +1951,15 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         {
             compound.setTag("Pos", this.newDoubleNBTList(this.posX, this.posY, this.posZ));
             compound.setTag("Motion", this.newDoubleNBTList(this.motionX, this.motionY, this.motionZ));
+            // Akarin start - Checking for NaN pitch/yaw and resetting to zero
+            if (Float.isNaN(this.rotationYaw)) {
+                this.rotationYaw = 0;
+            }
+
+            if (Float.isNaN(this.rotationPitch)) {
+                this.rotationPitch = 0;
+            }
+            // Akarin end
             compound.setTag("Rotation", this.newFloatNBTList(this.rotationYaw, this.rotationPitch));
             compound.setFloat("FallDistance", this.fallDistance);
             compound.setShort("Fire", (short)this.fire);
@@ -1696,6 +1969,12 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             compound.setBoolean("Invulnerable", this.invulnerable);
             compound.setInteger("PortalCooldown", this.timeUntilPortal);
             compound.setUniqueId("UUID", this.getUniqueID());
+            // Akarin start
+            compound.setLong("WorldUUIDLeast", this.world.getSaveHandler().getUUID().getLeastSignificantBits());
+            compound.setLong("WorldUUIDMost", this.world.getSaveHandler().getUUID().getMostSignificantBits());
+            compound.setInteger("Bukkit.updateLevel", CURRENT_LEVEL);
+            compound.setInteger("Spigot.ticksLived", this.ticksExisted);
+            // Akarin end
 
             if (this.hasCustomName())
             {
@@ -1784,6 +2063,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             this.motionY = nbttaglist2.getDoubleAt(1);
             this.motionZ = nbttaglist2.getDoubleAt(2);
 
+            // Akarin start
+            /*
             if (Math.abs(this.motionX) > 10.0D)
             {
                 this.motionX = 0.0D;
@@ -1798,6 +2079,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             {
                 this.motionZ = 0.0D;
             }
+            */
+            // Akarin end
 
             this.posX = nbttaglist.getDoubleAt(0);
             this.posY = nbttaglist.getDoubleAt(1);
@@ -1869,6 +2152,53 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             {
                 this.setPosition(this.posX, this.posY, this.posZ);
             }
+            // Akarin start
+            if (this instanceof EntityLivingBase) {
+                EntityLivingBase entity = (EntityLivingBase) this;
+
+                this.ticksExisted = compound.getInteger("Spigot.ticksLived");
+
+                // Reset the persistence for tamed animals
+                if (entity instanceof EntityTameable && !isLevelAtLeast(compound, 2) && !compound.getBoolean("PersistenceRequired")) {
+                    EntityLiving entityinsentient = (EntityLiving) entity;
+                    entityinsentient.persistenceRequired = !entityinsentient.canDespawn();
+                }
+            }
+            
+            double limit = getBukkitEntity() instanceof Vehicle ? 100.0D : 10.0D;
+            if (Math.abs(this.motionX) > limit) {
+                this.motionX = 0.0D;
+            }
+
+            if (Math.abs(this.motionY) > limit) {
+                this.motionY = 0.0D;
+            }
+
+            if (Math.abs(this.motionZ) > limit) {
+                this.motionZ = 0.0D;
+            }
+            
+            if (this instanceof EntityPlayerMP) {
+                Server server = Bukkit.getServer();
+                org.bukkit.World bworld = null;
+
+                String worldName = compound.getString("world");
+
+                if (compound.hasKey("WorldUUIDMost") && compound.hasKey("WorldUUIDLeast")) {
+                    UUID uid = new UUID(compound.getLong("WorldUUIDMost"), compound.getLong("WorldUUIDLeast"));
+                    bworld = server.getWorld(uid);
+                } else {
+                    bworld = server.getWorld(worldName);
+                }
+
+                if (bworld == null) {
+                    EntityPlayerMP entityPlayer = (EntityPlayerMP) this;
+                    bworld = ((CraftServer) server).getServer().getWorld(entityPlayer.dimension).getWorld();
+                }
+
+                setWorld(bworld == null? null : ((CraftWorld) bworld).getHandle());
+            }
+            // Akarin end
         }
         catch (Throwable throwable)
         {
@@ -1885,7 +2215,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     @Nullable
-    protected final String getEntityString()
+    public
+    final String getEntityString()
     {
         ResourceLocation resourcelocation = EntityList.getKey(this);
         return resourcelocation == null ? null : resourcelocation.toString();
@@ -2110,6 +2441,30 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         }
         else
         {
+            // Akarin start
+            com.google.common.base.Preconditions.checkState(!passenger.riddenByEntities.contains(this), "Circular entity riding! %s %s", this, passenger);
+
+            CraftEntity craft = (CraftEntity) passenger.getBukkitEntity().getVehicle();
+            Entity orig = craft == null ? null : craft.getHandle();
+            if (getBukkitEntity() instanceof Vehicle && passenger.getBukkitEntity() instanceof LivingEntity && passenger.world.isChunkLoaded((int) passenger.posX >> 4, (int) passenger.posZ >> 4, false)) { // Boolean not used
+                VehicleEnterEvent event = new VehicleEnterEvent(
+                        (Vehicle) getBukkitEntity(),
+                        passenger.getBukkitEntity()
+                );
+                Bukkit.getPluginManager().callEvent(event);
+                CraftEntity craftn = (CraftEntity) passenger.getBukkitEntity().getVehicle();
+                Entity n = craftn == null ? null : craftn.getHandle();
+                if (event.isCancelled() || n != orig) {
+                    return;
+                }
+            }
+            
+            org.spigotmc.event.entity.EntityMountEvent event = new org.spigotmc.event.entity.EntityMountEvent(passenger.getBukkitEntity(), this.getBukkitEntity());
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return;
+            }
+            // Akarin end
             if (!this.world.isRemote && passenger instanceof EntityPlayer && !(this.getControllingPassenger() instanceof EntityPlayer))
             {
                 this.riddenByEntities.add(0, passenger);
@@ -2129,6 +2484,22 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         }
         else
         {
+            // Akarin start
+            CraftEntity craft = (CraftEntity) passenger.getBukkitEntity().getVehicle();
+            Entity orig = craft == null ? null : craft.getHandle();
+            if (getBukkitEntity() instanceof Vehicle && passenger.getBukkitEntity() instanceof LivingEntity) {
+                VehicleExitEvent event = new VehicleExitEvent(
+                        (Vehicle) getBukkitEntity(),
+                        (LivingEntity) passenger.getBukkitEntity()
+                );
+                Bukkit.getPluginManager().callEvent(event);
+                CraftEntity craftn = (CraftEntity) passenger.getBukkitEntity().getVehicle();
+                Entity n = craftn == null ? null : craftn.getHandle();
+                if (event.isCancelled() || n != orig) {
+                    return;
+                }
+            }
+            // Akarin end
             this.riddenByEntities.remove(passenger);
             passenger.rideCooldown = 60;
         }
@@ -2325,12 +2696,12 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         this.setFlag(5, invisible);
     }
 
-    protected boolean getFlag(int flag)
+    public boolean getFlag(int flag)
     {
         return (((Byte)this.dataManager.get(FLAGS)).byteValue() & 1 << flag) != 0;
     }
 
-    protected void setFlag(int flag, boolean set)
+    public void setFlag(int flag, boolean set)
     {
         byte b0 = ((Byte)this.dataManager.get(FLAGS)).byteValue();
 
@@ -2351,17 +2722,52 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
 
     public void setAir(int air)
     {
-        this.dataManager.set(AIR, Integer.valueOf(air));
+        // Akarin start
+        EntityAirChangeEvent event = new EntityAirChangeEvent(this.getBukkitEntity(), air);
+        event.getEntity().getServer().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+        this.dataManager.set(Entity.AIR, Integer.valueOf(event.getAmount()));
+        // Akarin end
     }
 
     public void onStruckByLightning(EntityLightningBolt lightningBolt)
     {
-        this.attackEntityFrom(DamageSource.LIGHTNING_BOLT, 5.0F);
+        // Akarin start
+        final org.bukkit.entity.Entity thisBukkitEntity = this.getBukkitEntity();
+        final org.bukkit.entity.Entity stormBukkitEntity = lightningBolt.getBukkitEntity();
+        final PluginManager pluginManager = Bukkit.getPluginManager();
+
+        if (thisBukkitEntity instanceof Hanging) {
+            HangingBreakByEntityEvent hangingEvent = new HangingBreakByEntityEvent((Hanging) thisBukkitEntity, stormBukkitEntity);
+            pluginManager.callEvent(hangingEvent);
+
+            if (hangingEvent.isCancelled()) {
+                return;
+            }
+        }
+
+        if (this.isImmuneToFire) {
+            return;
+        }
+        CraftEventFactory.entityDamage = lightningBolt;
+        if (!this.attackEntityFrom(DamageSource.LIGHTNING_BOLT, 5.0F)) {
+            CraftEventFactory.entityDamage = null;
+            return;
+        }
+        // Akarin end
         ++this.fire;
 
         if (this.fire == 0)
         {
-            this.setFire(8);
+            // Akarin start
+            EntityCombustByEntityEvent entityCombustEvent = new EntityCombustByEntityEvent(stormBukkitEntity, thisBukkitEntity, 8);
+            pluginManager.callEvent(entityCombustEvent);
+            if (!entityCombustEvent.isCancelled()) {
+                this.setFire(entityCombustEvent.getDuration());
+            }
+            // Akarin end
         }
     }
 
@@ -2551,20 +2957,79 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             if (!net.minecraftforge.common.ForgeHooks.onTravelToDimension(this, dimensionIn)) return null;
             this.world.profiler.startSection("changeDimension");
             MinecraftServer minecraftserver = this.getServer();
+            // Akarin start
+            WorldServer exitWorld = null;
+            if (this.dimension < 10) {
+                for (WorldServer world : minecraftserver.worldServers) {
+                    if (world.dimension != dimensionIn) continue;
+                    exitWorld = world;
+                }
+            }
+            BlockPos blockposition = null;
+            Location enter = this.getBukkitEntity().getLocation();
+            Location exit;
+            if (exitWorld != null) {
+                if (blockposition != null) {
+                    exit = new Location(exitWorld.getWorld(), blockposition.getX(), blockposition.getY(), blockposition.getZ());
+                } else {
+                    exit = minecraftserver.getPlayerList().calculateTarget(enter, minecraftserver.getWorld(dimensionIn));
+                }
+            } else {
+                exit = null;
+            }
+            boolean useTravelAgent = exitWorld != null && (this.dimension != 1 || exitWorld.dimension != 1);
+            TravelAgent agent = exit != null ? (TravelAgent)(((CraftWorld)exit.getWorld()).getHandle().getDefaultTeleporter()) : CraftTravelAgent.DEFAULT;
+            
+            boolean oldCanCreate = agent.getCanCreatePortal();
+            agent.setCanCreatePortal(false);
+            EntityPortalEvent event = new EntityPortalEvent(this.getBukkitEntity(), enter, exit, agent);
+            event.useTravelAgent(useTravelAgent);
+            
+            event.getEntity().getServer().getPluginManager().callEvent(event);
+            if (event.isCancelled() || event.getTo() == null || event.getTo().getWorld() == null || !this.isEntityAlive()) {
+                agent.setCanCreatePortal(oldCanCreate);
+                return null;
+            }
+            
+            exit = event.useTravelAgent() ? event.getPortalTravelAgent().findOrCreate(event.getTo()) : event.getTo();
+            agent.setCanCreatePortal(oldCanCreate);
+            Entity entity = this.teleportTo(exit, true);
+            this.world.profiler.endSection();
+            return entity;
+        }
+        return null;
+    }
+
+    public Entity teleportTo(Location exit, boolean portal) {
+        if (!this.isDead) {
+            int i;
+            WorldServer worldserver = ((CraftWorld)this.getBukkitEntity().getLocation().getWorld()).getHandle();
+            WorldServer worldserver1 = ((CraftWorld)exit.getWorld()).getHandle();
+            this.dimension = i = worldserver1.dimension;
+            /*
             int i = this.dimension;
             WorldServer worldserver = minecraftserver.getWorld(i);
             WorldServer worldserver1 = minecraftserver.getWorld(dimensionIn);
             this.dimension = dimensionIn;
+            */
+            // Akarin end
 
+            // Akarin start
+            /*
             if (i == 1 && dimensionIn == 1 && teleporter.isVanilla())
             {
                 worldserver1 = minecraftserver.getWorld(0);
                 this.dimension = 0;
             }
+            */
+            // Akarin end
 
             this.world.removeEntity(this);
             this.isDead = false;
             this.world.profiler.startSection("reposition");
+            // Akarin start
+            worldserver1.getMinecraftServer().getPlayerList().repositionEntity(this, exit, portal);
+            /*
             BlockPos blockpos;
 
             if (dimensionIn == 1 && teleporter.isVanilla())
@@ -2598,6 +3063,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             }
 
             worldserver.updateEntityWithOptionalForce(this, false);
+            */
+            // Akarin end
             this.world.profiler.endStartSection("reloading");
             Entity entity = EntityList.newEntity(this.getClass(), worldserver1);
 
@@ -2605,6 +3072,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             {
                 entity.copyDataFromOld(this);
 
+                // Akarin start
+                /*
                 if (i == 1 && dimensionIn == 1 && teleporter.isVanilla())
                 {
                     BlockPos blockpos1 = worldserver1.getTopSolidOrLiquidBlock(worldserver1.getSpawnPoint());
@@ -2614,19 +3083,29 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 {
                     entity.moveToBlockPosAndAngles(blockpos, entity.rotationYaw, entity.rotationPitch);
                 }
+                */
+                // Akarin end
 
                 boolean flag = entity.forceSpawn;
                 entity.forceSpawn = true;
                 worldserver1.spawnEntity(entity);
                 entity.forceSpawn = flag;
                 worldserver1.updateEntityWithOptionalForce(entity, false);
+                // Akarin start
+                this.getBukkitEntity().setHandle(entity);
+                entity.bukkitEntity = this.getBukkitEntity();
+
+                if (this instanceof EntityLiving) {
+                    ((EntityLiving) this).clearLeashed(true, false); // Unleash to prevent duping of leads.
+                }
+                // Akarin end
             }
 
             this.isDead = true;
             this.world.profiler.endSection();
             worldserver.resetUpdateEntityTick();
             worldserver1.resetUpdateEntityTick();
-            this.world.profiler.endSection();
+            //this.world.profiler.endSection(); // Akarin
             return entity;
         }
         else
@@ -2755,6 +3234,11 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
 
     public void setCustomNameTag(String name)
     {
+        // Akarin start
+        if (name.length() > 256) {
+            name = name.substring(0, 256);
+        }
+        // Akarin end
         this.dataManager.set(CUSTOM_NAME, name);
     }
 
@@ -2838,7 +3322,26 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
 
     public void setEntityBoundingBox(AxisAlignedBB bb)
     {
-        this.boundingBox = bb;
+        // Akarin start
+        double a = bb.minX,
+                b = bb.minY,
+                c = bb.minZ,
+                d = bb.maxX,
+                e = bb.maxY,
+                f = bb.maxZ;
+        double len = bb.maxX - bb.minX;
+        if (len < 0) d = a;
+        if (len > 64) d = a + 64.0;
+
+        len = bb.maxY - bb.minY;
+        if (len < 0) e = b;
+        if (len > 64) e = b + 64.0;
+
+        len = bb.maxZ - bb.minZ;
+        if (len < 0) f = c;
+        if (len > 64) f = c + 64.0;
+        this.boundingBox = new AxisAlignedBB(a, b, c, d, e, f);
+        // Akarin end
     }
 
     public float getEyeHeight()
@@ -3319,7 +3822,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         return SoundCategory.NEUTRAL;
     }
 
-    protected int getFireImmuneTicks()
+    public int getFireImmuneTicks()
     {
         return 1;
     }

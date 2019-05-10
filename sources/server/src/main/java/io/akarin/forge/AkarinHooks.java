@@ -78,7 +78,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public abstract class AkarinHooks {
-	private static final Logger LOGGER = LogManager.getLogger("AkarinHooks");
+	private static final Logger LOGGER = LogManager.getLogger("Akarin");
 	
 	private static boolean initalizedConnection;
 	private static int initalizeConnectionSteps = 2;
