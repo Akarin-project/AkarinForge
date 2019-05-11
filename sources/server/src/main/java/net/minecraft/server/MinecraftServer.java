@@ -582,7 +582,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         }
 
         CommandBase.setCommandListener(null); // Forge: fix MC-128561
-        AkarinHooks.saveUserCache(this); // Akarin
+        AkarinHooks.stopServer(this); // Akarin
     }
 
     public boolean isServerRunning()

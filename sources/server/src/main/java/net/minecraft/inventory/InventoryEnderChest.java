@@ -26,7 +26,7 @@ public class InventoryEnderChest extends InventoryBasic
 
     @Override
     public Location getLocation() {
-        return new Location(this.owner.getWorld().getWorld(), this.owner.getPosition().getX(), this.owner.getPosition().getY(), this.owner.getPosition().getZ());
+        return new Location(this.owner.getEntityWorld().getWorld(), this.owner.getPosition().getX(), this.owner.getPosition().getY(), this.owner.getPosition().getZ());
     }
     
     public InventoryEnderChest(EntityPlayer owner)

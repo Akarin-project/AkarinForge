@@ -5,10 +5,8 @@
             <PatternLayout>
                 <LoggerNamePatternSelector defaultPattern="%highlightError{[%d{HH:mm:ss} %level]: [%logger] %minecraftFormatting{%msg}%n%xEx}">
                     <!-- don't include the full logger name for Mojang's logs since they use full class names and it's very verbose -->
-                    <PatternMatch key="net.minecraftforge." pattern="%highlightError{[%d{HH:mm:ss} %level]: %minecraftFormatting{%msg}%n%xEx}"/>
-                    <PatternMatch key="net.minecraft." pattern="%highlightError{[%d{HH:mm:ss} %level]: %minecraftFormatting{%msg}%n%xEx}"/>
-                    <PatternMatch key="com.mojang." pattern="%highlightError{[%d{HH:mm:ss} %level]: %minecraftFormatting{%msg}%n%xEx}"/>
-                    <PatternMatch key=",com.destroystokyo.,io.akarin.,Minecraft,com.sk89q.,ru.tehkode.,Minecraft.AWE" pattern="%highlightError{[%d{HH:mm:ss} %level]: %minecraftFormatting{%msg}%n%xEx}"/>
+                    <PatternMatch key="LaunchWrapper" pattern=""/>
+                    <PatternMatch key=",net.minecraftforge.,net.minecraft.,com.mojang.,com.destroystokyo.,io.akarin.,Minecraft,com.sk89q.,ru.tehkode.,Minecraft.AWE" pattern="%highlightError{[%d{HH:mm:ss} %level]: %minecraftFormatting{%msg}%n%xEx}"/>
                 </LoggerNamePatternSelector>
             </PatternLayout>
         </TerminalConsole>
@@ -16,10 +14,7 @@
             <PatternLayout>
                 <LoggerNamePatternSelector defaultPattern="[%d{HH:mm:ss}] [%t/%level]: [%logger] %minecraftFormatting{%msg}{strip}%n">
                     <!-- don't include the full logger name for Mojang's logs since they use full class names and it's very verbose -->
-                    <PatternMatch key="net.minecraftforge." pattern="[%d{HH:mm:ss}] [%t/%level]: %minecraftFormatting{%msg}{strip}%n"/>
-                    <PatternMatch key="net.minecraft." pattern="[%d{HH:mm:ss}] [%t/%level]: %minecraftFormatting{%msg}{strip}%n"/>
-                    <PatternMatch key="com.mojang." pattern="[%d{HH:mm:ss}] [%t/%level]: %minecraftFormatting{%msg}{strip}%n"/>
-                    <PatternMatch key=",com.destroystokyo.,io.akarin.,Minecraft,com.sk89q.,ru.tehkode.,Minecraft.AWE" pattern="[%d{HH:mm:ss}] [%t/%level]: %minecraftFormatting{%msg}{strip}%n"/>
+                    <PatternMatch key=",net.minecraftforge.,net.minecraft.,com.mojang.,com.destroystokyo.,io.akarin.,Minecraft,com.sk89q.,ru.tehkode.,Minecraft.AWE" pattern="[%d{HH:mm:ss}] [%t/%level]: %minecraftFormatting{%msg}{strip}%n"/>
                 </LoggerNamePatternSelector>
             </PatternLayout>
             <Policies>

@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.Future;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
@@ -47,7 +45,6 @@ import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 
 import io.akarin.forge.api.bukkit.I18nManager;
-import io.akarin.forge.server.AkarinNetHandlerPlayerServer;
 import io.netty.util.concurrent.GenericFutureListener;
 import joptsimple.OptionSet;
 import net.minecraft.block.Block;
@@ -57,7 +54,6 @@ import net.minecraft.crash.CrashReport;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
-import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.network.play.client.CPacketVehicleMove;
 import net.minecraft.network.play.server.SPacketDisconnect;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
@@ -70,7 +66,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.datafix.DataFixesManager;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.DimensionType;
@@ -373,18 +368,18 @@ public abstract class AkarinHooks {
             server.hasStopped = true;
         }
         
-        WatchdogThread.doStop();
+        //WatchdogThread.doStop();
         
         if (server.server != null) {
             server.server.disablePlugins();
         }
 	}
 	
-	public static void saveUserCache(MinecraftServer server) {
-        if (SpigotConfig.saveUserCacheOnStopOnly) {
-            LOGGER.info("Saving usercache.json");
+	public static void stopServer(MinecraftServer server) {
+        if (SpigotConfig.saveUserCacheOnStopOnly)
             server.profileCache.save();
-        }
+        
+        MinecraftServer.LOGGER.info("Stopped server");
 	}
 	
 	public static void tickServer(MinecraftServer server) throws InterruptedException {
@@ -776,7 +771,7 @@ public abstract class AkarinHooks {
             }
         }, new GenericFutureListener[0]);
         
-        ((AkarinNetHandlerPlayerServer) connection).onDisconnect(chatcomponenttext);
+        connection.onDisconnect(chatcomponenttext);
         
         return true;
 	}

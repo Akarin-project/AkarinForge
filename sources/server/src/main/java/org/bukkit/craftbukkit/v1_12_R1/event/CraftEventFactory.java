@@ -642,7 +642,7 @@ public class CraftEventFactory {
             cause = DamageCause.FLY_INTO_WALL;
         } else if (source == DamageSource.CRAMMING) {
             cause = DamageCause.CRAMMING;
-        } else if (source == DamageSource.GENERIC) {
+        } else {
             cause = DamageCause.CUSTOM;
         }
 

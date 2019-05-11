@@ -1,7 +1,6 @@
 package io.akarin.forge.server;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.bukkit.Location;
@@ -25,8 +24,6 @@ public abstract class AkarinNetHandlerPlayerServer {
     public float lastPitch = Float.MAX_VALUE;
     public float lastYaw = Float.MAX_VALUE;
     public boolean justTeleported = false;
-
-    protected final static HashSet<Integer> invalidItems = new HashSet<Integer>(java.util.Arrays.asList(8, 9, 10, 11, 26, 34, 36, 43, 51, 55, 59, 62, 63, 64, 68, 71, 74, 75, 83, 90, 92, 93, 94, 104, 105, 115, 117, 118, 119, 125, 127, 132, 140, 141, 142, 144));
     
     public abstract CraftPlayer getPlayer();
     
@@ -35,8 +32,6 @@ public abstract class AkarinNetHandlerPlayerServer {
     }
     
     public abstract void disconnect(String s);
-    
-	public abstract void onDisconnect(ITextComponent ichatbasecomponent);
 	
 	public abstract void teleport(Location dest);
 	

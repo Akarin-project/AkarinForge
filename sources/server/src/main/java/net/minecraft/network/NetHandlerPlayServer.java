@@ -1078,7 +1078,7 @@ public class NetHandlerPlayServer extends AkarinNetHandlerPlayerServer implement
         this.serverController.getPlayerList().sendMessage(textcomponenttranslation);
         */
         
-        String quitMessage = this.serverController.getPlayerList().disconnect(this.player);
+        String quitMessage = this.serverController.getPlayerList().playerLoggedOut(this.player);
         if ((quitMessage != null) && (quitMessage.length() > 0)) {
             this.serverController.getPlayerList().sendMessage(CraftChatMessage.fromString(quitMessage));
         }
@@ -2008,8 +2008,7 @@ public class NetHandlerPlayServer extends AkarinNetHandlerPlayerServer implement
             }
 
             boolean flag1 = packetIn.getSlotId() >= 1 && packetIn.getSlotId() <= 45;
-            // CraftBukkit - Add invalidItems check
-            boolean flag2 = itemstack.isEmpty() || itemstack.getMetadata() >= 0 && itemstack.getCount() <= 64 && !itemstack.isEmpty() && (!invalidItems.contains(Item.getIdFromItem(itemstack.getItem())) || !org.spigotmc.SpigotConfig.filterCreativeItems); // Spigot
+            boolean flag2 = itemstack.isEmpty() || itemstack.getMetadata() >= 0 && itemstack.getCount() <= 64 && !itemstack.isEmpty();
             if (flag || (flag1 && !ItemStack.areItemStacksEqual(this.player.inventoryContainer.getSlot(packetIn.getSlotId()).getStack(), packetIn.getStack()))) { // Insist on valid slot
                 // CraftBukkit start - Call click event
                 InventoryView inventory = this.player.inventoryContainer.getBukkitView();

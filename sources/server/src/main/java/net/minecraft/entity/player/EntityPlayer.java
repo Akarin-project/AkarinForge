@@ -1,6 +1,3 @@
-/*
- * Akarin reference
- */
 package net.minecraft.entity.player;
 
 import com.google.common.base.Predicate;
