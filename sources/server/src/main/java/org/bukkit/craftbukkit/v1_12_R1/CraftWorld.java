@@ -888,5 +888,11 @@ public class CraftWorld implements World {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public Spigot spigot() {
+		// TODO Auto-generated method stub
+		return null;
+	}
     
 }

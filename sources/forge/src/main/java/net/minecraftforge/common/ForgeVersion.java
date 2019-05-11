@@ -245,6 +245,7 @@ public class ForgeVersion
             {
                 try
                 {
+                	if (mod.getModId().equals("forge")) return; // Akarin - do not check forge
                     log.info("[{}] Starting version check at {}", mod.getModId(), url.toString());
                     Status status = PENDING;
                     ComparableVersion target = null;

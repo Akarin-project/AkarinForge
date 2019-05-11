@@ -227,6 +227,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
             else
             {
                 long start = System.nanoTime(); // Akarin - more accurate timer
+            	this.anvilConverterForAnvilFile = new net.minecraft.world.chunk.storage.AnvilSaveConverter(server.getWorldContainer(), this.dataFixer); // Akarin - init converter
                 net.minecraftforge.fml.common.FMLCommonHandler.instance().onServerStarted();
                 // Akarin start - eariler
                 // this.setPlayerList(new DedicatedPlayerList(this));

@@ -5,6 +5,7 @@ import java.net.Proxy;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -70,6 +71,25 @@ public abstract class AkarinHooks {
 		else
 			// haven't finish initalization
 			return false;
+	}
+	
+	public static Environment lookupEnvironment(int dim) {
+		// Lookup from bukkit
+        for (Environment env : Environment.values())
+        	if (env.getId() == dim)
+        		return env;
+        
+        // Figure out type then lookup from bukkit
+        return Environment.getEnvironment(DimensionManager.getProviderType(dim).getId());
+	}
+	
+	public static Environment lookupEnvironment(Map<Integer, Environment> lookup, int dim) {
+		Environment env = lookup.get(dim);
+		if (env == null)
+			// Figure out type then lookup
+			env = lookup.get(DimensionManager.getProviderType(dim).getId());
+		
+		return env;
 	}
 	
 	public static void loadWorlds(MinecraftServer server, String saveName, String worldNameIn, long seed, WorldType type, String generatorOptions) {

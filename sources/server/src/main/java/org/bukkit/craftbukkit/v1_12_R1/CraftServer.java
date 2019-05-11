@@ -746,5 +746,17 @@ public final class CraftServer implements Server {
             this.playerCommandState = false;
         }
     }
+
+	@Override
+	public Player[] getOnlinePlayers_1710() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Spigot spigot() {
+		// TODO Auto-generated method stub
+		return null;
+	}
     
 }
