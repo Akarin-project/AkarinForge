@@ -6,13 +6,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 
-public class RecipesMapCloning extends ShapelessRecipes implements IRecipe // CraftBukkit - added extends
+public class RecipesMapCloning extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<IRecipe> implements IRecipe
 {
-    // CraftBukkit start - Delegate to new parent class
-    public RecipesMapCloning() {
-        super("", new ItemStack(Items.MAP, 0, -1), NonNullList.from(Ingredient.EMPTY, Ingredient.fromItem(Items.MAP)));
-    }
-    // CraftBukkit end
     public boolean matches(InventoryCrafting inv, World worldIn)
     {
         int i = 0;

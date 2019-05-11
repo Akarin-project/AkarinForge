@@ -48,7 +48,6 @@ import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.relauncher.Side;
 
 import com.google.common.collect.ImmutableList;
-
 import org.apache.commons.io.IOUtils;
 
 /**

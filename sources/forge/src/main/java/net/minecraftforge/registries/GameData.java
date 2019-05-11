@@ -84,7 +84,6 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Level;
-import org.bukkit.inventory.Recipe;
 
 /**
  * INTERNAL ONLY
@@ -102,6 +101,7 @@ public class GameData
     public static final ResourceLocation ENTITIES     = new ResourceLocation("minecraft:entities");
     public static final ResourceLocation RECIPES      = new ResourceLocation("minecraft:recipes");
     public static final ResourceLocation PROFESSIONS  = new ResourceLocation("minecraft:villagerprofessions");
+    public static final ResourceLocation SERIALIZERS  = new ResourceLocation("minecraft:dataserializers");
 
     private static final int MAX_BLOCK_ID = 4095;
     private static final int MIN_ITEM_ID = MAX_BLOCK_ID + 1;
@@ -149,6 +149,7 @@ public class GameData
         makeRegistry(ENCHANTMENTS, Enchantment.class, MAX_ENCHANTMENT_ID).create();
         makeRegistry(RECIPES,      IRecipe.class,     MAX_RECIPE_ID).disableSaving().allowModification().addCallback(RecipeCallbacks.INSTANCE).create();
         makeRegistry(PROFESSIONS,  VillagerProfession.class, MAX_PROFESSION_ID).create();
+        makeRegistry(SERIALIZERS,  DataSerializerEntry.class, MIN_SERIALIZER_ID, MAX_SERIALIZER_ID).disableSaving().disableOverrides().addCallback(SerializerCallbacks.INSTANCE).create();
         entityRegistry = (ForgeRegistry<EntityEntry>)makeRegistry(ENTITIES, EntityEntry.class, MAX_ENTITY_ID).addCallback(EntityCallbacks.INSTANCE).create();
     }
 
@@ -484,12 +485,6 @@ public class GameData
             @Override public boolean canFit(int width, int height) { return false; }
             @Override public ItemStack getRecipeOutput() { return result; }
             @Override public boolean isDynamic() { return true; }
-			@Override
-			public Recipe toBukkitRecipe() {
-				return null;
-			}
-			@Override
-			public void setKey(ResourceLocation key) {}
         }
     }
 
@@ -900,7 +895,7 @@ public class GameData
         String prefix = mc == null || (mc instanceof InjectedModContainer && ((InjectedModContainer)mc).wrappedContainer instanceof FMLContainer) ? "minecraft" : mc.getModId().toLowerCase(Locale.ROOT);
         if (warnOverrides && !oldPrefix.equals(prefix) && oldPrefix.length() > 0)
         {
-            FMLLog.log.debug("Potentially Dangerous alternative prefix `{}` for name `{}`, expected `{}`. This could be a intended override, but in most cases indicates a broken mod.", oldPrefix, name, prefix); // Akarin - down to debug
+            FMLLog.log.warn("Potentially Dangerous alternative prefix `{}` for name `{}`, expected `{}`. This could be a intended override, but in most cases indicates a broken mod.", oldPrefix, name, prefix);
             prefix = oldPrefix;
         }
         return new ResourceLocation(prefix, name);

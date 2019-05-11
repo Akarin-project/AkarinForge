@@ -15,23 +15,15 @@ import net.minecraft.item.ItemStack;
 public class FurnaceRecipes
 {
     private static final FurnaceRecipes SMELTING_BASE = new FurnaceRecipes();
-    public Map<ItemStack, ItemStack> smeltingList = Maps.<ItemStack, ItemStack>newHashMap(); // Akarin
+    private final Map<ItemStack, ItemStack> smeltingList = Maps.<ItemStack, ItemStack>newHashMap();
     private final Map<ItemStack, Float> experienceList = Maps.<ItemStack, Float>newHashMap();
-    public Map<ItemStack,ItemStack> customRecipes = Maps.newHashMap(); // CraftBukkit - add field
-    public Map<ItemStack,Float> customExperience = Maps.newHashMap(); // CraftBukkit - add field
-    // CraftBukkit start - add method
-    public void registerRecipe(ItemStack itemstack, ItemStack itemstack1, float f) {
-        this.customRecipes.put(itemstack, itemstack1);
-        this.customExperience.put(itemstack, f);
-    }
-    // CraftBukkit end
 
     public static FurnaceRecipes instance()
     {
         return SMELTING_BASE;
     }
 
-    public FurnaceRecipes() // Akarin
+    private FurnaceRecipes()
     {
         this.addSmeltingRecipeForBlock(Blocks.IRON_ORE, new ItemStack(Items.IRON_INGOT), 0.7F);
         this.addSmeltingRecipeForBlock(Blocks.GOLD_ORE, new ItemStack(Items.GOLD_INGOT), 1.0F);
@@ -128,7 +120,7 @@ public class FurnaceRecipes
 
     public ItemStack getSmeltingResult(ItemStack stack)
     {
-        for (Entry<ItemStack, ItemStack> entry : this.customRecipes.entrySet()) // Akarin
+        for (Entry<ItemStack, ItemStack> entry : this.smeltingList.entrySet())
         {
             if (this.compareItemStacks(stack, entry.getKey()))
             {
@@ -136,20 +128,7 @@ public class FurnaceRecipes
             }
         }
 
-        // CraftBukkit start - fall back to vanilla recipes
-        if (!this.smeltingList.isEmpty()) {
-            for (Entry<ItemStack, ItemStack> entry : this.smeltingList.entrySet())
-            {
-                if (this.compareItemStacks(stack, entry.getKey()))
-                {
-                    return entry.getValue();
-                }
-            }
-            return ItemStack.EMPTY;
-        } else {
-            return ItemStack.EMPTY;
-        }
-        // CraftBukkit end
+        return ItemStack.EMPTY;
     }
 
     private boolean compareItemStacks(ItemStack stack1, ItemStack stack2)
@@ -167,7 +146,7 @@ public class FurnaceRecipes
         float ret = stack.getItem().getSmeltingExperience(stack);
         if (ret != -1) return ret;
 
-        for (Entry<ItemStack, Float> entry : this.customExperience.entrySet()) // Akarin
+        for (Entry<ItemStack, Float> entry : this.experienceList.entrySet())
         {
             if (this.compareItemStacks(stack, entry.getKey()))
             {
@@ -175,19 +154,6 @@ public class FurnaceRecipes
             }
         }
 
-        // CraftBukkit start - fall back to vanilla recipes
-        if (!this.experienceList.isEmpty()) {
-            for (Entry<ItemStack, Float> entry : this.experienceList.entrySet())
-            {
-                if (this.compareItemStacks(stack, entry.getKey()))
-                {
-                    return ((Float)entry.getValue()).floatValue();
-                }
-            }
-            return 0.0F;
-        } else {
-            return 0.0F;
-        }
-        // CraftBukkit end
+        return 0.0F;
     }
 }

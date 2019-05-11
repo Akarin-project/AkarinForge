@@ -12,10 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
-
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftShapedRecipe;
-
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -31,69 +27,6 @@ public class ShapedRecipes extends net.minecraftforge.registries.IForgeRegistryE
     public final NonNullList<Ingredient> recipeItems;
     private final ItemStack recipeOutput;
     private final String group;
-    // CraftBukkit start
-    public ResourceLocation key;
-
-    @Override
-    public void setKey(ResourceLocation key) {
-        this.key = key;
-    }
-    
-    public org.bukkit.inventory.ShapedRecipe toBukkitRecipe() {
-        CraftItemStack result = CraftItemStack.asCraftMirror(this.recipeOutput);
-        CraftShapedRecipe recipe = new CraftShapedRecipe(result, this);
-        switch (this.recipeHeight) {
-        case 1:
-            switch (this.recipeWidth) {
-            case 1:
-                recipe.shape("a");
-                break;
-            case 2:
-                recipe.shape("ab");
-                break;
-            case 3:
-                recipe.shape("abc");
-                break;
-            }
-            break;
-        case 2:
-            switch (this.recipeWidth) {
-            case 1:
-                recipe.shape("a","b");
-                break;
-            case 2:
-                recipe.shape("ab","cd");
-                break;
-            case 3:
-                recipe.shape("abc","def");
-                break;
-            }
-            break;
-        case 3:
-            switch (this.recipeWidth) {
-            case 1:
-                recipe.shape("a","b","c");
-                break;
-            case 2:
-                recipe.shape("ab","cd","ef");
-                break;
-            case 3:
-                recipe.shape("abc","def","ghi");
-                break;
-            }
-            break;
-        }
-        char c = 'a';
-        for (Ingredient list : this.recipeItems) {
-            if (list != null && list.matchingStacks.length > 0) {
-                net.minecraft.item.ItemStack stack = list.matchingStacks[0];
-                recipe.setIngredient(c, org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers.getMaterial(stack.getItem()), (list.matchingStacks.length) > 1 ? 32767 : stack.getMetadata());
-            }
-            c++;
-        }
-        return recipe;
-    }
-    // CraftBukkit end
 
     public ShapedRecipes(String group, int width, int height, NonNullList<Ingredient> ingredients, ItemStack result)
     {

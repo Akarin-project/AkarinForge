@@ -1,8 +1,5 @@
 package net.minecraft.inventory;
 
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryCrafting;
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryView;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
@@ -17,30 +14,9 @@ public class ContainerWorkbench extends Container
     private final World world;
     private final BlockPos pos;
     private final EntityPlayer player;
-    // CraftBukkit start
-    private CraftInventoryView bukkitEntity = null;
-    private InventoryPlayer playerInventory;
-    
-    @Override
-    public CraftInventoryView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
-        }
-
-        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
-        bukkitEntity = new CraftInventoryView(this.playerInventory.player.getBukkitEntity(), inventory, this);
-        return bukkitEntity;
-    }
-    // CraftBukkit end
 
     public ContainerWorkbench(InventoryPlayer playerInventory, World worldIn, BlockPos posIn)
     {
-        // CraftBukkit start - Switched order of IInventory construction and stored player
-        this.craftResult = new InventoryCraftResult();
-        this.craftMatrix = new InventoryCrafting(this, 3, 3, playerInventory.player); // CraftBukkit - pass player
-        this.craftMatrix.resultInventory = this.craftResult;
-        this.playerInventory = playerInventory;
-        // CraftBukkit end
         this.world = worldIn;
         this.pos = posIn;
         this.player = playerInventory.player;
@@ -85,7 +61,6 @@ public class ContainerWorkbench extends Container
 
     public boolean canInteractWith(EntityPlayer playerIn)
     {
-        if (!this.checkReachable) return true; // CraftBukkit
         if (this.world.getBlockState(this.pos).getBlock() != Blocks.CRAFTING_TABLE)
         {
             return false;

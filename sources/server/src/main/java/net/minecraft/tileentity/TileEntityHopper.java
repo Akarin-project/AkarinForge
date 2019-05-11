@@ -2,10 +2,6 @@ package net.minecraft.tileentity;
 
 import java.util.List;
 import javax.annotation.Nullable;
-
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
-import org.bukkit.entity.HumanEntity;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.BlockHopper;
@@ -37,30 +33,6 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
     private NonNullList<ItemStack> inventory = NonNullList.<ItemStack>withSize(5, ItemStack.EMPTY);
     private int transferCooldown = -1;
     private long tickedGameTime;
-    // CraftBukkit start - add fields and methods
-    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
-    private int maxStack = 64;
-
-    public List<ItemStack> getContents() {
-        return this.inventory;
-    }
-
-    public void onOpen(CraftHumanEntity who) {
-        transaction.add(who);
-    }
-
-    public void onClose(CraftHumanEntity who) {
-        transaction.remove(who);
-    }
-
-    public List<HumanEntity> getViewers() {
-        return transaction;
-    }
-
-    public void setMaxStackSize(int size) {
-        maxStack = size;
-    }
-    // CraftBukkit end
 
     public static void registerFixesHopper(DataFixer fixer)
     {
@@ -134,7 +106,7 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
 
     public int getInventoryStackLimit()
     {
-        return maxStack; // CraftBukkit
+        return 64;
     }
 
     public void update()
@@ -147,11 +119,7 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
             if (!this.isOnTransferCooldown())
             {
                 this.setTransferCooldown(0);
-                // Spigot start
-                if (!this.updateHopper() && this.world.spigotConfig.hopperCheck > 1) {
-                    this.setTransferCooldown(this.world.spigotConfig.hopperCheck);
-                }
-                // Spigot end
+                this.updateHopper();
             }
         }
     }

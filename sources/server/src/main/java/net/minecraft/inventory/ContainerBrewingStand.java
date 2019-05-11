@@ -1,8 +1,5 @@
 package net.minecraft.inventory;
 
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryBrewer;
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryView;
-
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -22,14 +19,9 @@ public class ContainerBrewingStand extends Container
     private final Slot slot;
     private int prevBrewTime;
     private int prevFuel;
-    // CraftBukkit start
-    private CraftInventoryView bukkitEntity = null;
-    private InventoryPlayer player;
-    // CraftBukkit end
 
     public ContainerBrewingStand(InventoryPlayer playerInventory, IInventory tileBrewingStandIn)
     {
-        player = playerInventory; // CraftBukkit
         this.tileBrewingStand = tileBrewingStandIn;
         this.addSlotToContainer(new ContainerBrewingStand.Potion(tileBrewingStandIn, 0, 56, 51));
         this.addSlotToContainer(new ContainerBrewingStand.Potion(tileBrewingStandIn, 1, 79, 58));
@@ -88,7 +80,6 @@ public class ContainerBrewingStand extends Container
 
     public boolean canInteractWith(EntityPlayer playerIn)
     {
-        if (!this.checkReachable) return true; // CraftBukkit
         return this.tileBrewingStand.isUsableByPlayer(playerIn);
     }
 
@@ -251,16 +242,4 @@ public class ContainerBrewingStand extends Container
                 return net.minecraftforge.common.brewing.BrewingRecipeRegistry.isValidInput(stack);
             }
         }
-    // CraftBukkit start
-    @Override
-    public CraftInventoryView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
-        }
-
-        CraftInventoryBrewer inventory = new CraftInventoryBrewer(this.tileBrewingStand);
-        bukkitEntity = new CraftInventoryView(this.player.player.getBukkitEntity(), inventory, this);
-        return bukkitEntity;
-    }
-    // CraftBukkit end
 }

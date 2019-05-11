@@ -421,7 +421,7 @@ public class OreDictionary
                                 matches = true;
                                 if (oreName != null && !oreName.equals(ent.getValue()))
                                 {
-                                    FMLLog.log.debug("Invalid recipe found with multiple oredict ingredients in the same ingredient..."); //TODO: Write a dumper? // Akarin - down to debug
+                                    // FMLLog.log.info("Invalid recipe found with multiple oredict ingredients in the same ingredient..."); //TODO: Write a dumper? // Akarin - this always happen
                                     skip = true;
                                     break;
                                 }
@@ -456,7 +456,7 @@ public class OreDictionary
             }
         }
 
-        FMLLog.log.debug("Replaced {} ore ingredients", replaced); // Akarin - down to debug
+        //FMLLog.log.info("Replaced {} ore ingredients", replaced); // Akarin - down to debug
     }
 
     /**

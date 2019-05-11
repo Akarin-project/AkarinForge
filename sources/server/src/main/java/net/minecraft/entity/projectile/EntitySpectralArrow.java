@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 
 public class EntitySpectralArrow extends EntityArrow
 {
-    public int duration = 200;
+    private int duration = 200;
 
     public EntitySpectralArrow(World worldIn)
     {

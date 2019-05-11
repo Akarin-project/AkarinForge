@@ -27,11 +27,11 @@ import org.apache.logging.log4j.Logger;
 
 public class TileEntityEndGateway extends TileEntityEndPortal implements ITickable
 {
-    private static final Logger LOGGER = LogManager.getRootLogger(); // Akarin
+    private static final Logger LOGGER = LogManager.getLogger();
     private long age;
     private int teleportCooldown;
-    public BlockPos exitPortal; // Akarin
-    public boolean exactTeleport; // Akarin
+    private BlockPos exitPortal;
+    private boolean exactTeleport;
 
     public NBTTagCompound writeToNBT(NBTTagCompound compound)
     {

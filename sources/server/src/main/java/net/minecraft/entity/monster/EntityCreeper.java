@@ -2,10 +2,6 @@ package net.minecraft.entity.monster;
 
 import java.util.Collection;
 import javax.annotation.Nullable;
-
-import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
-import org.bukkit.event.entity.ExplosionPrimeEvent;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityAreaEffectCloud;
 import net.minecraft.entity.EntityLiving;
@@ -48,8 +44,8 @@ public class EntityCreeper extends EntityMob
     private static final DataParameter<Boolean> IGNITED = EntityDataManager.<Boolean>createKey(EntityCreeper.class, DataSerializers.BOOLEAN);
     private int lastActiveTime;
     private int timeSinceIgnited;
-    public int fuseTime = 30;
-    public int explosionRadius = 3;
+    private int fuseTime = 30;
+    private int explosionRadius = 3;
     private int droppedSkulls;
 
     public EntityCreeper(World worldIn)
@@ -188,7 +184,7 @@ public class EntityCreeper extends EntityMob
 
     public void onDeath(DamageSource cause)
     {
-        //super.onDeath(cause); // Akarin
+        super.onDeath(cause);
 
         if (this.world.getGameRules().getBoolean("doMobLoot"))
         {
@@ -205,7 +201,6 @@ public class EntityCreeper extends EntityMob
                 this.entityDropItem(new ItemStack(Items.SKULL, 1, 4), 0.0F);
             }
         }
-        super.onDeath(cause); // Akarin
     }
 
     public boolean attackEntityAsMob(Entity entityIn)
@@ -243,18 +238,8 @@ public class EntityCreeper extends EntityMob
     public void onStruckByLightning(EntityLightningBolt lightningBolt)
     {
         super.onStruckByLightning(lightningBolt);
-     // CraftBukkit start
-        if (CraftEventFactory.callCreeperPowerEvent(this, lightningBolt, org.bukkit.event.entity.CreeperPowerEvent.PowerCause.LIGHTNING).isCancelled()) {
-            return;
-        }
-
-        this.setPowered(true);
+        this.dataManager.set(POWERED, Boolean.valueOf(true));
     }
-
-    public void setPowered(boolean powered) {
-        this.dataManager.set(EntityCreeper.POWERED, powered);
-    }
-    // CraftBukkit end
 
     protected boolean processInteract(EntityPlayer player, EnumHand hand)
     {
@@ -282,19 +267,10 @@ public class EntityCreeper extends EntityMob
         {
             boolean flag = net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.world, this);
             float f = this.getPowered() ? 2.0F : 1.0F;
-            // CraftBukkit start
-            ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), this.explosionRadius * f, false);
-            this.world.getServer().getPluginManager().callEvent(event);
-            if (!event.isCancelled()) {
-                this.dead = true;
-                this.world.newExplosion(this, this.posX, this.posY, this.posZ, event.getRadius(), event.getFire(), flag);
-                this.setDead();
-                this.spawnLingeringCloud();
-            } else {
-                timeSinceIgnited = 0;
-                this.dataManager.set(IGNITED, Boolean.valueOf(false));
-            }
-            // CraftBukkit end
+            this.dead = true;
+            this.world.createExplosion(this, this.posX, this.posY, this.posZ, (float)this.explosionRadius * f, flag);
+            this.setDead();
+            this.spawnLingeringCloud();
         }
     }
 
@@ -305,7 +281,6 @@ public class EntityCreeper extends EntityMob
         if (!collection.isEmpty())
         {
             EntityAreaEffectCloud entityareaeffectcloud = new EntityAreaEffectCloud(this.world, this.posX, this.posY, this.posZ);
-            entityareaeffectcloud.setOwner(this); // CraftBukkit
             entityareaeffectcloud.setRadius(2.5F);
             entityareaeffectcloud.setRadiusOnUse(-0.5F);
             entityareaeffectcloud.setWaitTime(10);

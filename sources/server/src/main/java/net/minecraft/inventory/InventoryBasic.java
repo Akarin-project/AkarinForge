@@ -1,15 +1,7 @@
 package net.minecraft.inventory;
 
 import com.google.common.collect.Lists;
-
-import gnu.trove.iterator.TIterator;
-
 import java.util.List;
-
-import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
-import org.bukkit.entity.HumanEntity;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -26,45 +18,6 @@ public class InventoryBasic implements IInventory
     private final NonNullList<ItemStack> inventoryContents;
     private List<IInventoryChangedListener> changeListeners;
     private boolean hasCustomName;
-    // Akarin start - add fields and methods
-    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
-    private int maxStack = 64;
-    protected org.bukkit.inventory.InventoryHolder bukkitOwner;
-
-    public List<ItemStack> getContents() {
-        return this.inventoryContents;
-    }
-
-    public void onOpen(CraftHumanEntity who) {
-        transaction.add(who);
-    }
-
-    public void onClose(CraftHumanEntity who) {
-        transaction.remove(who);
-    }
-
-    public List<HumanEntity> getViewers() {
-        return transaction;
-    }
-
-    public void setMaxStackSize(int i) {
-        maxStack = i;
-    }
-
-    public org.bukkit.inventory.InventoryHolder getOwner() {
-        return bukkitOwner;
-    }
-
-    @Override
-    public Location getLocation() {
-        return null;
-    }
-
-    public InventoryBasic(String title, boolean customName, int slotCount, org.bukkit.inventory.InventoryHolder owner) {
-        this(title, customName, slotCount);
-        this.bukkitOwner = owner;
-    }
-    // Akarin end
 
     public InventoryBasic(String title, boolean customName, int slotCount)
     {

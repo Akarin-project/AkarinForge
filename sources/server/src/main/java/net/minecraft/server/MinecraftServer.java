@@ -9,16 +9,10 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
-
-import io.akarin.forge.AkarinHooks;
-import io.akarin.forge.BukkitInjector;
-import io.akarin.forge.api.bukkit.I18nManager;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
-import joptsimple.OptionSet;
-
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -29,10 +23,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
@@ -63,7 +55,6 @@ import net.minecraft.profiler.ISnooperInfo;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.profiler.Snooper;
 import net.minecraft.server.dedicated.DedicatedServer;
-import net.minecraft.server.dedicated.PropertyManager;
 import net.minecraft.server.management.PlayerList;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.util.IProgressUpdate;
@@ -82,7 +73,6 @@ import net.minecraft.world.GameType;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldServerDemo;
 import net.minecraft.world.WorldServerMulti;
@@ -92,48 +82,34 @@ import net.minecraft.world.chunk.storage.AnvilSaveConverter;
 import net.minecraft.world.storage.ISaveFormat;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bukkit.Bukkit;
-import org.bukkit.World.Environment;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.command.RemoteConsoleCommandSender;
-import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_12_R1.scoreboard.CraftScoreboardManager;
-import org.bukkit.craftbukkit.v1_12_R1.util.ServerShutdownThread;
-import org.bukkit.event.world.WorldInitEvent;
-import org.bukkit.generator.ChunkGenerator;
-import org.bukkit.plugin.PluginLoadOrder;
 
 public abstract class MinecraftServer implements ICommandSender, Runnable, IThreadListener, ISnooperInfo
 {
-    public static final Logger LOGGER = LogManager.getLogger("Minecraft");
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final File USER_CACHE_FILE = new File("usercache.json");
-    protected ISaveFormat anvilConverterForAnvilFile;
+    private final ISaveFormat anvilConverterForAnvilFile;
     private final Snooper usageSnooper = new Snooper("server", this, getCurrentTimeMillis());
-    public File anvilFile; // Akarin
+    private final File anvilFile;
     private final List<ITickable> tickables = Lists.<ITickable>newArrayList();
     public final ICommandManager commandManager;
     public final Profiler profiler = new Profiler();
     private final NetworkSystem networkSystem;
     private final ServerStatusResponse statusResponse = new ServerStatusResponse();
     private final Random random = new Random();
-    public final DataFixer dataFixer; // Akarin
+    private final DataFixer dataFixer;
     @SideOnly(Side.SERVER)
     private String hostname;
     private int serverPort = -1;
     public WorldServer[] worlds = new WorldServer[0];
     private PlayerList playerList;
-    public boolean serverRunning = true; // Akarin
+    private boolean serverRunning = true;
     private boolean serverStopped;
-    public int tickCounter; // Akarin
+    private int tickCounter;
     protected final Proxy serverProxy;
     public String currentTask;
     public int percentDone;
@@ -158,7 +134,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     private boolean enableBonusChest;
     private String resourcePackUrl = "";
     private String resourcePackHash = "";
-    public boolean serverIsRunning; // Akarin
+    private boolean serverIsRunning;
     private long timeOfLastWarning;
     private String userMessage;
     private boolean startProfiling;
@@ -166,100 +142,25 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     private final YggdrasilAuthenticationService authService;
     private final MinecraftSessionService sessionService;
     private final GameProfileRepository profileRepo;
-    public final PlayerProfileCache profileCache; // Akarin
+    private final PlayerProfileCache profileCache;
     private long nanoTimeSinceStatusRefresh;
     public final Queue < FutureTask<? >> futureTaskQueue = Queues. < FutureTask<? >> newArrayDeque();
     private Thread serverThread;
     protected long currentTime = getCurrentTimeMillis();
     @SideOnly(Side.CLIENT)
     private boolean worldIconSet;
-    // CraftBukkit start
-    public ConsoleCommandSender console;
-    public RemoteConsoleCommandSender remoteConsole;
-    public CraftServer server;
-    public OptionSet options;
-    public Thread primaryThread;
-    public Queue<Runnable> processQueue = Queues.newConcurrentLinkedQueue();
-    public int autosavePeriod;
-    public boolean hasStopped; // Akarin
-    public final Object stopLock; // Akarin
-    public static int currentTick = (int) (System.currentTimeMillis() / 50);
-    
-    private static final int TPS = 20;
-    private static final long SEC_IN_NANO = 1000000000;
-    public static final long TICK_TIME = SEC_IN_NANO / TPS;
-    public static final long MAX_CATCHUP_BUFFER = TICK_TIME * TPS * 60L; // Akarin
-    public static final int SAMPLE_INTERVAL = 20; // Akarin
-    public final RollingAverage tps1 = new RollingAverage(60);
-    public final RollingAverage tps5 = new RollingAverage(60 * 5);
-    public final RollingAverage tps15 = new RollingAverage(60 * 15);
-    public double[] recentTps = new double[3];
-    
-    private static MinecraftServer SERVER;
-    
-    public static class RollingAverage {
-        private final int size;
-        private long time;
-        private double total;
-        private int index = 0;
-        private final double[] samples;
-        private final long[] times;
 
-        RollingAverage(int size) {
-            this.size = size;
-            this.time = size * SEC_IN_NANO;
-            this.total = TPS * SEC_IN_NANO * size;
-            this.samples = new double[size];
-            this.times = new long[size];
-            for (int i = 0; i < size; i++) {
-                this.samples[i] = TPS;
-                this.times[i] = SEC_IN_NANO;
-            }
-        }
-
-        public void add(double x, long t) {
-            time -= times[index];
-            total -= samples[index] * times[index];
-            samples[index] = x;
-            times[index] = t;
-            time += t;
-            total += x * t;
-            if (++index == size) {
-                index = 0;
-            }
-        }
-
-        public double getAverage() {
-            return total / time;
-        }
-    }
-    
-    public static MinecraftServer getServerInst() {
-        return SERVER;
-    }
-    
-    public abstract PropertyManager getPropertyManager();
-    // CraftBukkit end
-
-    // Akarin start
-    public MinecraftServer(OptionSet options, Proxy proxyIn, DataFixer dataFixerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
+    public MinecraftServer(File anvilFileIn, Proxy proxyIn, DataFixer dataFixerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
     {
-        SERVER = this;
-        this.stopLock = new Object();
-        this.recentTps = new double[3];
-        
-        Runtime.getRuntime().addShutdownHook(new ServerShutdownThread(this));
-        this.serverThread = this.primaryThread = new Thread(SidedThreadGroups.SERVER, this, "Server thread");
-        // Akarin end
         this.serverProxy = proxyIn;
         this.authService = authServiceIn;
         this.sessionService = sessionServiceIn;
         this.profileRepo = profileRepoIn;
         this.profileCache = profileCacheIn;
-        this.options = options; // Akarin
+        this.anvilFile = anvilFileIn;
         this.networkSystem = new NetworkSystem(this);
         this.commandManager = this.createCommandManager();
-        this.anvilConverterForAnvilFile = this.getActiveAnvilConverter(); // Akarin
+        this.anvilConverterForAnvilFile = new AnvilSaveConverter(anvilFileIn, dataFixerIn);
         this.dataFixer = dataFixerIn;
     }
 
@@ -322,11 +223,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     {
         this.convertMapIfNeeded(saveName);
         this.setUserMessage("menu.loadingLevel");
-        // Akarin start
-        AkarinHooks.injectBukkit();
-        AkarinHooks.loadWorlds(this, saveName, worldNameIn, seed, type, generatorOptions);
-        
-        /*
         ISaveHandler isavehandler = this.anvilConverterForAnvilFile.getSaveLoader(saveName, true);
         this.setResourcePackFromWorld(this.getFolderName(), isavehandler);
         WorldInfo worldinfo = isavehandler.loadWorldInfo();
@@ -416,17 +312,10 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         this.playerList.setPlayerManager(new WorldServer[]{ overWorld });
         this.setDifficultyForAllWorlds(this.getDifficulty());
         this.initialWorldChunkLoad();
-        */
-        // Akarin end
     }
 
     public void initialWorldChunkLoad()
     {
-    	// Akarin start
-    	AkarinHooks.initializeChunks(this);
-        this.server.enablePlugins(PluginLoadOrder.POSTWORLD);
-    	
-    	/*
         int i = 16;
         int j = 4;
         int k = 192;
@@ -455,8 +344,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
                 worldserver.getChunkProvider().provideChunk(blockpos.getX() + l1 >> 4, blockpos.getZ() + i2 >> 4);
             }
         }
-        */
-        // Akarin end
 
         this.clearCurrentTask();
     }
@@ -492,7 +379,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
     public abstract boolean shouldBroadcastConsoleToOps();
 
-    public void outputPercentRemaining(String message, int percent) // Akarin
+    protected void outputPercentRemaining(String message, int percent)
     {
         this.currentTask = message;
         this.percentDone = percent;
@@ -531,7 +418,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     public void stopServer()
     {
         LOGGER.info("Stopping server");
-        AkarinHooks.preStopServer(this); // Akarin
 
         if (this.getNetworkSystem() != null)
         {
@@ -543,7 +429,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
             LOGGER.info("Saving players");
             this.playerList.saveAllPlayerData();
             this.playerList.removeAllPlayers();
-            try { Thread.sleep(100); } catch (InterruptedException ex) {} // Akarin
         }
 
         if (this.worlds != null)
@@ -582,7 +467,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         }
 
         CommandBase.setCommandListener(null); // Forge: fix MC-128561
-        AkarinHooks.stopServer(this); // Akarin
     }
 
     public boolean isServerRunning()
@@ -608,10 +492,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
                 this.statusResponse.setVersion(new ServerStatusResponse.Version("1.12.2", 340));
                 this.applyServerIconToResponse(this.statusResponse);
 
-                // Akarin start
-                AkarinHooks.tickServer(this);
-                
-                /*
                 while (this.serverRunning)
                 {
                     long k = getCurrentTimeMillis();
@@ -650,8 +530,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
                     Thread.sleep(Math.max(1L, 50L - i));
                     this.serverIsRunning = true;
                 }
-                */
-                // Akarin end
                 net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerStopping();
                 net.minecraftforge.fml.common.FMLCommonHandler.instance().expectServerStopped(); // has to come before finalTick to avoid race conditions
             }
@@ -836,7 +714,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
     public void updateTimeLightAndEntities()
     {
-    	AkarinHooks.preTick(this); // Akarin
         this.profiler.startSection("jobs");
 
         synchronized (this.futureTaskQueue)
@@ -850,10 +727,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         this.profiler.endStartSection("levels");
         net.minecraftforge.common.chunkio.ChunkIOExecutor.tick();
 
-        // Akarin start
-        AkarinHooks.tickWorlds(this);
-        
-        /*
         Integer[] ids = net.minecraftforge.common.DimensionManager.getIDs(this.tickCounter % 200 == 0);
         for (int x = 0; x < ids.length; x++)
         {
@@ -913,8 +786,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
         this.profiler.endStartSection("dim_unloading");
         net.minecraftforge.common.DimensionManager.unloadWorlds(worldTickTimes);
-        */
-        // Akarin end
         this.profiler.endStartSection("connection");
         this.getNetworkSystem().networkTick();
         this.profiler.endStartSection("players");
@@ -938,13 +809,9 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
     public void startServerThread()
     {
-    	// Akarin start
-    	/*
         net.minecraftforge.fml.common.StartupQuery.reset();
         this.serverThread = new Thread(net.minecraftforge.fml.common.thread.SidedThreadGroups.SERVER, this, "Server thread");
         this.serverThread.start();
-        */
-        // Akarin end
     }
 
     public File getFile(String fileName)
@@ -1073,7 +940,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
     public boolean isAnvilFileSet()
     {
-        return true; // Akarin
+        return this.anvilFile != null;
     }
 
     public String getName()
@@ -1083,7 +950,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
     public void sendMessage(ITextComponent component)
     {
-        LOGGER.info(component.getFormattedText()); // Akarin
+        LOGGER.info(component.getUnformattedText());
     }
 
     public boolean canUseCommand(int permLevel, String commandName)
@@ -1499,7 +1366,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     {
         Validate.notNull(callable);
 
-        if (!this.isCallingFromMinecraftThread()) // Akarin
+        if (!this.isCallingFromMinecraftThread() && !this.isServerStopped())
         {
             ListenableFutureTask<V> listenablefuturetask = ListenableFutureTask.<V>create(callable);
 
@@ -1602,10 +1469,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
 
         Bootstrap.register();
 
-        // Akarin start
-        AkarinHooks.initalizeServer(p_main_0_);
-        
-        /*
         try
         {
             boolean flag = true;
@@ -1721,8 +1584,6 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         {
             LOGGER.fatal("Failed to start the minecraft server", (Throwable)exception);
         }
-        */
-        // Akarin end
     }
 
     @SideOnly(Side.SERVER)

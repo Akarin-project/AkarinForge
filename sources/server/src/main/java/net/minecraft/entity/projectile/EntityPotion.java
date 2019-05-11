@@ -232,7 +232,7 @@ public class EntityPotion extends EntityThrowable
         this.world.spawnEntity(entityareaeffectcloud);
     }
 
-    public boolean isLingering()
+    private boolean isLingering()
     {
         return this.getPotion().getItem() == Items.LINGERING_POTION;
     }

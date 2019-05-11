@@ -6,10 +6,10 @@ import net.minecraft.util.text.ITextComponent;
 public abstract class BossInfo
 {
     private final UUID uniqueId;
-    public ITextComponent name; // Akarin
+    protected ITextComponent name;
     protected float percent;
-    public BossInfo.Color color; // Akarin
-    public BossInfo.Overlay overlay; // Akarin
+    protected BossInfo.Color color;
+    protected BossInfo.Overlay overlay;
     protected boolean darkenSky;
     protected boolean playEndBossMusic;
     protected boolean createFog;

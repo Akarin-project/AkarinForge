@@ -45,11 +45,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multiset;
 
-import io.akarin.forge.AkarinHooks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.dedicated.DedicatedPlayerList;
-import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.World;
@@ -57,21 +54,11 @@ import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldServerMulti;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.WorldType;
-import net.minecraft.world.chunk.storage.AnvilSaveHandler;
 import net.minecraft.world.storage.ISaveHandler;
-import net.minecraft.world.storage.SaveHandler;
-import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.FMLLog;
 
 import javax.annotation.Nullable;
-
-import org.bukkit.World.Environment;
-import org.bukkit.WorldCreator;
-import org.bukkit.event.world.WorldLoadEvent;
-import org.bukkit.generator.ChunkGenerator;
 
 public class DimensionManager
 {
@@ -96,27 +83,6 @@ public class DimensionManager
     private static final IntSet usedIds = new IntOpenHashSet();
     private static final ConcurrentMap<World, World> weakWorldMap = new MapMaker().weakKeys().weakValues().makeMap();
     private static final Multiset<Integer> leakedWorlds = HashMultiset.create();
-    private static ArrayList<Integer> bukkitDims = new ArrayList();
-    
-    public static void addBukkitDimension(int dim) {
-        if (!bukkitDims.contains(dim)) {
-            bukkitDims.add(dim);
-        }
-    }
-
-    public static void removeBukkitDimension(int dim) {
-        if (bukkitDims.contains(dim)) {
-            bukkitDims.remove(bukkitDims.indexOf(dim));
-        }
-    }
-
-    public static ArrayList<Integer> getBukkitDimensionIDs() {
-        return bukkitDims;
-    }
-
-    public static boolean isBukkitDimension(int dim) {
-        return bukkitDims.contains(dim);
-    }
 
     /**
      * Returns a list of dimensions associated with this DimensionType.
@@ -244,7 +210,7 @@ public class DimensionManager
             worlds.put(id, world);
             weakWorldMap.put(world, world);
             server.worldTickTimes.put(id, new long[100]);
-            FMLLog.log.info("Loading dimension {} ({})", id, world.getWorldInfo().getWorldName());
+            FMLLog.log.info("Loading dimension {} ({}) ({})", id, world.getWorldInfo().getWorldName(), world.getMinecraftServer());
         }
         else
         {
@@ -273,13 +239,9 @@ public class DimensionManager
 
         server.worlds = tmp.toArray(new WorldServer[0]);
     }
-    
+
     public static void initDimension(int dim)
     {
-    	// Akarin start
-    	AkarinHooks.initalizeWorld(dim);
-    	
-    	/*
         WorldServer overworld = getWorld(0);
         if (overworld == null)
         {
@@ -296,64 +258,18 @@ public class DimensionManager
         }
         MinecraftServer mcServer = overworld.getMinecraftServer();
         ISaveHandler savehandler = overworld.getSaveHandler();
-        String name;
-        WorldSettings worldSettings = new WorldSettings(overworld.getWorldInfo());
-        Environment env = Environment.getEnvironment(dim);
-        if (dim >= -1 && dim <= 1) {
-            if (dim == -1 && !mcServer.getAllowNether() || dim == 1 && !mcServer.server.getAllowEnd()) {
-                return;
-            }
-            name = "DIM" + dim;
-        } else {
-            WorldProvider provider = WorldProvider.getProviderForDimension(dim);
-            String worldType = provider.getClass().getSimpleName().toLowerCase();
-            worldType = worldType.replace("worldprovider", "");
-            worldType = worldType.replace("provider", "");
-            if (Environment.getEnvironment(DimensionManager.getProviderType(dim).getId()) == null) {
-                env = DimensionManager.registerBukkitDimension(DimensionManager.getProviderType(dim).getId(), worldType);
-            }
-            name = provider.getSaveFolder();
-        }
-        
-        ChunkGenerator gen = mcServer.server.getGenerator(name);
-        if (mcServer instanceof DedicatedServer) {
-            worldSettings.setGeneratorOptions(((DedicatedServer) mcServer).getStringProperty("generator-settings", ""));
-        }
-        
-        WorldInfo worldInfo = new WorldInfo(worldSettings, name);
-        WorldServer world = (dim == 0 ? overworld : (WorldServer)(new WorldServerMulti(mcServer, savehandler, dim, overworld, mcServer.profiler, worldInfo, env, gen).init()));
-        List<WorldServer> worldServers = Lists.newArrayList(mcServer.worlds);
-        worldServers.add(world);
-        mcServer.worlds = worldServers.toArray(new WorldServer[0]);
-        mcServer.getPlayerList().setPlayerManager(mcServer.worlds);
+        //WorldSettings worldSettings = new WorldSettings(overworld.getWorldInfo());
+
+        WorldServer world = (dim == 0 ? overworld : (WorldServer)(new WorldServerMulti(mcServer, savehandler, dim, overworld, mcServer.profiler).init()));
         world.addEventListener(new ServerWorldEventHandler(mcServer, world));
         MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(world));
-        
         if (!mcServer.isSinglePlayer())
         {
             world.getWorldInfo().setGameType(mcServer.getGameType());
         }
 
         mcServer.setDifficultyForAllWorlds(mcServer.getDifficulty());
-        */
-    	// Akarin end
     }
-
-    // Akarin start
-    public static WorldServer initDimension(WorldCreator creator, WorldSettings worldSettings) {
-        return AkarinHooks.initalizeWorld(creator, worldSettings);
-    }
-
-    public static Environment registerBukkitDimension(int dim, String worldType) {
-        Environment env = Environment.getEnvironment(dim);
-        if (env == null) {
-            worldType = worldType.replace("WorldProvider", "");
-            env = net.minecraftforge.common.util.EnumHelper.addBukkitEnvironment(dim, worldType.toUpperCase());
-            Environment.registerEnvironment(env);
-        }
-        return env;
-    }
-    // Akarin end
 
     public static WorldServer getWorld(int id)
     {

@@ -1,7 +1,5 @@
 package net.minecraft.entity.projectile;
 
-import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -25,8 +23,6 @@ public abstract class EntityFireball extends Entity
     public double accelerationX;
     public double accelerationY;
     public double accelerationZ;
-    public float bukkitYield = 1; // CraftBukkit
-    public boolean isIncendiary = true; // CraftBukkit
 
     public EntityFireball(World worldIn)
     {
@@ -74,12 +70,6 @@ public abstract class EntityFireball extends Entity
         this.motionX = 0.0D;
         this.motionY = 0.0D;
         this.motionZ = 0.0D;
-        // CraftBukkit start - Added setDirection method
-        this.setDirection(accelX, accelY, accelZ);
-    }
-
-    public void setDirection(double accelX, double accelY, double accelZ) {
-        // CraftBukkit end
         accelX = accelX + this.rand.nextGaussian() * 0.4D;
         accelY = accelY + this.rand.nextGaussian() * 0.4D;
         accelZ = accelZ + this.rand.nextGaussian() * 0.4D;
@@ -106,11 +96,6 @@ public abstract class EntityFireball extends Entity
             if (raytraceresult != null && !net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, raytraceresult))
             {
                 this.onImpact(raytraceresult);
-                // CraftBukkit start - Fire ProjectileHitEvent
-                if (this.isDead) {
-                    CraftEventFactory.callProjectileHitEvent(this, raytraceresult);
-                }
-                // CraftBukkit end
             }
 
             this.posX += this.motionX;
@@ -224,11 +209,6 @@ public abstract class EntityFireball extends Entity
 
             if (source.getTrueSource() != null)
             {
-                // CraftBukkit start
-                if (CraftEventFactory.handleNonLivingEntityDamageEvent(this, source, amount)) {
-                    return false;
-                }
-                // CraftBukkit end
                 Vec3d vec3d = source.getTrueSource().getLookVec();
 
                 if (vec3d != null)

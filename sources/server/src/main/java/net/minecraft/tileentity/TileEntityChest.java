@@ -1,17 +1,10 @@
 package net.minecraft.tileentity;
 
-import java.util.List;
-
 import javax.annotation.Nullable;
-
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
-import org.bukkit.entity.HumanEntity;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerChest;
@@ -43,30 +36,6 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
     public int numPlayersUsing;
     private int ticksSinceSync;
     private BlockChest.Type cachedChestType;
-    // CraftBukkit start - add fields and methods
-    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
-    private int maxStack = 64;
-
-    public List<ItemStack> getContents() {
-        return this.chestContents;
-    }
-
-    public void onOpen(CraftHumanEntity who) {
-        transaction.add(who);
-    }
-
-    public void onClose(CraftHumanEntity who) {
-        transaction.remove(who);
-    }
-
-    public List<HumanEntity> getViewers() {
-        return transaction;
-    }
-
-    public void setMaxStackSize(int size) {
-        maxStack = size;
-    }
-    // CraftBukkit end
 
     public TileEntityChest()
     {
@@ -140,7 +109,7 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
 
     public int getInventoryStackLimit()
     {
-        return maxStack; // CraftBukkit
+        return 64;
     }
 
     public void updateContainingBlockInfo()
@@ -243,8 +212,6 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
 
     public void update()
     {
-        // Akarin start
-        /*
         this.checkForAdjacentChests();
         int i = this.pos.getX();
         int j = this.pos.getY();
@@ -334,8 +301,6 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
                 this.lidAngle = 0.0F;
             }
         }
-        */
-        // Akarin end
     }
 
     public boolean receiveClientEvent(int id, int type)
@@ -359,41 +324,9 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
             {
                 this.numPlayersUsing = 0;
             }
-            int oldPower = Math.max(0, Math.min(15, this.numPlayersUsing)); // CraftBukkit - Get power before new viewer is added
-            // Paper start - Move chest open sound out of the tick loop
-            this.checkForAdjacentChests();
 
-            if (this.numPlayersUsing > 0 && this.lidAngle == 0.0F && this.adjacentChestZNeg == null && this.adjacentChestXNeg == null) {
-                this.lidAngle = 0.7F;
-
-                double d0 = (double) this.pos.getZ() + 0.5D;
-                double d1 = (double) this.pos.getX() + 0.5D;
-
-                if (this.adjacentChestZPos != null) {
-                    d0 += 0.5D;
-                }
-
-                if (this.adjacentChestXPos != null) {
-                    d1 += 0.5D;
-                }
-
-                this.world.playSound((EntityPlayer) null, d1, (double) this.pos.getY() + 0.5D, d0, SoundEvents.BLOCK_CHEST_OPEN, SoundCategory.BLOCKS, 0.5F, this.world.rand.nextFloat() * 0.1F + 0.9F);
-            }
-            // Paper end
-
-            if (this.world == null) return; // CraftBukkit
+            ++this.numPlayersUsing;
             this.world.addBlockEvent(this.pos, this.getBlockType(), 1, this.numPlayersUsing);
-
-            // CraftBukkit start - Call redstone event
-            if (this.getBlockType() == Blocks.TRAPPED_CHEST) {
-                int newPower = Math.max(0, Math.min(15, this.numPlayersUsing));
-
-                if (oldPower != newPower) {
-                    org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callRedstoneChange(world, pos.getX(), pos.getY(), pos.getZ(), oldPower, newPower);
-                }
-            }
-            // CraftBukkit end
-
             this.world.notifyNeighborsOfStateChange(this.pos, this.getBlockType(), false);
 
             if (this.getChestType() == BlockChest.Type.TRAP)
@@ -407,48 +340,14 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
     {
         if (!player.isSpectator() && this.getBlockType() instanceof BlockChest)
         {
-            int oldPower = Math.max(0, Math.min(15, this.numPlayersUsing)); // CraftBukkit - Get power before new viewer is added
             --this.numPlayersUsing;
-            // Paper start - Move chest close sound out of the tick loop
-            if (this.numPlayersUsing == 0 && this.lidAngle > 0.0F || this.numPlayersUsing > 0 && this.lidAngle < 1.0F) {
-                float f = 0.1F;
-
-                if (this.numPlayersUsing > 0) {
-                    this.lidAngle += f;
-                } else {
-                    this.lidAngle -= f;
-                }
-
-                double d0 = (double) this.getPos().getX() + 0.5D;
-                double d2 = (double) this.getPos().getZ() + 0.5D;
-                int yLoc = this.pos.getY();
-
-                if (this.adjacentChestZPos != null) {
-                    d2 += 0.5D;
-                }
-
-                if (this.adjacentChestXPos != null) {
-                    d0 += 0.5D;
-                }
-
-                this.world.playSound((EntityPlayer) null, d0, (double) yLoc + 0.5D, d2, SoundEvents.BLOCK_CHEST_CLOSE, SoundCategory.BLOCKS, 0.5F, this.world.rand.nextFloat() * 0.1F + 0.9F);
-                this.lidAngle = 0.0F;
-            }
-            // Paper end
-
             this.world.addBlockEvent(this.pos, this.getBlockType(), 1, this.numPlayersUsing);
             this.world.notifyNeighborsOfStateChange(this.pos, this.getBlockType(), false);
 
-            // CraftBukkit start - Call redstone event
-            if (this.getChestType() == BlockChest.Type.TRAP) {
-                int newPower = Math.max(0, Math.min(15, this.numPlayersUsing));
-
-                if (oldPower != newPower) {
-                    org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callRedstoneChange(world, pos.getX(), pos.getY(), pos.getZ(), oldPower, newPower);
-                }
+            if (this.getChestType() == BlockChest.Type.TRAP)
+            {
                 this.world.notifyNeighborsOfStateChange(this.pos.down(), this.getBlockType(), false);
             }
-            // CraftBukkit end
         }
     }
 
@@ -512,10 +411,4 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
     {
         return this.chestContents;
     }
-    // CraftBukkit start
-    @Override
-    public boolean onlyOpsCanSetNbt() {
-        return true;
-    }
-    // CraftBukkit end
 }

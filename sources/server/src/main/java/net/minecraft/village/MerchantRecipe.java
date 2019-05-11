@@ -1,7 +1,5 @@
 package net.minecraft.village;
 
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftMerchantRecipe;
-
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -10,24 +8,12 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class MerchantRecipe
 {
-    public ItemStack itemToBuy; // Akarin
-    public ItemStack secondItemToBuy; // Akarin
-    public ItemStack itemToSell; // Akarin
-    public int toolUses; // Akarin
-    public int maxTradeUses; // Akarin
-    public boolean rewardsExp; // Akarin
-    // CraftBukkit start
-    private CraftMerchantRecipe bukkitHandle;
-
-    public CraftMerchantRecipe asBukkit() {
-        return (bukkitHandle == null) ? bukkitHandle = new CraftMerchantRecipe(this) : bukkitHandle;
-    }
-
-    public MerchantRecipe(ItemStack itemstack, ItemStack itemstack1, ItemStack itemstack2, int i, int j, CraftMerchantRecipe bukkit) {
-        this(itemstack, itemstack1, itemstack2, i, j);
-        this.bukkitHandle = bukkit;
-    }
-    // CraftBukkit end
+    private ItemStack itemToBuy;
+    private ItemStack secondItemToBuy;
+    private ItemStack itemToSell;
+    private int toolUses;
+    private int maxTradeUses;
+    private boolean rewardsExp;
 
     public MerchantRecipe(NBTTagCompound tagCompound)
     {

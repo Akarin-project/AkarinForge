@@ -21,31 +21,6 @@ public abstract class EntityAgeable extends EntityCreature
     protected int forcedAgeTimer;
     private float ageWidth = -1.0F;
     private float ageHeight;
-    public boolean ageLocked; // CraftBukkit
-    // Spigot start
-    @Override
-    public void inactiveTick()
-    {
-        super.inactiveTick();
-        if ( this.world.isRemote || this.ageLocked )
-        { // CraftBukkit
-            this.setScaleForAge( this.isChild() );
-        } else
-        {
-            int i = this.getGrowingAge();
-
-            if ( i < 0 )
-            {
-                ++i;
-                this.setGrowingAge( i );
-            } else if ( i > 0 )
-            {
-                --i;
-                this.setGrowingAge( i );
-            }
-        }
-    }
-    // Spigot end
 
     public EntityAgeable(World worldIn)
     {
@@ -73,7 +48,7 @@ public abstract class EntityAgeable extends EntityCreature
                     {
                         entityageable.setGrowingAge(-24000);
                         entityageable.setLocationAndAngles(this.posX, this.posY, this.posZ, 0.0F, 0.0F);
-                        this.world.addEntity(entityageable, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER_EGG); // CraftBukkit
+                        this.world.spawnEntity(entityageable);
 
                         if (itemstack.hasDisplayName())
                         {
@@ -179,7 +154,6 @@ public abstract class EntityAgeable extends EntityCreature
         super.writeEntityToNBT(compound);
         compound.setInteger("Age", this.getGrowingAge());
         compound.setInteger("ForcedAge", this.forcedAge);
-        compound.setBoolean("AgeLocked", this.ageLocked); // CraftBukkit
     }
 
     public void readEntityFromNBT(NBTTagCompound compound)
@@ -187,7 +161,6 @@ public abstract class EntityAgeable extends EntityCreature
         super.readEntityFromNBT(compound);
         this.setGrowingAge(compound.getInteger("Age"));
         this.forcedAge = compound.getInteger("ForcedAge");
-        this.ageLocked = compound.getBoolean("AgeLocked"); // CraftBukkit
     }
 
     public void notifyDataManagerChange(DataParameter<?> key)
@@ -204,7 +177,7 @@ public abstract class EntityAgeable extends EntityCreature
     {
         super.onLivingUpdate();
 
-        if (this.world.isRemote || ageLocked) // CraftBukkit
+        if (this.world.isRemote)
         {
             if (this.forcedAgeTimer > 0)
             {

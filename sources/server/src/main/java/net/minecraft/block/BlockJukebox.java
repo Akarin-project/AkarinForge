@@ -66,7 +66,7 @@ public class BlockJukebox extends BlockContainer
         }
     }
 
-    public void dropRecord(World worldIn, BlockPos pos, IBlockState state) // Akarin
+    private void dropRecord(World worldIn, BlockPos pos, IBlockState state)
     {
         if (!worldIn.isRemote)
         {

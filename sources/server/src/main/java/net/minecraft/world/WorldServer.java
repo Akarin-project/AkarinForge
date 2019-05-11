@@ -4,9 +4,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import io.akarin.forge.WorldCapture;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,6 +14,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.advancements.AdvancementManager;
@@ -28,11 +26,15 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.entity.INpc;
 import net.minecraft.entity.effect.EntityLightningBolt;
+import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.passive.EntitySkeletonHorse;
+import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
@@ -48,7 +50,6 @@ import net.minecraft.scoreboard.ScoreboardSaveData;
 import net.minecraft.scoreboard.ServerScoreboard;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerChunkMap;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.IProgressUpdate;
 import net.minecraft.util.IThreadListener;
@@ -80,26 +81,12 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bukkit.Bukkit;
-import org.bukkit.World.Environment;
-import org.bukkit.craftbukkit.v1_12_R1.CraftTravelAgent;
-import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
-import org.bukkit.craftbukkit.v1_12_R1.generator.CustomChunkGenerator;
-import org.bukkit.craftbukkit.v1_12_R1.generator.InternalChunkGenerator;
-import org.bukkit.craftbukkit.v1_12_R1.generator.NetherChunkGenerator;
-import org.bukkit.craftbukkit.v1_12_R1.generator.NormalChunkGenerator;
-import org.bukkit.craftbukkit.v1_12_R1.generator.SkyLandsChunkGenerator;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
-import org.bukkit.event.weather.LightningStrikeEvent;
-import org.bukkit.event.world.WorldSaveEvent;
-import org.bukkit.generator.ChunkGenerator;
 
 public class WorldServer extends World implements IThreadListener
 {
     private static final Logger LOGGER = LogManager.getLogger();
     private final MinecraftServer mcServer;
-    public final EntityTracker entityTracker; // Akarin
+    private final EntityTracker entityTracker;
     private final PlayerChunkMap playerChunkMap;
     private final Set<NextTickListEntry> pendingTickListEntriesHashSet = Sets.<NextTickListEntry>newHashSet();
     private final TreeSet<NextTickListEntry> pendingTickListEntriesTreeSet = new TreeSet<NextTickListEntry>();
@@ -117,24 +104,10 @@ public class WorldServer extends World implements IThreadListener
     /** Stores the recently processed (lighting) chunks */
     protected Set<ChunkPos> doneChunks = new java.util.HashSet<ChunkPos>();
     public List<Teleporter> customTeleporters = new ArrayList<Teleporter>();
-    // Akarin start
-    public final int dimension;
-    
-    private boolean canSpawn(int x2, int z2) {
-        if (this.generator != null) {
-            return this.generator.canSpawn(this.getWorld(), x2, z2);
-        }
-        return this.provider.canCoordinateBeSpawn(x2, z2);
-    }
 
-    public WorldServer(MinecraftServer server, ISaveHandler saveHandlerIn, WorldInfo info, int dimensionId, Profiler profilerIn, Environment worldEnvironment, ChunkGenerator gen)
+    public WorldServer(MinecraftServer server, ISaveHandler saveHandlerIn, WorldInfo info, int dimensionId, Profiler profilerIn)
     {
-        super(saveHandlerIn, info, net.minecraftforge.common.DimensionManager.createProviderFor(dimensionId), profilerIn, false, gen, worldEnvironment);
-        this.pvpMode = server.isPVPEnabled();
-        info.world = this;
-        this.dimension = dimensionId;
-        this.worldCapture = new WorldCapture(this);
-        // Akarin end
+        super(saveHandlerIn, info, net.minecraftforge.common.DimensionManager.createProviderFor(dimensionId), profilerIn, false);
         this.mcServer = server;
         this.entityTracker = new EntityTracker(this);
         this.playerChunkMap = new PlayerChunkMap(this);
@@ -144,7 +117,7 @@ public class WorldServer extends World implements IThreadListener
         this.provider.setDimension(providerDim);
         this.chunkProvider = this.createChunkProvider();
         perWorldStorage = new MapStorage(new net.minecraftforge.common.WorldSpecificSaveHandler((WorldServer)this, saveHandlerIn));
-        this.worldTeleporter = new CraftTravelAgent(this); // Akarin
+        this.worldTeleporter = new Teleporter(this);
         this.calculateInitialSkylight();
         this.calculateInitialWeather();
         this.getWorldBorder().setSize(server.getMaxWorldSize());
@@ -168,7 +141,6 @@ public class WorldServer extends World implements IThreadListener
             this.villageCollection.setWorldsForAll(this);
         }
 
-        if (getServer().getScoreboardManager() == null) { // Akarin
         this.worldScoreboard = new ServerScoreboard(this.mcServer);
         ScoreboardSaveData scoreboardsavedata = (ScoreboardSaveData)this.mapStorage.getOrLoadData(ScoreboardSaveData.class, "scoreboard");
 
@@ -180,22 +152,9 @@ public class WorldServer extends World implements IThreadListener
 
         scoreboardsavedata.setScoreboard(this.worldScoreboard);
         ((ServerScoreboard)this.worldScoreboard).addDirtyRunnable(new WorldSavedDataCallableSave(scoreboardsavedata));
-        // Akarin start
-        } else {
-            this.worldScoreboard = getServer().getScoreboardManager().getMainScoreboard().getHandle();
-        }
-        
-        if (this.dimension != 0) { // SPIGOT-3899 multiple worlds of advancements not supported
-            this.advancementManager = this.mcServer.getAdvancementManager();
-        }
-        if (this.advancementManager == null) {
-            this.advancementManager = new AdvancementManager(new File(new File(this.saveHandler.getWorldDirectory(), "data"), "advancements"));
-        }
-        if (this.functionManager == null) {
-            this.functionManager = new FunctionManager(new File(new File(this.saveHandler.getWorldDirectory(), "data"), "functions"), this.mcServer);
-        }
-        // Akarin end
         this.lootTable = new LootTableManager(new File(new File(this.saveHandler.getWorldDirectory(), "data"), "loot_tables"));
+        this.advancementManager = new AdvancementManager(new File(new File(this.saveHandler.getWorldDirectory(), "data"), "advancements"));
+        this.functionManager = new FunctionManager(new File(new File(this.saveHandler.getWorldDirectory(), "data"), "functions"), this.mcServer);
         this.getWorldBorder().setCenter(this.worldInfo.getBorderCenterX(), this.worldInfo.getBorderCenterZ());
         this.getWorldBorder().setDamageAmount(this.worldInfo.getBorderDamagePerBlock());
         this.getWorldBorder().setDamageBuffer(this.worldInfo.getBorderSafeZone());
@@ -239,12 +198,10 @@ public class WorldServer extends World implements IThreadListener
 
         this.profiler.startSection("mobSpawner");
 
-        // Akarin start
-        long time = this.worldInfo.getWorldTotalTime();
-        if (this.getGameRules().getBoolean("doMobSpawning") && this.worldInfo.getTerrainType() != WorldType.DEBUG_ALL_BLOCK_STATES && (this.spawnHostileMobs || this.spawnPeacefulMobs) && (this instanceof WorldServer && this.playerEntities.size() > 0)) {
-            this.entitySpawner.findChunksForSpawning(this, this.spawnHostileMobs && (this.ticksPerMonsterSpawns != 0 && time % this.ticksPerMonsterSpawns == 0L), this.spawnPeacefulMobs && (this.ticksPerAnimalSpawns != 0 && time % this.ticksPerAnimalSpawns == 0L), this.worldInfo.getWorldTotalTime() % 400L == 0L);
+        if (this.getGameRules().getBoolean("doMobSpawning") && this.worldInfo.getTerrainType() != WorldType.DEBUG_ALL_BLOCK_STATES)
+        {
+            this.entitySpawner.findChunksForSpawning(this, this.spawnHostileMobs, this.spawnPeacefulMobs, this.worldInfo.getWorldTotalTime() % 400L == 0L);
         }
-        // Akarin end
 
         this.profiler.endStartSection("chunkSource");
         this.chunkProvider.tick();
@@ -279,9 +236,6 @@ public class WorldServer extends World implements IThreadListener
         }
         this.profiler.endSection();
         this.sendQueuedBlockEvents();
-        // Akarin start
-        this.getWorld().processChunkGC();
-        // Akarin end
     }
 
     @Nullable
@@ -314,7 +268,7 @@ public class WorldServer extends World implements IThreadListener
                 {
                     ++i;
                 }
-                else if (entityplayer.isPlayerSleeping() || entityplayer.fauxSleeping) // Akarin
+                else if (entityplayer.isPlayerSleeping())
                 {
                     ++j;
                 }
@@ -346,20 +300,22 @@ public class WorldServer extends World implements IThreadListener
 
     public boolean areAllPlayersAsleep()
     {
-        // Akarin start
-        if (this.allPlayersSleeping) {
-            boolean foundActualSleepers = false;
-            for (EntityPlayer entityplayer : this.playerEntities) {
-                if (entityplayer.isPlayerFullyAsleep()) {
-                    foundActualSleepers = true;
+        if (this.allPlayersSleeping && !this.isRemote)
+        {
+            for (EntityPlayer entityplayer : this.playerEntities)
+            {
+                if (!entityplayer.isSpectator() && !entityplayer.isPlayerFullyAsleep())
+                {
+                    return false;
                 }
-                if ((entityplayer.isSpectator() || foundActualSleepers) && !entityplayer.fauxSleeping) continue;
-                return false;
             }
-            return foundActualSleepers;
+
+            return true;
         }
-        return false;
-        // Akarin end
+        else
+        {
+            return false;
+        }
     }
 
     @SideOnly(Side.CLIENT)
@@ -390,7 +346,7 @@ public class WorldServer extends World implements IThreadListener
         this.worldInfo.setSpawnZ(j);
     }
 
-    public boolean isChunkLoaded(int x, int z, boolean allowEmpty)
+    protected boolean isChunkLoaded(int x, int z, boolean allowEmpty)
     {
         return this.getChunkProvider().chunkExists(x, z);
     }
@@ -460,7 +416,7 @@ public class WorldServer extends World implements IThreadListener
                             entityskeletonhorse.setTrap(true);
                             entityskeletonhorse.setGrowingAge(0);
                             entityskeletonhorse.setPosition((double)blockpos.getX(), (double)blockpos.getY(), (double)blockpos.getZ());
-                            this.addEntity(entityskeletonhorse, CreatureSpawnEvent.SpawnReason.LIGHTNING);
+                            this.spawnEntity(entityskeletonhorse);
                             this.addWeatherEffect(new EntityLightningBolt(this, (double)blockpos.getX(), (double)blockpos.getY(), (double)blockpos.getZ(), true));
                         }
                         else
@@ -482,12 +438,12 @@ public class WorldServer extends World implements IThreadListener
                     if (this.isAreaLoaded(blockpos2, 1)) // Forge: check area to avoid loading neighbors in unloaded chunks
                     if (this.canBlockFreezeNoWater(blockpos2))
                     {
-                        CraftEventFactory.handleBlockFormEvent(this, blockpos2, Blocks.ICE.getDefaultState(), null); // Akarin
+                        this.setBlockState(blockpos2, Blocks.ICE.getDefaultState());
                     }
 
                     if (flag && this.canSnowAt(blockpos1, true))
                     {
-                        CraftEventFactory.handleBlockFormEvent(this, blockpos1, Blocks.SNOW_LAYER.getDefaultState(), null); // Akarin
+                        this.setBlockState(blockpos1, Blocks.SNOW_LAYER.getDefaultState());
                     }
 
                     if (flag && this.getBiome(blockpos2).canRain())
@@ -730,13 +686,16 @@ public class WorldServer extends World implements IThreadListener
         {
             int i = this.pendingTickListEntriesTreeSet.size();
 
-            if (false) // Akarin
+            if (i != this.pendingTickListEntriesHashSet.size())
             {
                 throw new IllegalStateException("TickNextTick list out of synch");
             }
             else
             {
-                if (i > 65536) i = i > 1310720 ? (i /= 20) : 65536; // Akarin
+                if (i > 65536)
+                {
+                    i = 65536;
+                }
 
                 this.profiler.startSection("cleaning");
 
@@ -858,8 +817,6 @@ public class WorldServer extends World implements IThreadListener
         return list;
     }
 
-    // Akarin start
-    /*
     public void updateEntityWithOptionalForce(Entity entityIn, boolean forceUpdate)
     {
         if (!this.canSpawnAnimals() && (entityIn instanceof EntityAnimal || entityIn instanceof EntityWaterMob))
@@ -874,8 +831,6 @@ public class WorldServer extends World implements IThreadListener
 
         super.updateEntityWithOptionalForce(entityIn, forceUpdate);
     }
-    */
-    // Akarin end
 
     private boolean canSpawnNPCs()
     {
@@ -890,42 +845,7 @@ public class WorldServer extends World implements IThreadListener
     protected IChunkProvider createChunkProvider()
     {
         IChunkLoader ichunkloader = this.saveHandler.getChunkLoader(this.provider);
-
-        // Akarin start
-        InternalChunkGenerator gen;
-
-        if (this.generator != null) {
-            gen = new CustomChunkGenerator(this, this.getSeed(), this.generator);
-        } else if (this.provider instanceof WorldProviderHell) {
-            gen = new NetherChunkGenerator(this, this.getSeed());
-        } else if (this.provider instanceof WorldProviderEnd) {
-            gen = new SkyLandsChunkGenerator(this, this.getSeed());
-        } else {
-            gen = new NormalChunkGenerator(this, this.getSeed());
-        }
-
-        return new ChunkProviderServer(this, ichunkloader, gen);
-    }
-
-    public List<TileEntity> getTileEntities(int i, int j, int k, int l, int i1, int j1) {
-        ArrayList<TileEntity> arraylist = Lists.newArrayList();
-
-        for (int chunkX = (i >> 4); chunkX <= ((l - 1) >> 4); chunkX++) {
-            for (int chunkZ = (k >> 4); chunkZ <= ((j1 - 1) >> 4); chunkZ++) {
-                Chunk chunk = getChunkFromChunkCoords(chunkX, chunkZ);
-                if (chunk == null) {
-                    continue;
-                }
-                for (Object te : chunk.tileEntities.values()) {
-                    TileEntity tileentity = (TileEntity) te;
-                    if ((tileentity.pos.getX() >= i) && (tileentity.pos.getY() >= j) && (tileentity.pos.getZ() >= k) && (tileentity.pos.getX() < l) && (tileentity.pos.getY() < i1) && (tileentity.pos.getZ() < j1)) {
-                        arraylist.add(tileentity);
-                    }
-                }
-            }
-        }
-        
-        return arraylist;
+        return new ChunkProviderServer(this, ichunkloader, this.provider.createChunkGenerator());
     }
 
     public boolean isBlockModifiable(EntityPlayer player, BlockPos pos)
@@ -1008,22 +928,6 @@ public class WorldServer extends World implements IThreadListener
             int i = 8;
             int j = this.provider.getAverageGroundLevel();
             int k = 8;
-            // Akarin start
-            if (this.generator != null) {
-                Random rand = new Random(this.getSeed());
-                org.bukkit.Location spawn = this.generator.getFixedSpawnLocation(this.getWorld(), rand);
-
-                if (spawn != null) {
-                    if (spawn.getWorld() != this.getWorld()) {
-                        throw new IllegalStateException("Cannot set spawn point for " + this.worldInfo.getWorldName() + " to be in another world (" + spawn.getWorld().getName() + ")");
-                    } else {
-                        this.worldInfo.setSpawn(new BlockPos(spawn.getBlockX(), spawn.getBlockY(), spawn.getBlockZ()));
-                        this.findingSpawnPoint = false;
-                        return;
-                    }
-                }
-            }
-            // Akarin end
 
             if (blockpos != null)
             {
@@ -1037,7 +941,7 @@ public class WorldServer extends World implements IThreadListener
 
             int l = 0;
 
-            while (!this.canSpawn(i, k)) // Akarin
+            while (!this.provider.canCoordinateBeSpawn(i, k))
             {
                 i += random.nextInt(64) - random.nextInt(64);
                 k += random.nextInt(64) - random.nextInt(64);
@@ -1088,7 +992,6 @@ public class WorldServer extends World implements IThreadListener
 
         if (chunkproviderserver.canSave())
         {
-            Bukkit.getPluginManager().callEvent(new WorldSaveEvent(this.getWorld())); // Akarin
             if (progressCallback != null)
             {
                 progressCallback.displaySavingString("Saving level");
@@ -1104,8 +1007,6 @@ public class WorldServer extends World implements IThreadListener
             chunkproviderserver.saveChunks(all);
             net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Save(this));
 
-            // Akarin start
-            /*
             for (Chunk chunk : Lists.newArrayList(chunkproviderserver.getLoadedChunks()))
             {
                 if (chunk != null && !this.playerChunkMap.contains(chunk.x, chunk.z))
@@ -1113,8 +1014,6 @@ public class WorldServer extends World implements IThreadListener
                     chunkproviderserver.queueUnload(chunk);
                 }
             }
-            */
-            // Akarin end
         }
     }
 
@@ -1139,7 +1038,6 @@ public class WorldServer extends World implements IThreadListener
                 ((WorldServerMulti)worldserver).saveAdditionalData();
             }
         }
-        if (this instanceof WorldServerMulti) ((WorldServerMulti) this).saveAdditionalData(); // Akarin
 
         this.worldInfo.setBorderSize(this.getWorldBorder().getDiameter());
         this.worldInfo.getBorderCenterX(this.getWorldBorder().getCenterX());
@@ -1155,17 +1053,9 @@ public class WorldServer extends World implements IThreadListener
         this.perWorldStorage.saveAllData();
     }
 
-    // Akarin start
-    @Override
-    public boolean addEntity(Entity entity, SpawnReason spawnReason) {
-        // World.addEntity(Entity) will call this, and we still want to perform
-        // existing entity checking when it's called with a SpawnReason
-        return this.canAddEntity(entity) ? super.addEntity(entity, spawnReason) : false;
-    }
-    // Akarin end
     public boolean spawnEntity(Entity entityIn)
     {
-        return this.canAddEntity(entityIn) ? super.addEntity(entityIn, SpawnReason.DEFAULT) : false; // Akarin
+        return this.canAddEntity(entityIn) ? super.spawnEntity(entityIn) : false;
     }
 
     public void loadEntities(Collection<Entity> entityCollection)
@@ -1184,7 +1074,7 @@ public class WorldServer extends World implements IThreadListener
     {
         if (entityIn.isDead)
         {
-            //LOGGER.warn("Tried to add entity {} but it was marked as removed already", (Object)EntityList.getKey(entityIn)); // Akarin
+            LOGGER.warn("Tried to add entity {} but it was marked as removed already", (Object)EntityList.getKey(entityIn));
             return false;
         }
         else
@@ -1203,7 +1093,7 @@ public class WorldServer extends World implements IThreadListener
                 {
                     if (!(entityIn instanceof EntityPlayer))
                     {
-                        //LOGGER.warn("Keeping entity {} that already exists with UUID {}", EntityList.getKey(entity), uuid.toString()); // Akarin
+                        LOGGER.warn("Keeping entity {} that already exists with UUID {}", EntityList.getKey(entity), uuid.toString());
                         return false;
                     }
 
@@ -1251,17 +1141,9 @@ public class WorldServer extends World implements IThreadListener
 
     public boolean addWeatherEffect(Entity entityIn)
     {
-        // Akarin start
-        LightningStrikeEvent lightning = new LightningStrikeEvent(this.getWorld(), (org.bukkit.entity.LightningStrike) entityIn.getBukkitEntity());
-        this.getServer().getPluginManager().callEvent(lightning);
-
-        if (lightning.isCancelled()) {
-            return false;
-        }
-        // Akarin end
         if (super.addWeatherEffect(entityIn))
         {
-            this.mcServer.getPlayerList().sendToAllNearExcept((EntityPlayer) null, entityIn.posX, entityIn.posY, entityIn.posZ, 512.0D, this.dimension, new SPacketSpawnGlobalEntity(entityIn)); // Akarin
+            this.mcServer.getPlayerList().sendToAllNearExcept((EntityPlayer)null, entityIn.posX, entityIn.posY, entityIn.posZ, 512.0D, this.provider.getDimension(), new SPacketSpawnGlobalEntity(entityIn));
             return true;
         }
         else
@@ -1282,20 +1164,10 @@ public class WorldServer extends World implements IThreadListener
 
     public Explosion newExplosion(@Nullable Entity entityIn, double x, double y, double z, float strength, boolean isFlaming, boolean isSmoking)
     {
-        // Akarin start
-        Explosion explosion = super.newExplosion(entityIn, x, y, z, strength, isFlaming, isSmoking);
-        
-        if (explosion.wasCanceled) {
-            return explosion;
-        }
-        // Akarin end
+        Explosion explosion = new Explosion(this, entityIn, x, y, z, strength, isFlaming, isSmoking);
         if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(this, explosion)) return explosion;
-        // Akarin start
-        /*
         explosion.doExplosionA();
         explosion.doExplosionB(false);
-        */
-        // Akarin end
 
         if (!isSmoking)
         {
@@ -1339,7 +1211,7 @@ public class WorldServer extends World implements IThreadListener
             {
                 if (this.fireBlockEvent(blockeventdata))
                 {
-                    this.mcServer.getPlayerList().sendToAllNearExcept((EntityPlayer)null, (double)blockeventdata.getPosition().getX(), (double)blockeventdata.getPosition().getY(), (double)blockeventdata.getPosition().getZ(), 64.0D, this.dimension, new SPacketBlockAction(blockeventdata.getPosition(), blockeventdata.getBlock(), blockeventdata.getEventID(), blockeventdata.getEventParameter())); // Akarin
+                    this.mcServer.getPlayerList().sendToAllNearExcept((EntityPlayer)null, (double)blockeventdata.getPosition().getX(), (double)blockeventdata.getPosition().getY(), (double)blockeventdata.getPosition().getZ(), 64.0D, this.provider.getDimension(), new SPacketBlockAction(blockeventdata.getPosition(), blockeventdata.getBlock(), blockeventdata.getEventID(), blockeventdata.getEventParameter()));
                 }
             }
 
@@ -1426,25 +1298,11 @@ public class WorldServer extends World implements IThreadListener
 
     public void spawnParticle(EnumParticleTypes particleType, boolean longDistance, double xCoord, double yCoord, double zCoord, int numberOfParticles, double xOffset, double yOffset, double zOffset, double particleSpeed, int... particleArguments)
     {
-        // Akarin start - visibility api support
-        sendParticles(null, particleType, longDistance, xCoord, yCoord, zCoord, numberOfParticles, xOffset, yOffset, zOffset, particleSpeed, particleArguments);
-    }
-
-    public void sendParticles(EntityPlayerMP sender, EnumParticleTypes particleType, boolean longDistance, double xCoord, double yCoord, double zCoord, int numberOfParticles, double xOffset, double yOffset, double zOffset, double particleSpeed, int... particleArguments) {
-        sendParticles(this.playerEntities, sender, particleType, longDistance, xCoord, yCoord, zCoord, numberOfParticles, xCoord, yCoord, zCoord, particleSpeed, particleArguments);
-    }
-    
-    public void sendParticles(List<? extends EntityPlayer> receivers, EntityPlayerMP sender, EnumParticleTypes particleType, boolean longDistance, double xCoord, double yCoord, double zCoord, int numberOfParticles, double xOffset, double yOffset, double zOffset, double particleSpeed, int... particleArguments) {
-        // Akarin end
         SPacketParticles spacketparticles = new SPacketParticles(particleType, longDistance, (float)xCoord, (float)yCoord, (float)zCoord, (float)xOffset, (float)yOffset, (float)zOffset, (float)particleSpeed, numberOfParticles, particleArguments);
 
-        // Akarin start
-        for (EntityPlayer entityhuman : receivers) {
-            EntityPlayerMP entityplayermp = (EntityPlayerMP) entityhuman;
-            
-            if (sender != null && !entityplayermp.getBukkitEntity().canSee(sender.getBukkitEntity()))
-                continue;
-            // Akarin end
+        for (int i = 0; i < this.playerEntities.size(); ++i)
+        {
+            EntityPlayerMP entityplayermp = (EntityPlayerMP)this.playerEntities.get(i);
             this.sendPacketWithinDistance(entityplayermp, longDistance, xCoord, yCoord, zCoord, spacketparticles);
         }
     }

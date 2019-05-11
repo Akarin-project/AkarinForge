@@ -8,17 +8,8 @@ import net.minecraft.potion.PotionUtils;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 
-public class RecipeTippedArrow extends ShapedRecipes implements IRecipe // CraftBukkit
+public class RecipeTippedArrow extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<IRecipe> implements IRecipe
 {
-    // CraftBukkit start
-    public RecipeTippedArrow() {
-        super("", 3, 3, NonNullList.from(Ingredient.EMPTY,
-                Ingredient.fromItem(Items.ARROW), Ingredient.fromItem(Items.ARROW), Ingredient.fromItem(Items.ARROW),
-                Ingredient.fromItem(Items.ARROW), Ingredient.fromItem(Items.LINGERING_POTION), Ingredient.fromItem(Items.ARROW),
-                Ingredient.fromItem(Items.ARROW), Ingredient.fromItem(Items.ARROW), Ingredient.fromItem(Items.ARROW)),
-                new ItemStack(Items.TIPPED_ARROW, 8));
-    }
-    // CraftBukkit end
     public boolean matches(InventoryCrafting inv, World worldIn)
     {
         if (inv.getWidth() == 3 && inv.getHeight() == 3)

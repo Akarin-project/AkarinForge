@@ -1,8 +1,6 @@
 package net.minecraft.world.storage;
 
 import java.io.File;
-import java.util.UUID;
-
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.WorldProvider;
@@ -59,9 +57,4 @@ public class SaveHandlerMP implements ISaveHandler
     {
         return null;
     }
-
-	@Override
-	public UUID getUUID() {
-		return null;
-	}
 }

@@ -1,6 +1,3 @@
-/*
- * Akarin reference
- */
 package net.minecraft.entity;
 
 import com.google.common.collect.Maps;
@@ -9,16 +6,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import javax.annotation.Nullable;
-
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
-import org.bukkit.event.entity.EntityUnleashEvent;
-import org.bukkit.event.entity.EntityUnleashEvent.UnleashReason;
-
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.ai.EntityAITasks;
@@ -32,7 +19,6 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityGhast;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
@@ -82,16 +68,16 @@ public abstract class EntityLiving extends EntityLivingBase
     protected EntityJumpHelper jumpHelper;
     private final EntityBodyHelper bodyHelper;
     protected PathNavigate navigator;
-    public EntityAITasks tasks;
-    public EntityAITasks targetTasks;
+    public final EntityAITasks tasks;
+    public final EntityAITasks targetTasks;
     private EntityLivingBase attackTarget;
     private final EntitySenses senses;
     private final NonNullList<ItemStack> inventoryHands = NonNullList.<ItemStack>withSize(2, ItemStack.EMPTY);
-    public float[] inventoryHandsDropChances = new float[2]; // Akarin
+    protected float[] inventoryHandsDropChances = new float[2];
     private final NonNullList<ItemStack> inventoryArmor = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
-    public float[] inventoryArmorDropChances = new float[4]; // Akarin
-    public boolean canPickUpLoot;
-    public boolean persistenceRequired; // Akarin
+    protected float[] inventoryArmorDropChances = new float[4];
+    private boolean canPickUpLoot;
+    private boolean persistenceRequired;
     private final Map<PathNodeType, Float> mapPathPriority = Maps.newEnumMap(PathNodeType.class);
     private ResourceLocation deathLootTable;
     private long deathLootTableSeed;
@@ -117,9 +103,6 @@ public abstract class EntityLiving extends EntityLivingBase
         {
             this.initEntityAI();
         }
-        // CraftBukkit start - default persistance to type's persistance value
-        this.persistenceRequired = !canDespawn();
-        // CraftBukkit end
     }
 
     protected void initEntityAI()
@@ -186,39 +169,8 @@ public abstract class EntityLiving extends EntityLivingBase
 
     public void setAttackTarget(@Nullable EntityLivingBase entitylivingbaseIn)
     {
-        // CraftBukkit start - fire event
-        setGoalTarget(entitylivingbaseIn, EntityTargetEvent.TargetReason.UNKNOWN, true);
-    }
-
-    public boolean setGoalTarget(EntityLivingBase entityliving, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
-        if (getAttackTarget() == entityliving) return false;
-        if (fireEvent) {
-            if (reason == EntityTargetEvent.TargetReason.UNKNOWN && getAttackTarget() != null && entityliving == null) {
-                reason = getAttackTarget().isEntityAlive() ? EntityTargetEvent.TargetReason.FORGOT_TARGET : EntityTargetEvent.TargetReason.TARGET_DIED;
-            }
-            if (reason == EntityTargetEvent.TargetReason.UNKNOWN) {
-                world.getServer().getLogger().log(java.util.logging.Level.WARNING, "Unknown target reason, please report on the issue tracker"); // TODO - Akarin
-            }
-            CraftLivingEntity ctarget = null;
-            if (entityliving != null) {
-                ctarget = (CraftLivingEntity) entityliving.getBukkitEntity();
-            }
-            EntityTargetLivingEntityEvent event = new EntityTargetLivingEntityEvent(this.getBukkitEntity(), ctarget, reason);
-            world.getServer().getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                return false;
-            }
-
-            if (event.getTarget() != null) {
-                entityliving = ((CraftLivingEntity) event.getTarget()).getHandle();
-            } else {
-                entityliving = null;
-            }
-        }
-        this.attackTarget = entityliving;
-        net.minecraftforge.common.ForgeHooks.onLivingSetAttackTarget(this, entityliving);
-        return true;
-        // CraftBukkit end
+        this.attackTarget = entitylivingbaseIn;
+        net.minecraftforge.common.ForgeHooks.onLivingSetAttackTarget(this, entitylivingbaseIn);
     }
 
     public boolean canAttackClass(Class <? extends EntityLivingBase > cls)
@@ -497,20 +449,10 @@ public abstract class EntityLiving extends EntityLivingBase
 
         if (compound.hasKey("CanPickUpLoot", 1))
         {
-            // Akarin start
-            boolean data = compound.getBoolean("CanPickUpLoot");
-            if (isLevelAtLeast(compound, 1) || data) {
-                this.setCanPickUpLoot(data);
-            }
-            // Akarin end
+            this.setCanPickUpLoot(compound.getBoolean("CanPickUpLoot"));
         }
 
-        // Akarin start
-        boolean data = compound.getBoolean("PersistenceRequired");
-        if (isLevelAtLeast(compound, 1) || data) {
-            this.persistenceRequired = data;
-        }
-        // Akarin end
+        this.persistenceRequired = compound.getBoolean("PersistenceRequired");
 
         if (compound.hasKey("ArmorItems", 9))
         {
@@ -711,15 +653,8 @@ public abstract class EntityLiving extends EntityLivingBase
             }
         }
 
-        // CraftBukkit start
-        boolean canPickup = flag && this.canEquipItem(itemstack);
-
-        EntityPickupItemEvent entityEvent = new EntityPickupItemEvent((LivingEntity) getBukkitEntity(), (org.bukkit.entity.Item) itemEntity.getBukkitEntity(), 0);
-        entityEvent.setCancelled(!canPickup);
-        this.world.getServer().getPluginManager().callEvent(entityEvent);
-        canPickup = !entityEvent.isCancelled();
-        if (canPickup) {
-            // CraftBukkit end
+        if (flag && this.canEquipItem(itemstack))
+        {
             double d0;
 
             switch (entityequipmentslot.getSlotType())
@@ -736,9 +671,7 @@ public abstract class EntityLiving extends EntityLivingBase
 
             if (!itemstack1.isEmpty() && (double)(this.rand.nextFloat() - 0.1F) < d0)
             {
-                this.forceDrops = true; // CraftBukkit
                 this.entityDropItem(itemstack1, 0.0F);
-                this.forceDrops = false; // CraftBukkit
             }
 
             this.setItemStackToSlot(entityequipmentslot, itemstack);
@@ -797,12 +730,12 @@ public abstract class EntityLiving extends EntityLivingBase
                 double d2 = entity.posZ - this.posZ;
                 double d3 = d0 * d0 + d1 * d1 + d2 * d2;
 
-                if (d3  > 256) // Akarin
+                if (this.canDespawn() && d3 > 16384.0D)
                 {
                     this.setDead();
                 }
 
-                if (this.idleTime > 600 && this.rand.nextInt(800) == 0 && d3 > 128) // Akarin
+                if (this.idleTime > 600 && this.rand.nextInt(800) == 0 && d3 > 1024.0D && this.canDespawn())
                 {
                     this.setDead();
                 }
@@ -1276,12 +1209,6 @@ public abstract class EntityLiving extends EntityLivingBase
     {
         if (this.getLeashed() && this.getLeashHolder() == player)
         {
-            // CraftBukkit start - fire PlayerUnleashEntityEvent
-            if (CraftEventFactory.callPlayerUnleashEntityEvent(this, player).isCancelled()) {
-                ((EntityPlayerMP) player).connection.sendPacket(new SPacketEntityAttach(this, this.getLeashHolder()));
-                return false;
-            }
-            // CraftBukkit end
             this.clearLeashed(true, !player.capabilities.isCreativeMode);
             return true;
         }
@@ -1291,12 +1218,6 @@ public abstract class EntityLiving extends EntityLivingBase
 
             if (itemstack.getItem() == Items.LEAD && this.canBeLeashedTo(player))
             {
-                // CraftBukkit start - fire PlayerLeashEntityEvent
-                if (CraftEventFactory.callPlayerLeashEntityEvent(this, player, player).isCancelled()) {
-                    ((EntityPlayerMP) player).connection.sendPacket(new SPacketEntityAttach(this, this.getLeashHolder()));
-                    return false;
-                }
-                // CraftBukkit end
                 this.setLeashHolder(player, true);
                 itemstack.shrink(1);
                 return true;
@@ -1324,13 +1245,11 @@ public abstract class EntityLiving extends EntityLivingBase
         {
             if (!this.isEntityAlive())
             {
-                this.world.getServer().getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), UnleashReason.PLAYER_UNLEASH)); // CraftBukkit
                 this.clearLeashed(true, true);
             }
 
             if (this.leashHolder == null || this.leashHolder.isDead)
             {
-                this.world.getServer().getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), UnleashReason.HOLDER_GONE)); // CraftBukkit
                 this.clearLeashed(true, true);
             }
         }
@@ -1345,9 +1264,7 @@ public abstract class EntityLiving extends EntityLivingBase
 
             if (!this.world.isRemote && dropLead)
             {
-                this.forceDrops = true; // CraftBukkit
                 this.dropItem(Items.LEAD, 1);
-                this.forceDrops = false; // CraftBukkit
             }
 
             if (!this.world.isRemote && sendPacket && this.world instanceof WorldServer)
@@ -1431,7 +1348,6 @@ public abstract class EntityLiving extends EntityLivingBase
             }
             else
             {
-                this.world.getServer().getPluginManager().callEvent(new EntityUnleashEvent(this.getBukkitEntity(), UnleashReason.UNKNOWN)); // CraftBukkit
                 this.clearLeashed(false, true);
             }
         }

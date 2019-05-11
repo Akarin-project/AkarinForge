@@ -4,9 +4,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import java.util.UUID;
 import javax.annotation.Nullable;
-
-import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
-
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -69,7 +66,7 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
             return p_apply_1_ instanceof AbstractHorse && ((AbstractHorse)p_apply_1_).isBreeding();
         }
     };
-    public static final IAttribute JUMP_STRENGTH = (new RangedAttribute((IAttribute)null, "horse.jumpStrength", 0.7D, 0.0D, 2.0D)).setDescription("Jump Strength").setShouldWatch(true);
+    protected static final IAttribute JUMP_STRENGTH = (new RangedAttribute((IAttribute)null, "horse.jumpStrength", 0.7D, 0.0D, 2.0D)).setDescription("Jump Strength").setShouldWatch(true);
     private static final DataParameter<Byte> STATUS = EntityDataManager.<Byte>createKey(AbstractHorse.class, DataSerializers.BYTE);
     private static final DataParameter<Optional<UUID>> OWNER_UNIQUE_ID = EntityDataManager.<Optional<UUID>>createKey(AbstractHorse.class, DataSerializers.OPTIONAL_UNIQUE_ID);
     private int eatingCounter;
@@ -78,7 +75,7 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
     public int tailCounter;
     public int sprintCounter;
     protected boolean horseJumping;
-    public ContainerHorseChest horseChest;
+    protected ContainerHorseChest horseChest;
     protected int temper;
     protected float jumpPower;
     private boolean allowStandSliding;
@@ -90,7 +87,6 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
     private float prevMouthOpenness;
     protected boolean canGallop = true;
     protected int gallopTime;
-    public int maxDomestication = 100; // CraftBukkit - store max domestication value
 
     public AbstractHorse(World worldIn)
     {
@@ -292,10 +288,10 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
         return 2;
     }
 
-    public void initHorseChest()
+    protected void initHorseChest()
     {
         ContainerHorseChest containerhorsechest = this.horseChest;
-        this.horseChest = new ContainerHorseChest("HorseChest", this.getInventorySize(), this); // CraftBukkit
+        this.horseChest = new ContainerHorseChest("HorseChest", this.getInventorySize());
         this.horseChest.setCustomName(this.getName());
 
         if (containerhorsechest != null)
@@ -469,7 +465,7 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
 
     public int getMaxTemper()
     {
-        return this.maxDomestication;  // CraftBukkit - return stored max domestication instead of 100
+        return 100;
     }
 
     protected float getSoundVolume()
@@ -549,7 +545,7 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
 
         if (this.getHealth() < this.getMaxHealth() && f > 0.0F)
         {
-            this.heal(f, RegainReason.EATING); // CraftBukkit
+            this.heal(f);
             flag = true;
         }
 
@@ -613,7 +609,7 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
 
     public void onDeath(DamageSource cause)
     {
-        //super.onDeath(cause); // Akarin
+        super.onDeath(cause);
 
         if (!this.world.isRemote && this.horseChest != null)
         {
@@ -627,7 +623,6 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
                 }
             }
         }
-        super.onDeath(cause); // Akarin
     }
 
     public void onLivingUpdate()
@@ -946,7 +941,6 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
         {
             compound.setString("OwnerUUID", this.getOwnerUniqueId().toString());
         }
-        compound.setInteger("Bukkit.MaxDomestication", this.maxDomestication); // CraftBukkit
 
         if (!this.horseChest.getStackInSlot(0).isEmpty())
         {
@@ -978,11 +972,6 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
             this.setOwnerUniqueId(UUID.fromString(s));
         }
 
-        // CraftBukkit start
-        if (compound.hasKey("Bukkit.MaxDomestication")) {
-            this.maxDomestication = compound.getInteger("Bukkit.MaxDomestication");
-        }
-        // CraftBukkit end
         IAttributeInstance iattributeinstance = this.getAttributeMap().getAttributeInstanceByName("Speed");
 
         if (iattributeinstance != null)
@@ -1085,18 +1074,6 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
 
     public void handleStartJump(int p_184775_1_)
     {
-        // CraftBukkit start
-        float power;
-        if (p_184775_1_ >= 90) {
-            power = 1.0F;
-        } else {
-            power = 0.4F + 0.4F * (float) p_184775_1_ / 90.0F;
-        }
-        org.bukkit.event.entity.HorseJumpEvent event = org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callHorseJumpEvent(this, power);
-        if (event.isCancelled()) {
-            return;
-        }
-        // CraftBukkit end
         this.allowStandSliding = true;
         this.makeHorseRear();
     }

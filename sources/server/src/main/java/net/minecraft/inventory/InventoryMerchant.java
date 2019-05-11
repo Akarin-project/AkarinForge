@@ -1,14 +1,6 @@
 package net.minecraft.inventory;
 
-import java.util.List;
-
-import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftVillager;
-import org.bukkit.entity.HumanEntity;
-
 import net.minecraft.entity.IMerchant;
-import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -24,40 +16,7 @@ public class InventoryMerchant implements IInventory
     private final NonNullList<ItemStack> slots = NonNullList.<ItemStack>withSize(3, ItemStack.EMPTY);
     private final EntityPlayer player;
     private MerchantRecipe currentRecipe;
-    public int currentRecipeIndex; // Akarin
-    // CraftBukkit start - add fields and methods
-    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
-    private int maxStack = 64;
-
-    public List<ItemStack> getContents() {
-        return this.slots;
-    }
-
-    public void onOpen(CraftHumanEntity who) {
-        transaction.add(who);
-    }
-
-    public void onClose(CraftHumanEntity who) {
-        transaction.remove(who);
-    }
-
-    public List<HumanEntity> getViewers() {
-        return transaction;
-    }
-
-    public void setMaxStackSize(int i) {
-        maxStack = i;
-    }
-
-    public org.bukkit.inventory.InventoryHolder getOwner() {
-        return (merchant instanceof EntityVillager) ? (CraftVillager) ((EntityVillager) this.merchant).getBukkitEntity() : null;
-    }
-
-    @Override
-    public Location getLocation() {
-        return (merchant instanceof EntityVillager) ? ((EntityVillager) this.merchant).getBukkitEntity().getLocation() : null;
-    }
-    // CraftBukkit end
+    private int currentRecipeIndex;
 
     public InventoryMerchant(EntityPlayer thePlayerIn, IMerchant theMerchantIn)
     {
@@ -151,7 +110,7 @@ public class InventoryMerchant implements IInventory
 
     public int getInventoryStackLimit()
     {
-        return maxStack; // CraftBukkit
+        return 64;
     }
 
     public boolean isUsableByPlayer(EntityPlayer player)

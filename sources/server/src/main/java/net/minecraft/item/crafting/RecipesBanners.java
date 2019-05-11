@@ -15,13 +15,8 @@ import net.minecraft.world.World;
 
 public class RecipesBanners
 {
-    public static class RecipeAddPattern extends ShapelessRecipes implements IRecipe // CraftBukkit - added extends
+    public static class RecipeAddPattern extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<IRecipe> implements IRecipe
         {
-        // CraftBukkit start - Delegate to new parent class with bogus info
-        public RecipeAddPattern() {
-            super("", new ItemStack(Items.BANNER, 0, 0), NonNullList.from(Ingredient.EMPTY, Ingredient.fromItem(Items.BANNER)));
-        }
-        // CraftBukkit end
             public boolean matches(InventoryCrafting inv, World worldIn)
             {
                 boolean flag = false;
@@ -243,13 +238,8 @@ public class RecipesBanners
             }
         }
 
-    public static class RecipeDuplicatePattern extends ShapelessRecipes implements IRecipe // CraftBukkit - added extends
+    public static class RecipeDuplicatePattern extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<IRecipe> implements IRecipe
         {
-        // CraftBukkit start - Delegate to new parent class with bogus info
-        public RecipeDuplicatePattern() {
-            super("", new ItemStack(Items.BANNER, 0, 0), NonNullList.from(Ingredient.EMPTY, Ingredient.fromItem(Items.DYE)));
-        }
-        // CraftBukkit end
             public boolean matches(InventoryCrafting inv, World worldIn)
             {
                 ItemStack itemstack = ItemStack.EMPTY;

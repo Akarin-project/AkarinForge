@@ -12,13 +12,7 @@ import org.apache.logging.log4j.Logger;
 public class NBTTagList extends NBTBase implements java.lang.Iterable<NBTBase>
 {
     private static final Logger LOGGER = LogManager.getLogger();
-    public List<NBTBase> tagList = Lists.newArrayList(); // Paper
-    // Paper start
-    public void sort(java.util.Comparator<? extends NBTBase> comparator) {
-        //noinspection unchecked
-        java.util.Collections.sort(tagList, (java.util.Comparator<NBTBase>) comparator);
-    }
-    // Paper end
+    private List<NBTBase> tagList = Lists.<NBTBase>newArrayList();
     private byte tagType = 0;
 
     void write(DataOutput output) throws IOException

@@ -171,7 +171,7 @@ public class FMLSanityChecker implements IFMLCallHook
         }
         if (!goodFML)
         {
-            FMLLog.log.debug("FML appears to be missing any signature data. This is not a good thing"); // Akarin - down to debug
+            // FMLLog.log.error("FML appears to be missing any signature data. This is not a good thing"); // Akarin - this always happen
         }
         return null;
     }

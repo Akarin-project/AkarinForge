@@ -115,10 +115,8 @@ public class FMLLaunchHandler
     private void redirectStdOutputToLog()
     {
         FMLLog.log.debug("Injecting tracing printstreams for STDOUT/STDERR.");
-        // Akarin start - no need to tell user where they comes
-        System.setOut(new TracingPrintStream(LogManager.getLogger(), System.out));
-        System.setErr(new TracingPrintStream(LogManager.getLogger(), System.err));
-        // Akarin end
+        System.setOut(new TracingPrintStream(LogManager.getLogger("STDOUT"), System.out));
+        System.setErr(new TracingPrintStream(LogManager.getLogger("STDERR"), System.err));
     }
 
     public static Side side()

@@ -96,7 +96,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import io.akarin.forge.AkarinHooks;
+import io.akarin.forge.server.AkarinHooks;
 
 import javax.annotation.Nullable;
 
@@ -427,7 +427,7 @@ public class Loader
         mods.addAll(discoverer.identifyMods());
         identifyDuplicates(mods);
         namedMods = Maps.uniqueIndex(mods, ModContainer::getModId);
-        if (mods.size() > 4) FMLLog.log.info("Forge Mod Loader has identified {} mod{} to load", mods.size() - 4, mods.size() - 4 != 1 ? "s" : ""); // Akarin - exclude natives
+        if (mods.size() > 4) FMLLog.log.info("Forge Mod Loader has identified {} mod{} to load", mods.size() - 4, mods.size() - 4 != 1 ? "s" : ""); // Akarin - ignore internal stuffs
         return discoverer;
     }
 

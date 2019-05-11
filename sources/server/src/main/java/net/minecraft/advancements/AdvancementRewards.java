@@ -89,25 +89,8 @@ public class AdvancementRewards
 
         if (functionobject != null)
         {
-        	// Akarin start
-            ICommandSender icommandlistener = new AdvancementCommandListener(player, minecraftserver);
-
-            minecraftserver.getFunctionManager().execute(functionobject, icommandlistener);
-        }
-    }
-
-    public static class AdvancementCommandListener implements ICommandSender {
-        
-        private final EntityPlayerMP player;
-        private final MinecraftServer minecraftserver;
-        
-        public AdvancementCommandListener(EntityPlayerMP entityplayer, MinecraftServer minecraftserver) {
-            this.player = entityplayer;
-            this.minecraftserver = minecraftserver;
-        }
-        //ICommandSender icommandsender = new ICommandSender()
-        //{
-        // Akarin end
+            ICommandSender icommandsender = new ICommandSender()
+            {
                 public String getName()
                 {
                     return player.getName();
@@ -151,9 +134,9 @@ public class AdvancementRewards
                 {
                     return player.getServer();
                 }
-            //}; // Akarin
-            //minecraftserver.getFunctionManager().execute(functionobject, icommandsender); // Akarin
-        //} // Akarin
+            };
+            minecraftserver.getFunctionManager().execute(functionobject, icommandsender);
+        }
     }
 
     public String toString()

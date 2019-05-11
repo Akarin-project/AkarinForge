@@ -182,7 +182,6 @@ public class ForgeVersion
 
     public static void startVersionCheck()
     {
-    	/* // Akarin - disable version check
         new Thread("Forge Version Check")
         {
             @Override
@@ -211,7 +210,6 @@ public class ForgeVersion
             /**
              * Opens stream for given URL while following redirects
              */
-    		/* // Akarin - disable version check
             private InputStream openUrlStream(URL url) throws IOException
             {
                 URL currentUrl = url;
@@ -342,7 +340,6 @@ public class ForgeVersion
                 }
             }
         }.start();
-        */ // Akarin - disable version check
     }
 
     // Gather a list of mods that have opted in to this update system by providing a URL.

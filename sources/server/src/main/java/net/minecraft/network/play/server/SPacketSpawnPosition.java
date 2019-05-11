@@ -10,7 +10,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class SPacketSpawnPosition implements Packet<INetHandlerPlayClient>
 {
-    public BlockPos spawnBlockPos; // Akarin
+    private BlockPos spawnBlockPos;
 
     public SPacketSpawnPosition()
     {

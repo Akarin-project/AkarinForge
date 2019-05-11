@@ -26,10 +26,10 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EntityFireworkRocket extends Entity
 {
-    public static final DataParameter<ItemStack> FIREWORK_ITEM = EntityDataManager.<ItemStack>createKey(EntityFireworkRocket.class, DataSerializers.ITEM_STACK);
+    private static final DataParameter<ItemStack> FIREWORK_ITEM = EntityDataManager.<ItemStack>createKey(EntityFireworkRocket.class, DataSerializers.ITEM_STACK);
     private static final DataParameter<Integer> BOOSTED_ENTITY_ID = EntityDataManager.<Integer>createKey(EntityFireworkRocket.class, DataSerializers.VARINT);
     private int fireworkAge;
-    public int lifetime;
+    private int lifetime;
     private EntityLivingBase boostedEntity;
 
     public EntityFireworkRocket(World worldIn)

@@ -44,7 +44,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class BlockShulkerBox extends BlockContainer
 {
     public static final PropertyEnum<EnumFacing> FACING = PropertyDirection.create("facing");
-    public final EnumDyeColor color; // Akarin
+    private final EnumDyeColor color;
 
     public BlockShulkerBox(EnumDyeColor colorIn)
     {

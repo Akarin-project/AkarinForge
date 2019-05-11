@@ -23,11 +23,11 @@ public class PlayerChunkMapEntry
 {
     private static final Logger LOGGER = LogManager.getLogger();
     private final PlayerChunkMap playerChunkMap;
-    final List<EntityPlayerMP> players = Lists.<EntityPlayerMP>newArrayList();
+    private final List<EntityPlayerMP> players = Lists.<EntityPlayerMP>newArrayList();
     private final ChunkPos pos;
     private short[] changedBlocks = new short[64];
     @Nullable
-	public Chunk chunk; // Akarin
+    private Chunk chunk;
     private int changes;
     private int changedSectionFilter;
     private long lastUpdateInhabitedTime;

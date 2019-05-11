@@ -36,7 +36,7 @@ public class CraftingManager
 {
     private static final Logger LOGGER = LogManager.getLogger();
     private static int nextAvailableId;
-    public static RegistryNamespaced<ResourceLocation, IRecipe> REGISTRY = net.minecraftforge.registries.GameData.getWrapper(IRecipe.class); // Akarin
+    public static final RegistryNamespaced<ResourceLocation, IRecipe> REGISTRY = net.minecraftforge.registries.GameData.getWrapper(IRecipe.class);
 
     public static boolean init()
     {
@@ -180,7 +180,7 @@ public class CraftingManager
     }
 
     //Forge: Made private use GameData/Registry events!
-    public static void register(ResourceLocation name, IRecipe recipe) // Akarin
+    private static void register(ResourceLocation name, IRecipe recipe)
     {
         if (REGISTRY.containsKey(name))
         {

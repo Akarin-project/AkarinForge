@@ -54,11 +54,6 @@ public class UserList<K, V extends UserListEntry<K>>
             return null;
         }
     };
-    // CraftBukkit start
-    public Collection<V> getMapValues() {
-        return this.values.values();
-    }
-    // CraftBukkit end
 
     public UserList(File saveFile)
     {
@@ -156,7 +151,7 @@ public class UserList<K, V extends UserListEntry<K>>
         return new UserListEntry<K>(null, entryData);
     }
 
-    public Map<String, V> getValues() // Akarin
+    protected Map<String, V> getValues()
     {
         return this.values;
     }

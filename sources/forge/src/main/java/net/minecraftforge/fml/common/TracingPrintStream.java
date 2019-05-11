@@ -40,12 +40,12 @@ public class TracingPrintStream extends PrintStream {
 
     @Override
     public void println(Object o) {
-        logger.info("{}", o); // Akarin - remove prefix since they use standard output
+        logger.info("{}{}", getPrefix(), o);
     }
 
     @Override
     public void println(String s) {
-        logger.info("{}", s); // Akarin - remove prefix since they use standard output
+        logger.info("{}{}", getPrefix(), s);
     }
 
     private String getPrefix() {

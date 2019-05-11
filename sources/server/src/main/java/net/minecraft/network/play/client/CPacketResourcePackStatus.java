@@ -7,7 +7,7 @@ import net.minecraft.network.play.INetHandlerPlayServer;
 
 public class CPacketResourcePackStatus implements Packet<INetHandlerPlayServer>
 {
-    public CPacketResourcePackStatus.Action action; // Akarin
+    private CPacketResourcePackStatus.Action action;
 
     public CPacketResourcePackStatus()
     {

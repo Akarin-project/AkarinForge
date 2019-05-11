@@ -438,7 +438,7 @@ public class CoreModManager {
                 }
                 else
                 {
-                    FMLLog.log.debug("Found FMLCorePluginContainsFMLMod marker in {}. This is not recommended, @Mods should be in a separate jar from the coremod.", // Akarin - down to debug
+                    FMLLog.log.warn("Found FMLCorePluginContainsFMLMod marker in {}. This is not recommended, @Mods should be in a separate jar from the coremod.",
                             coreMod.getName());
                     candidateModFiles.add(coreMod.getName());
                 }
@@ -534,7 +534,7 @@ public class CoreModManager {
             MCVersion requiredMCVersion = coreModClazz.getAnnotation(IFMLLoadingPlugin.MCVersion.class);
             if (!Arrays.asList(rootPlugins).contains(coreModClass) && (requiredMCVersion == null || Strings.isNullOrEmpty(requiredMCVersion.value())))
             {
-                FMLLog.log.debug("The coremod {} does not have a MCVersion annotation, it may cause issues with this version of Minecraft", // Akarin - down to debug
+                FMLLog.log.warn("The coremod {} does not have a MCVersion annotation, it may cause issues with this version of Minecraft",
                         coreModClass);
             }
             else if (requiredMCVersion != null && !FMLInjectionData.mccversion.equals(requiredMCVersion.value()))
@@ -579,7 +579,7 @@ public class CoreModManager {
                 }
                 else // This is a probably a normal minecraft workspace - log at warn
                 {
-                    //FMLLog.log.warn("The coremod {} ({}) is not signed!", coreModName, coreModClass); // Akarin - who signed?
+                    // FMLLog.log.warn("The coremod {} ({}) is not signed!", coreModName, coreModClass); // Akarin - who signed?
                 }
             }
             else

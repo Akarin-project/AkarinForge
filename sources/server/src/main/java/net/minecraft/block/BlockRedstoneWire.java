@@ -319,7 +319,7 @@ public class BlockRedstoneWire extends Block
         }
     }
 
-    public int getMaxCurrentStrength(World worldIn, BlockPos pos, int strength) // Akarin
+    private int getMaxCurrentStrength(World worldIn, BlockPos pos, int strength)
     {
         if (worldIn.getBlockState(pos).getBlock() != this)
         {

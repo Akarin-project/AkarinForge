@@ -75,12 +75,4 @@ public abstract class UserListEntryBan<T> extends UserListEntry<T>
         data.addProperty("expires", this.banEndDate == null ? "forever" : DATE_FORMAT.format(this.banEndDate));
         data.addProperty("reason", this.reason);
     }
-    // Akarin start
-    public String getSource() {
-        return this.bannedBy;
-    }
-
-    public Date getCreated() {
-        return this.banStartDate;
-    }
 }

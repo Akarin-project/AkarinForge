@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 public class PropertyManager
 {
     private static final Logger LOGGER = LogManager.getLogger();
-    public final Properties serverProperties = new Properties(); // Akarin
+    private final Properties serverProperties = new Properties();
     private final File serverPropertiesFile;
 
     public PropertyManager(File propertiesFile)

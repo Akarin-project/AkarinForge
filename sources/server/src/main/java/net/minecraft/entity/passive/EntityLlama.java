@@ -66,7 +66,7 @@ public class EntityLlama extends AbstractChestHorse implements IRangedAttackMob
         this.setSize(0.9F, 1.87F);
     }
 
-    public void setStrength(int strengthIn)
+    private void setStrength(int strengthIn)
     {
         this.dataManager.set(DATA_STRENGTH_ID, Integer.valueOf(Math.max(1, Math.min(5, strengthIn))));
     }

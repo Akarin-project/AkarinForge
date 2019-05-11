@@ -3,7 +3,6 @@ package net.minecraft.item.crafting;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public interface IRecipe extends net.minecraftforge.registries.IForgeRegistryEntry<IRecipe>
@@ -35,6 +34,4 @@ default String getGroup()
     {
         return "";
     }
-    org.bukkit.inventory.Recipe toBukkitRecipe(); // Akarin
-    void setKey(ResourceLocation key); // Akarin
 }

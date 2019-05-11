@@ -20,7 +20,7 @@ public class Ingredient implements Predicate<ItemStack>
             return p_apply_1_.isEmpty();
         }
     };
-    final ItemStack[] matchingStacks; // Akarin
+    private final ItemStack[] matchingStacks;
     private final ItemStack[] matchingStacksExploded;
     private IntList matchingStacksPacked;
     private final boolean isSimple;

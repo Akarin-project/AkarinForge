@@ -1,48 +1,20 @@
-/*
- * Akarin reference
- */
 package net.minecraft.util;
 
-import java.lang.reflect.Field;
-
-import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
-
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.play.server.SPacketUpdateHealth;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class FoodStats
 {
-    public int foodLevel = 20;
-    public float foodSaturationLevel = 5.0F;
-    public float foodExhaustionLevel;
+    private int foodLevel = 20;
+    private float foodSaturationLevel = 5.0F;
+    private float foodExhaustionLevel;
     private int foodTimer;
     private int prevFoodLevel = 20;
-    // Akarin start
-    private EntityPlayer entityhuman;
-    
-    public FoodStats() {}
-    
-    public FoodStats(EntityPlayer entityhuman) {
-        org.apache.commons.lang.Validate.notNull(entityhuman);
-        this.entityhuman = entityhuman;
-        
-        try {
-            Field appaleCore = this.getClass().getField("entityplayer");
-            appaleCore.set(this, entityhuman);
-        }
-        catch (IllegalAccessException | NoSuchFieldException appaleCore) {
-            // empty catch block
-        }
-    }
-    // Akarin end
 
     public void addStats(int foodLevelIn, float foodSaturationModifier)
     {
@@ -52,21 +24,7 @@ public class FoodStats
 
     public void addStats(ItemFood foodItem, ItemStack stack)
     {
-        // Akarin start
-        if (entityhuman == null) {
-            this.addStats(foodItem.getHealAmount(stack), foodItem.getSaturationModifier(stack));
-        } else {
-            int oldFoodLevel = foodLevel;
-
-            org.bukkit.event.entity.FoodLevelChangeEvent event = org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callFoodLevelChangeEvent(entityhuman, foodItem.getHealAmount(stack) + oldFoodLevel);
-
-            if (!event.isCancelled()) {
-                this.addStats(event.getFoodLevel() - oldFoodLevel, foodItem.getSaturationModifier(stack));
-            }
-
-            ((EntityPlayerMP) entityhuman).getBukkitEntity().sendHealthUpdate();
-        }
-        // Akarin end
+        this.addStats(foodItem.getHealAmount(stack), foodItem.getSaturationModifier(stack));
     }
 
     public void onUpdate(EntityPlayer player)
@@ -84,13 +42,7 @@ public class FoodStats
             }
             else if (enumdifficulty != EnumDifficulty.PEACEFUL)
             {
-                // Akarin start
-                org.bukkit.event.entity.FoodLevelChangeEvent event = org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callFoodLevelChangeEvent(entityhuman, Math.max(this.foodLevel - 1, 0));
-                if (!event.isCancelled()) {
-                    this.foodLevel = event.getFoodLevel();
-                }
-                ((EntityPlayerMP) entityhuman).connection.sendPacket(new SPacketUpdateHealth(((EntityPlayerMP) entityhuman).getBukkitEntity().getScaledHealth(), this.foodLevel, this.foodSaturationLevel));
-                // Akarin end
+                this.foodLevel = Math.max(this.foodLevel - 1, 0);
             }
         }
 
@@ -103,7 +55,7 @@ public class FoodStats
             if (this.foodTimer >= 10)
             {
                 float f = Math.min(this.foodSaturationLevel, 6.0F);
-                entityhuman.heal(f / 6.0F, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.SATIATED, true); // Akarin
+                player.heal(f / 6.0F);
                 this.addExhaustion(f);
                 this.foodTimer = 0;
             }
@@ -114,8 +66,8 @@ public class FoodStats
 
             if (this.foodTimer >= 80)
             {
-                entityhuman.heal(1.0F, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.SATIATED); // CraftBukkit - added RegainReason
-                this.addExhaustion(entityhuman.world.spigotConfig.regenExhaustion); // Spigot - Change to use configurable value
+                player.heal(1.0F);
+                this.addExhaustion(6.0F);
                 this.foodTimer = 0;
             }
         }

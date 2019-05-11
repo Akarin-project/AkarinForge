@@ -113,7 +113,7 @@ public class ForgeModContainer extends DummyModContainer implements WorldAccessC
     public static int[] blendRanges = { 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34 };
     public static float zombieBabyChance = 0.05f;
     public static boolean shouldSortRecipies = true;
-    public static boolean disableVersionCheck = false;
+    public static boolean disableVersionCheck = true; // Akarin - disable by default
     public static boolean forgeLightPipelineEnabled = true;
     public static boolean selectiveResourceReloadEnabled = false;
     @Deprecated // TODO remove in 1.13
@@ -226,7 +226,7 @@ public class ForgeModContainer extends DummyModContainer implements WorldAccessC
         remapGeneralPropertyToClient("biomeSkyBlendRange");
         remapGeneralPropertyToClient("forgeLightPipelineEnabled");
 
-        prop = config.get(CATEGORY_GENERAL, "disableVersionCheck", false);
+        prop = config.get(CATEGORY_GENERAL, "disableVersionCheck", true); // Akarin - disable by default
         prop.setComment("Set to true to disable Forge's version check mechanics. Forge queries a small json file on our server for version information. For more details see the ForgeVersion class in our github.");
         // Language keys are a good idea to implement if you are using config GUIs. This allows you to use a .lang file that will hold the
         // "pretty" version of the property name as well as allow others to provide their own localizations.

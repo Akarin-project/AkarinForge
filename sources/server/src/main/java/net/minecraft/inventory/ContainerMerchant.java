@@ -1,7 +1,5 @@
 package net.minecraft.inventory;
 
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryView;
-
 import net.minecraft.entity.IMerchant;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -13,18 +11,6 @@ public class ContainerMerchant extends Container
     private final IMerchant merchant;
     private final InventoryMerchant merchantInventory;
     private final World world;
-    // CraftBukkit start
-    private CraftInventoryView bukkitEntity = null;
-    private InventoryPlayer player;
-
-    @Override
-    public CraftInventoryView getBukkitView() {
-        if (bukkitEntity == null) {
-            bukkitEntity = new CraftInventoryView(this.player.player.getBukkitEntity(), new org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryMerchant((InventoryMerchant) merchantInventory), this);
-        }
-        return bukkitEntity;
-    }
-    // CraftBukkit end
 
     public ContainerMerchant(InventoryPlayer playerInventory, IMerchant merchant, World worldIn)
     {
@@ -34,7 +20,6 @@ public class ContainerMerchant extends Container
         this.addSlotToContainer(new Slot(this.merchantInventory, 0, 36, 53));
         this.addSlotToContainer(new Slot(this.merchantInventory, 1, 62, 53));
         this.addSlotToContainer(new SlotMerchantResult(playerInventory.player, merchant, this.merchantInventory, 2, 120, 53));
-        this.player = playerInventory; // CraftBukkit - save player
 
         for (int i = 0; i < 3; ++i)
         {

@@ -38,9 +38,4 @@ public class EntityDamageSourceIndirect extends EntityDamageSource
         String s1 = s + ".item";
         return !itemstack.isEmpty() && itemstack.hasDisplayName() && I18n.canTranslate(s1) ? new TextComponentTranslation(s1, new Object[] {entityLivingBaseIn.getDisplayName(), itextcomponent, itemstack.getTextComponent()}) : new TextComponentTranslation(s, new Object[] {entityLivingBaseIn.getDisplayName(), itextcomponent});
     }
-    // CraftBukkit start
-    public Entity getProximateDamageSource() {
-        return super.getTrueSource();
-    }
-    // CraftBukkit end
 }

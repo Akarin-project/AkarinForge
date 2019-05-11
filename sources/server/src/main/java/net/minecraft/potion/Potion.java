@@ -30,7 +30,7 @@ public class Potion extends net.minecraftforge.registries.IForgeRegistryEntry.Im
     private final int liquidColor;
     private String name = "";
     private int statusIconIndex = -1;
-    public double effectiveness;
+    private double effectiveness;
     private boolean beneficial;
 
     @Nullable

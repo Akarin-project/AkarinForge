@@ -22,7 +22,6 @@ public class Profiler
 
     public void clearProfiling()
     {
-    	if (true) return; // Akarin
         this.profilingMap.clear();
         this.profilingSection = "";
         this.sectionList.clear();
@@ -30,7 +29,7 @@ public class Profiler
 
     public void startSection(String name)
     {
-        if (false && this.profilingEnabled) // Akarin
+        if (this.profilingEnabled)
         {
             if (!this.profilingSection.isEmpty())
             {
@@ -45,7 +44,7 @@ public class Profiler
 
     public void func_194340_a(Supplier<String> p_194340_1_)
     {
-        if (false && this.profilingEnabled) // Akarin
+        if (this.profilingEnabled)
         {
             this.startSection(p_194340_1_.get());
         }
@@ -53,7 +52,7 @@ public class Profiler
 
     public void endSection()
     {
-        if (false && this.profilingEnabled) // Akarin
+        if (this.profilingEnabled)
         {
             long i = System.nanoTime();
             long j = ((Long)this.timestampList.remove(this.timestampList.size() - 1)).longValue();
@@ -80,7 +79,7 @@ public class Profiler
 
     public List<Profiler.Result> getProfilingData(String profilerName)
     {
-        if (true || !this.profilingEnabled) // Akarin
+        if (!this.profilingEnabled)
         {
             return Collections.<Profiler.Result>emptyList();
         }
@@ -147,14 +146,13 @@ public class Profiler
 
     public void endStartSection(String name)
     {
-    	if (true) return; // Akarin
         this.endSection();
         this.startSection(name);
     }
 
     public String getNameOfLastSection()
     {
-        return "[DISABLED]"; // this.sectionList.isEmpty() ? "[UNKNOWN]" : (String)this.sectionList.get(this.sectionList.size() - 1); // Akarin
+        return this.sectionList.isEmpty() ? "[UNKNOWN]" : (String)this.sectionList.get(this.sectionList.size() - 1);
     }
 
     @SideOnly(Side.CLIENT)
@@ -202,7 +200,7 @@ public class Profiler
     @Deprecated // TODO: remove (1.13)
     public void startSection(Class<?> profiledClass)
     {
-        if (false && this.profilingEnabled) // Akarin
+        if (this.profilingEnabled)
         {
             startSection(profiledClass.getSimpleName());
         }
