@@ -81,6 +81,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.World.Environment;
+import org.bukkit.generator.ChunkGenerator;
 
 public class WorldServer extends World implements IThreadListener
 {
@@ -104,10 +106,14 @@ public class WorldServer extends World implements IThreadListener
     /** Stores the recently processed (lighting) chunks */
     protected Set<ChunkPos> doneChunks = new java.util.HashSet<ChunkPos>();
     public List<Teleporter> customTeleporters = new ArrayList<Teleporter>();
+    // Akarin start - add fields and params to constructor
+    public final int dimension;
 
-    public WorldServer(MinecraftServer server, ISaveHandler saveHandlerIn, WorldInfo info, int dimensionId, Profiler profilerIn)
+    public WorldServer(MinecraftServer server, ISaveHandler saveHandlerIn, WorldInfo info, int dimensionId, Profiler profilerIn, Environment environment, ChunkGenerator generator)
     {
-        super(saveHandlerIn, info, net.minecraftforge.common.DimensionManager.createProviderFor(dimensionId), profilerIn, false);
+        super(saveHandlerIn, info, net.minecraftforge.common.DimensionManager.createProviderFor(dimensionId), profilerIn, false, generator, environment);
+        this.dimension = dimensionId;
+        // Akarin end
         this.mcServer = server;
         this.entityTracker = new EntityTracker(this);
         this.playerChunkMap = new PlayerChunkMap(this);

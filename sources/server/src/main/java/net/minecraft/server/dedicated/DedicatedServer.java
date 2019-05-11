@@ -4,6 +4,10 @@ import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+
+import io.akarin.forge.server.AkarinHooks;
+import joptsimple.OptionSet;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +59,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
     private static final Pattern RESOURCE_PACK_SHA1_PATTERN = Pattern.compile("^[a-fA-F0-9]{40}$");
     public final List<PendingCommand> pendingCommandList = Collections.<PendingCommand>synchronizedList(Lists.newArrayList());
     private RConThreadQuery rconQueryThread;
-    private final RConConsoleSource rconConsoleSource = new RConConsoleSource(this);
+    public final RConConsoleSource rconConsoleSource = new RConConsoleSource(this); // Akarin - private -> public
     private RConThreadMain rconThread;
     private PropertyManager settings;
     private ServerEula eula;
@@ -64,9 +68,9 @@ public class DedicatedServer extends MinecraftServer implements IServer
     private boolean guiIsEnabled;
     public static boolean allowPlayerLogins = false;
 
-    public DedicatedServer(File anvilFileIn, DataFixer dataFixerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
+    public DedicatedServer(OptionSet options, DataFixer dataFixerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
     {
-        super(anvilFileIn, Proxy.NO_PROXY, dataFixerIn, authServiceIn, sessionServiceIn, profileRepoIn, profileCacheIn);
+        super(options, Proxy.NO_PROXY, dataFixerIn, authServiceIn, sessionServiceIn, profileRepoIn, profileCacheIn);
         Thread thread = new Thread("Server Infinisleeper")
         {
             {
@@ -180,12 +184,16 @@ public class DedicatedServer extends MinecraftServer implements IServer
             {
                 this.setServerPort(this.settings.getIntProperty("server-port", 25565));
             }
-            this.setPlayerList(new DedicatedPlayerList(this)); // Akarin - eariler
+            // Akarin start - eariler and configuration
+            this.setPlayerList(new DedicatedPlayerList(this));
+            AkarinHooks.initalizeConfiguration(this);
+            // Akarin end
 
             LOGGER.info("Generating keypair");
             this.setKeyPair(CryptManager.generateKeyPair());
             LOGGER.info("Starting Minecraft server on {}:{}", this.getServerHostname().isEmpty() ? "*" : this.getServerHostname(), Integer.valueOf(this.getServerPort()));
 
+            //if (!org.spigotmc.SpigotConfig.lateBind) { // Akarin - late bind pre handle
             try
             {
                 this.getNetworkSystem().addLanEndpoint(inetaddress, this.getServerPort());
@@ -197,6 +205,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
                 LOGGER.warn("Perhaps a server is already running on that port?");
                 return false;
             }
+            //} // Akarin - late bind pre handle
 
             if (!this.isServerInOnlineMode())
             {
@@ -217,7 +226,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
             }
             else
             {
-                long j = System.nanoTime(); // Akarin - more accurate timer
+                long start = System.nanoTime(); // Akarin - more accurate timer
                 net.minecraftforge.fml.common.FMLCommonHandler.instance().onServerStarted();
                 // Akarin start - eariler
                 // this.setPlayerList(new DedicatedPlayerList(this));
@@ -272,8 +281,8 @@ public class DedicatedServer extends MinecraftServer implements IServer
                 if (!net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerAboutToStart(this)) return false;
                 LOGGER.info("Preparing level \"{}\"", (Object)this.getFolderName());
                 this.loadAllWorlds(this.getFolderName(), this.getFolderName(), k, worldtype, s2);
-                long i1 = System.nanoTime() - j;
                 /* // Akarin - more accurate timer
+                long i1 = System.nanoTime() - j;
                 String s3 = String.format("%.3fs", (double)i1 / 1.0E9D);
                 LOGGER.info("Done ({})! For help, type \"help\" or \"?\"", (Object)s3);
                 */ // Akarin - more accurate timer
@@ -300,6 +309,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
                     this.rconThread.startThread();
                 }
 
+                /* // Akarin - remove vanilla watchdog
                 if (this.getMaxTickTime() > 0L)
                 {
                     Thread thread1 = new Thread(new ServerHangWatchdog(this));
@@ -307,6 +317,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
                     thread1.setDaemon(true);
                     thread1.start();
                 }
+                */ // Akarin - remove vanilla watchdog
 
                 Items.AIR.getSubItems(CreativeTabs.SEARCH, NonNullList.create());
                 // <3 you Grum for this, saves us ~30 patch files! --^
@@ -315,7 +326,29 @@ public class DedicatedServer extends MinecraftServer implements IServer
                 LOGGER.info("Initializing server starting state");
                 // Akarin end
                 return net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerStarting(this);
-                } finally { LOGGER.info("Ready for connection ({})!", String.format("%.3fs", (double)i1 / 1.0E9D)); } // Akarin - more accurate timer
+                // Akarin start
+                } finally {
+                	// Late bind post handle
+                    if (false /*org.spigotmc.SpigotConfig.lateBind*/) {
+                    try
+                    {
+                        this.getNetworkSystem().addLanEndpoint(inetaddress, this.getServerPort());
+                    }
+                    catch (IOException ioexception)
+                    {
+                        LOGGER.warn("**** FAILED TO BIND TO PORT!");
+                        LOGGER.warn("The exception was: {}", ioexception.toString());
+                        LOGGER.warn("Perhaps a server is already running on that port?");
+                        return false;
+                    }
+                    }
+                	
+                    long durationNanos = System.nanoTime() - start;
+                    String duration = String.format("%.3fs", (double) durationNanos / 1.0E9D);
+                    
+                	LOGGER.info("Ready for connection ({})!", duration);
+                }
+                // Akarin end
             }
         }
     }
@@ -441,7 +474,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
         while (!this.pendingCommandList.isEmpty())
         {
             PendingCommand pendingcommand = this.pendingCommandList.remove(0);
-            this.getCommandManager().executeCommand(pendingcommand.sender, pendingcommand.command);
+            AkarinHooks.handleServerCommandEvent(this, pendingcommand); // Akarin - replace with hook
         }
     }
 
@@ -700,8 +733,17 @@ public class DedicatedServer extends MinecraftServer implements IServer
 
     public String handleRConCommand(String command)
     {
-        this.rconConsoleSource.resetLog();
-        this.commandManager.executeCommand(this.rconConsoleSource, command);
-        return this.rconConsoleSource.getLogContents();
+    	// Akarin start - handle by hook and add method
+    	return AkarinHooks.handleRemoteServerCommandEvent(this, command);
+    	
+        // this.rconConsoleSource.resetLog();
+        // this.commandManager.executeCommand(this.rconConsoleSource, command);
+        // return this.rconConsoleSource.getLogContents();
     }
+    
+    @Override
+    public PropertyManager getPropertyManager() {
+        return settings;
+    }
+    // Akarin end
 }

@@ -13,6 +13,11 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
+
+import org.bukkit.World.Environment;
+import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
+import org.bukkit.generator.ChunkGenerator;
+
 import net.minecraft.advancements.AdvancementManager;
 import net.minecraft.advancements.FunctionManager;
 import net.minecraft.block.Block;
@@ -121,9 +126,19 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public java.util.ArrayList<net.minecraftforge.common.util.BlockSnapshot> capturedBlockSnapshots = new java.util.ArrayList<net.minecraftforge.common.util.BlockSnapshot>();
     private net.minecraftforge.common.capabilities.CapabilityDispatcher capabilities;
     private net.minecraftforge.common.util.WorldCapabilityData capabilityData;
+    // Akarin start - add fields and params to constructor
+    private final CraftWorld world;
+    public ChunkGenerator generator;
+    
+    public CraftWorld getWorld() {
+        return this.world;
+    }
 
-    protected World(ISaveHandler saveHandlerIn, WorldInfo info, WorldProvider providerIn, Profiler profilerIn, boolean client)
+    protected World(ISaveHandler saveHandlerIn, WorldInfo info, WorldProvider providerIn, Profiler profilerIn, boolean client, ChunkGenerator gen, Environment env)
     {
+        this.generator = gen;
+        this.world = new CraftWorld((WorldServer) this, gen, env);
+    	// Akarin end
         this.eventListeners = Lists.newArrayList(this.pathListener);
         this.calendar = Calendar.getInstance();
         this.worldScoreboard = new Scoreboard();

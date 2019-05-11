@@ -152,6 +152,20 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     public boolean isChangingQuantityOnly;
     public int ping;
     public boolean queuedEndExit;
+    // Akarin - add fields
+    public long timeOffset = 0;
+    public boolean relativeTime = true;
+    
+    public long getPlayerTime() {
+        if (this.relativeTime) {
+            // Adds timeOffset to the current server time.
+            return this.world.getWorldTime() + this.timeOffset;
+        } else {
+            // Adds timeOffset to the beginning of this day.
+            return this.world.getWorldTime() - (this.world.getWorldTime() % 24000) + this.timeOffset;
+        }
+    }
+    // Akarin end
 
     public EntityPlayerMP(MinecraftServer server, WorldServer worldIn, GameProfile profile, PlayerInteractionManager interactionManagerIn)
     {
