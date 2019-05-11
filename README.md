@@ -21,10 +21,11 @@ Get Akarin
 
 #### Compile
 ```sh
-./scripts/inst.sh
+./scripts/inst.sh --setup
 ```
 
 **Notes**
+* Run with `--setup` argument will regenerate codes in the submodule.
 * Please ensure that your machine has sufficient memory before compiling the project.
 
 Demo Servers
