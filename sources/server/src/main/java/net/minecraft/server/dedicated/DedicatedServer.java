@@ -47,6 +47,7 @@ import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
+import net.minecraft.world.chunk.storage.AnvilSaveConverter;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
@@ -227,7 +228,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
             else
             {
                 long start = System.nanoTime(); // Akarin - more accurate timer
-            	this.anvilConverterForAnvilFile = new net.minecraft.world.chunk.storage.AnvilSaveConverter(server.getWorldContainer(), this.dataFixer); // Akarin - init converter
+            	this.anvilConverterForAnvilFile = new AnvilSaveConverter(server.getWorldContainer(), this.dataFixer); // Akarin - init converter
                 net.minecraftforge.fml.common.FMLCommonHandler.instance().onServerStarted();
                 // Akarin start - eariler
                 // this.setPlayerList(new DedicatedPlayerList(this));

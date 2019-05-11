@@ -1,5 +1,6 @@
 package net.minecraft.server.management;
 
+import com.destroystokyo.paper.console.TerminalConsoleCommandSender;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -66,6 +67,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
 
 public abstract class PlayerList
 {
@@ -91,9 +94,14 @@ public abstract class PlayerList
     private GameType gameType;
     private boolean commandsAllowedForAll;
     private int playerPingIndex;
+    private CraftServer cserver; // Akarin
 
     public PlayerList(MinecraftServer server)
     {
+    	// Akarin start
+        this.cserver = server.server = new CraftServer(server, this);
+        server.console = new TerminalConsoleCommandSender();
+        // Akarin end
         this.bannedPlayers = new UserListBans(FILE_PLAYERBANS);
         this.bannedIPs = new UserListIPBans(FILE_IPBANS);
         this.ops = new UserListOps(FILE_OPS);

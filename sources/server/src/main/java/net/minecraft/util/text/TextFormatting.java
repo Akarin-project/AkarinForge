@@ -37,7 +37,7 @@ public enum TextFormatting
     private static final Map<String, TextFormatting> NAME_MAPPING = Maps.<String, TextFormatting>newHashMap();
     private static final Pattern FORMATTING_CODE_PATTERN = Pattern.compile("(?i)\u00a7[0-9A-FK-OR]");
     private final String name;
-    private final char formattingCode;
+    public final char formattingCode; // Akarin - private -> public
     private final boolean fancyStyling;
     private final String controlString;
     private final int colorIndex;

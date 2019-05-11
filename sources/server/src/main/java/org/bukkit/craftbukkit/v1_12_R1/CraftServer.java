@@ -10,7 +10,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
 import org.bukkit.BanList;
+import org.bukkit.Bukkit;
 import org.bukkit.BanList.Type;
 import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
@@ -58,15 +61,27 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.CachedServerIcon;
 
+import io.akarin.forge.server.logging.LogWrapper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.PendingCommand;
+import net.minecraft.server.management.PlayerList;
+import net.minecraft.world.storage.SaveHandler;
+import net.minecraftforge.common.DimensionManager;
 
 /*
  * Temp class dummy impl
  */
 public final class CraftServer implements Server {
 
+	private static final Logger LOGGER = LogWrapper.getLogger();
 	public CraftScoreboardManager scoreboardManager;
+
+	public CraftServer(MinecraftServer server, PlayerList playerList) {
+        Bukkit.setServer(this);
+        this.configuration = YamlConfiguration.loadConfiguration(this.getConfigFile());
+        this.commandMap = new SimpleCommandMap(this);
+        this.pluginManager = new SimplePluginManager(this, this.commandMap);
+	}
 
 	@Override
 	public void sendPluginMessage(Plugin source, String channel, byte[] message) {
@@ -250,8 +265,7 @@ public final class CraftServer implements Server {
 
 	@Override
 	public PluginManager getPluginManager() {
-		// TODO Auto-generated method stub
-		return null;
+		return pluginManager;
 	}
 	
     private final CraftScheduler scheduler = new CraftScheduler();
@@ -329,8 +343,7 @@ public final class CraftServer implements Server {
 
 	@Override
 	public Logger getLogger() {
-		// TODO Auto-generated method stub
-		return null;
+		return LOGGER;
 	}
 
 	@Override
@@ -494,11 +507,24 @@ public final class CraftServer implements Server {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+    private File container;
 
 	@Override
 	public File getWorldContainer() {
-		// TODO Auto-generated method stub
-		return null;
+        if (DimensionManager.getWorld(0) != null) {
+            return ((SaveHandler) DimensionManager.getWorld(0).getSaveHandler()).getWorldDirectory();
+        }
+        
+        if (MinecraftServer.instance().anvilFile != null) {
+            return MinecraftServer.instance().anvilFile;
+        }
+
+        if (container == null) {
+            container = new File(configuration.getString("settings.world-container", "."));
+        }
+
+        return container;
 	}
 
 	@Override
@@ -684,9 +710,6 @@ public final class CraftServer implements Server {
     private SimpleCommandMap commandMap;
 
 	public ChunkGenerator getGenerator(String world) {
-        this.configuration = YamlConfiguration.loadConfiguration(this.getConfigFile());
-        this.commandMap = new SimpleCommandMap(this);
-        this.pluginManager = new SimplePluginManager(this, this.commandMap);
 		
         String name;
         ConfigurationSection section = this.configuration.getConfigurationSection("worlds");
