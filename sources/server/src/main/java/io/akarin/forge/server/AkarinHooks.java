@@ -4,10 +4,12 @@ import java.io.File;
 import java.net.Proxy;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 import org.bukkit.craftbukkit.v1_12_R1.Main;
 import org.bukkit.craftbukkit.v1_12_R1.scoreboard.CraftScoreboardManager;
@@ -18,6 +20,7 @@ import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.ChunkGenerator;
 
+import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
@@ -34,6 +37,7 @@ import net.minecraft.util.ReportedException;
 import net.minecraft.util.datafix.DataFixesManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
+import net.minecraft.world.GameType;
 import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldServerMulti;
@@ -41,10 +45,12 @@ import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.storage.AnvilSaveHandler;
 import net.minecraft.world.storage.ISaveHandler;
+import net.minecraft.world.storage.SaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.FMLLog;
 
 public abstract class AkarinHooks {
 	private static final Logger LOGGER = LogManager.getRootLogger();
@@ -398,4 +404,119 @@ public abstract class AkarinHooks {
             throw new RuntimeException("Interrupted processing rcon command " + command, e);
         }
 	}
+	
+	public static WorldServer initalizeWorld(int dim) {
+		WorldServer overworld = DimensionManager.getWorld(0);
+        if (overworld == null) {
+            throw new RuntimeException("Cannot Hotload Dim: Overworld is not Loaded!");
+        }
+        
+        WorldSettings overworldSettings = new WorldSettings(overworld.getWorldInfo());
+        
+        Environment environment = Environment.getEnvironment(dim);
+        
+        // Make up world name by dimension
+        String worldName = "DIM" + dim;
+        
+        return initalizeWorld(dim, worldName, environment, overworldSettings);
+	}
+	
+	public static WorldServer initalizeWorld(WorldCreator worldCreator) {
+		MinecraftServer server = MinecraftServer.instance();
+		
+        WorldType type = WorldType.parseWorldType(worldCreator.type().getName());
+        boolean generateStructures = worldCreator.generateStructures();
+		WorldSettings worldSettings = new WorldSettings(worldCreator.seed(), GameType.getByID(server.server.getDefaultGameMode().getValue()), generateStructures, false, type);
+		
+        return initalizeWorld(worldCreator, worldSettings);
+	}
+	
+	public static WorldServer initalizeWorld(WorldCreator worldCreator, WorldSettings worldSettings) {
+		MinecraftServer server = MinecraftServer.instance();
+        String worldName = worldCreator.name();
+		
+        SaveHandler saver = new AnvilSaveHandler(server.server.getWorldContainer(), worldName, true, server.getDataFixer());
+        WorldInfo info = saver.loadWorldInfo();
+        
+        int dim = info != null ? info.dimension : 0;
+            dim = dim == -1 || dim == 0 || dim == 1 ? DimensionManager.getNextFreeDimId() : dim;
+        
+        return initalizeWorld(dim, worldName, worldCreator.environment(), worldSettings);
+	}
+	
+	public static WorldServer initalizeWorld(int dim, String worldName, Environment environment, WorldSettings worldSettings) {
+		// ----------- World Initalization ----------
+		
+		WorldServer overworld = DimensionManager.getWorld(0);
+        if (overworld == null) {
+            throw new RuntimeException("Cannot Hotload Dim: Overworld is not Loaded!");
+        }
+		
+        try {
+            DimensionManager.getProviderType(dim);
+        } catch (Exception e) {
+            FMLLog.log.error("Cannot Hotload Dim: {}", dim, e);
+            return overworld; // If a provider hasn't been registered then we can't hotload the dim
+        }
+        
+        MinecraftServer server = overworld.getMinecraftServer();
+        
+        // Skip not allowed nether or end
+        if (dim != 0 && (dim == -1 && !server.getAllowNether() || dim == 1 && !server.server.getAllowEnd()))
+            return overworld;
+        
+        // Register dimension to forge
+        if (!DimensionManager.isDimensionRegistered(dim))
+            DimensionManager.registerDimension(dim, DimensionType.getById(environment.getId()));
+        
+        ISaveHandler saver = new AnvilSaveHandler(server.server.getWorldContainer(), worldName, true, server.dataFixer);
+        ChunkGenerator generator = server.server.getGenerator(worldName);
+        worldSettings.setGeneratorOptions(((DedicatedServer) server).getStringProperty("generator-settings", ""));
+        
+        WorldInfo worldInfo = new WorldInfo(worldSettings, worldName);
+        WorldServer world = (WorldServer) new WorldServerMulti(server, saver, dim, overworld, server.profiler, worldInfo, environment, generator).init();
+        
+        // Put vanilla worlds
+        List<WorldServer> worldServers = Lists.newArrayList(server.worlds);
+        worldServers.add(world);
+        server.worlds = worldServers.toArray(new WorldServer[0]);
+        server.getPlayerList().setPlayerManager(server.worlds);
+        
+        world.addEventListener(new ServerWorldEventHandler(server, world));
+        
+        world.getWorldInfo().setGameType(server.getGameType());
+        server.setDifficultyForAllWorlds(server.getDifficulty());
+        
+        // Events
+        server.server.getPluginManager().callEvent(new WorldInitEvent(world.getWorld()));
+        MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(world));
+        
+		// ----------- Chunk Initalization ----------
+        
+        LOGGER.info("Preparing start region for level " + world.dimension + " (Seed: " + world.getSeed() + ")");
+        
+        if (world.getWorld().getKeepSpawnInMemory()) {
+            BlockPos spawn = world.getSpawnPoint();
+            long start = MinecraftServer.getCurrentTimeMillis();
+            
+            int chunks = 0;
+            for (int x = -192; x <= 192 && server.isServerRunning(); x += 16) {
+                for (int z = -192; z <= 192 && server.isServerRunning(); z += 16) {
+                    world.getChunkProvider().provideChunk(spawn.getX() + x >> 4, spawn.getZ() + z >> 4);
+                    
+                    long current = MinecraftServer.getCurrentTimeMillis();
+                    if (start - current > 1000) {
+                        server.outputPercentRemaining("Preparing spawn area", ++chunks * 100 / 625);
+                        start = current;
+                    }
+                }
+            }
+        }
+        
+        // Events
+        server.server.getPluginManager().callEvent(new WorldLoadEvent(world.getWorld()));
+        
+        return world;
+	}
+	
 }

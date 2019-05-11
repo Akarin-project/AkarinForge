@@ -19,7 +19,7 @@ public class WorldServerMulti extends WorldServer
 
     public WorldServerMulti(MinecraftServer server, ISaveHandler saveHandlerIn, int dimensionId, WorldServer delegate, Profiler profilerIn, WorldInfo info, Environment environment, ChunkGenerator generator)
     {
-        super(server, saveHandlerIn, new DerivedWorldInfo(delegate.getWorldInfo()), dimensionId, profilerIn, generator, environment);
+        super(server, saveHandlerIn, new DerivedWorldInfo(delegate.getWorldInfo()), dimensionId, profilerIn, environment, generator);
         this.delegate = delegate;
         this.borderListener = new IBorderListener()
         {

@@ -45,6 +45,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multiset;
 
+import io.akarin.forge.server.AkarinHooks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.DimensionType;
@@ -242,6 +243,8 @@ public class DimensionManager
 
     public static void initDimension(int dim)
     {
+    	AkarinHooks.initalizeWorld(dim); // Akarin - replace with standard steps in the hook
+    	/*// Akarin - replace with hook
         WorldServer overworld = getWorld(0);
         if (overworld == null)
         {
@@ -269,6 +272,7 @@ public class DimensionManager
         }
 
         mcServer.setDifficultyForAllWorlds(mcServer.getDifficulty());
+        */ // Akarin - replace with hook
     }
 
     public static WorldServer getWorld(int id)
