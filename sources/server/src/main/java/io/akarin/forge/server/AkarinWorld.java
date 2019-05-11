@@ -26,14 +26,6 @@ public abstract class AkarinWorld {
     public static boolean haveWeSilencedAPhysicsCrash;
     public static String blockLocation;
 
-    public CraftWorld getWorld() {
-        return this.world;
-    }
-
-    public CraftServer getServer() {
-        return (CraftServer) Bukkit.getServer();
-    }
-
     public abstract Chunk getChunkIfLoaded(BlockPos blockposition);
     
     public abstract Chunk getChunkIfLoaded(int x, int z);

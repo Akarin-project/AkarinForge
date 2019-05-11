@@ -300,7 +300,6 @@ public class FMLCommonHandler
     public void handleServerStarted()
     {
         Loader.instance().serverStarted();
-        MinecraftServer.LOGGER.info("Ready for connection!");
         sidedDelegate.allowLogins();
     }
 

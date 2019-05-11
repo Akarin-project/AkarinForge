@@ -75,6 +75,31 @@ public class Chunk extends AkarinChunk implements net.minecraftforge.common.capa
     private int queuedLightChecks;
     private final ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
     public boolean unloadQueued;
+    // Akarin start
+    public boolean areNeighborsLoaded(final int radius) {
+        switch (radius) {
+            case 2:
+                return this.neighbors == Integer.MAX_VALUE >> 6;
+            case 1:
+                final int mask =
+                        //       x        z   offset          x        z   offset          x         z   offset
+                        (0x1 << (1 * 5 +  1 + 12)) | (0x1 << (0 * 5 +  1 + 12)) | (0x1 << (-1 * 5 +  1 + 12)) |
+                        (0x1 << (1 * 5 +  0 + 12)) | (0x1 << (0 * 5 +  0 + 12)) | (0x1 << (-1 * 5 +  0 + 12)) |
+                        (0x1 << (1 * 5 + -1 + 12)) | (0x1 << (0 * 5 + -1 + 12)) | (0x1 << (-1 * 5 + -1 + 12));
+                return (this.neighbors & mask) == mask;
+            default:
+                throw new UnsupportedOperationException(String.valueOf(radius));
+        }
+    }
+
+    public void setNeighborLoaded(final int x, final int z) {
+        this.neighbors |= 0x1 << (x * 5 + 12 + z);
+    }
+
+    public void setNeighborUnloaded(final int x, final int z) {
+        this.neighbors &= ~(0x1 << (x * 5 + 12 + z));
+    }
+    // Akarin end
 
     public Chunk(World worldIn, int x, int z)
     {

@@ -284,7 +284,6 @@ public class DedicatedServer extends MinecraftServer implements IServer
                 this.loadAllWorlds(this.getFolderName(), this.getFolderName(), k, worldtype, s2);
                 long i1 = System.nanoTime() - j;
                 String s3 = String.format("%.3fs", (double)i1 / 1.0E9D);
-                LOGGER.info("Done ({})! For help, type \"help\" or \"?\"", (Object)s3);
                 this.currentTime = getCurrentTimeMillis();
 
                 if (this.settings.hasProperty("announce-player-achievements"))
@@ -324,7 +323,11 @@ public class DedicatedServer extends MinecraftServer implements IServer
 
                 Items.AIR.getSubItems(CreativeTabs.SEARCH, NonNullList.create());
                 // <3 you Grum for this, saves us ~30 patch files! --^
-                return net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerStarting(this);
+                try { // Akarin
+                return net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerStarting(this); // Akarin
+                } finally { // Akarin
+                    LOGGER.info("Ready for connection ({})!", (Object)s3); // Akarin
+				} // Akarin
             }
         }
     }

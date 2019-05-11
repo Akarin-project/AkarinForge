@@ -156,7 +156,6 @@ public abstract class AkarinHooks {
                 return dim1 == 0 ? -1 : Math.max(dim1, dim2); // Always set dim 0 to the first
             }
         });
-        Bukkit.getLogger().warning(Lists.newArrayList(dimIds).toString());
         
         // Prepare worlds array with same size
         server.worlds = new WorldServer[dimIds.length];

@@ -349,6 +349,11 @@ public class NetHandlerPlayServer extends AkarinNetHandlerPlayerServer implement
             }
         });//); // Akarin
     }
+    // Akarin start
+    public void disconnect(ITextComponent ichatbasecomponent) {
+        disconnect(CraftChatMessage.fromComponent(ichatbasecomponent, TextFormatting.WHITE));
+    }
+    // Akarin end
 
     public void processInput(CPacketInput packetIn)
     {

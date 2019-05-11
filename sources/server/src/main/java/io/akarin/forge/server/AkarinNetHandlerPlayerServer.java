@@ -27,10 +27,6 @@ public abstract class AkarinNetHandlerPlayerServer {
     
     public abstract CraftPlayer getPlayer();
     
-    public void disconnect(ITextComponent ichatbasecomponent) {
-        disconnect(CraftChatMessage.fromComponent(ichatbasecomponent, TextFormatting.WHITE));
-    }
-    
     public abstract void disconnect(String s);
 	
 	public abstract void teleport(Location dest);
