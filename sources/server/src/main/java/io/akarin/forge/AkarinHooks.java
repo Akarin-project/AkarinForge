@@ -392,9 +392,8 @@ public abstract class AkarinHooks {
             }
             
             if (wait > 0) {
-            	long target = wait / 1000000;
             	long park = System.nanoTime();
-            	while ((System.nanoTime() - park) < target);
+            	while ((System.nanoTime() - park) < wait);
                 curTime = System.nanoTime();
                 wait = MinecraftServer.TICK_TIME - (curTime - lastTick);
             }
