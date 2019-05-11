@@ -34,52 +34,57 @@ public class LogWrapper extends Logger {
     public void info(String msg) {
     	LOGGER.info(msg);
     }
+    
+    @Override
+    public void config(String msg) {
+    	LOGGER.debug(msg);
+    }
 
     @Override
     public void fine(String msg) {
-    	LOGGER.debug(msg);
+    	LOGGER.trace(msg);
     }
 
     @Override
     public void finer(String msg) {
     	LOGGER.trace(msg);
     }
-
-    /**
-     * Log a FINEST message.
-     * <p>
-     * If the logger is currently enabled for the FINEST message
-     * level then the given message is forwarded to all the
-     * registered output Handler objects.
-     * <p>
-     * @param   msg     The string message (or a key in the message catalog)
-     */
+    
+    @Override
     public void finest(String msg) {
-        log(Level.FINEST, msg);
+    	LOGGER.trace(msg);
     }
 
 	@Override
     public void log(Level level, String msg) {
 		if (level == Level.INFO)
-			LOGGER.info(msg);
+			LOGGER.log(org.apache.logging.log4j.Level.INFO, msg);
 		else if (level == Level.WARNING)
-			LOGGER.warn(msg);
+			LOGGER.log(org.apache.logging.log4j.Level.WARN, msg);
 		else if (level == Level.SEVERE)
-			LOGGER.error(msg);
-		else
-			LOGGER.debug(msg);
+			LOGGER.log(org.apache.logging.log4j.Level.ERROR, msg);
+		else if (level == Level.FINE || level == Level.FINER || level == Level.FINEST)
+			LOGGER.log(org.apache.logging.log4j.Level.TRACE, msg);
+		else if (level == Level.CONFIG)
+			LOGGER.log(org.apache.logging.log4j.Level.DEBUG, msg);
+		else if (level == Level.ALL)
+			LOGGER.log(org.apache.logging.log4j.Level.ALL, msg);
     }
 	
 	@Override
     public void log(Level level, String msg, Throwable throwable) {
-		if (level == Level.SEVERE)
-			LOGGER.error(msg, throwable);
+		if (level == Level.INFO)
+			LOGGER.log(org.apache.logging.log4j.Level.INFO, msg, throwable);
 		else if (level == Level.WARNING)
-			LOGGER.warn(msg, throwable);
-		else if (level == Level.INFO)
-			LOGGER.info(msg, throwable);
-		else
-			LOGGER.debug(msg, throwable);
+			LOGGER.log(org.apache.logging.log4j.Level.WARN, msg, throwable);
+		else if (level == Level.SEVERE)
+			LOGGER.log(org.apache.logging.log4j.Level.ERROR, msg, throwable);
+		else if (level == Level.FINE || level == Level.FINER || level == Level.FINEST)
+			LOGGER.log(org.apache.logging.log4j.Level.TRACE, msg, throwable);
+		else if (level == Level.CONFIG)
+			LOGGER.log(org.apache.logging.log4j.Level.DEBUG, msg, throwable);
+		else if (level == Level.ALL)
+			LOGGER.log(org.apache.logging.log4j.Level.ALL, msg, throwable);
     }
 }
 
