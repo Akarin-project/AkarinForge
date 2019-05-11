@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.Future;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World.Environment;
 import org.bukkit.WorldCreator;
 import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
@@ -21,8 +23,12 @@ import org.bukkit.craftbukkit.v1_12_R1.Main;
 import org.bukkit.craftbukkit.v1_12_R1.scoreboard.CraftScoreboardManager;
 import org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers;
 import org.bukkit.craftbukkit.v1_12_R1.util.Waitable;
+import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
+import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.world.ChunkPopulateEvent;
@@ -41,6 +47,8 @@ import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 
 import io.akarin.forge.api.bukkit.I18nManager;
+import io.akarin.forge.server.AkarinNetHandlerPlayerServer;
+import io.netty.util.concurrent.GenericFutureListener;
 import joptsimple.OptionSet;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockSand;
@@ -48,6 +56,10 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.NetHandlerPlayServer;
+import net.minecraft.network.play.client.CPacketPlayer;
+import net.minecraft.network.play.client.CPacketVehicleMove;
+import net.minecraft.network.play.server.SPacketDisconnect;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
 import net.minecraft.network.play.server.SPacketWorldBorder;
 import net.minecraft.server.MinecraftServer;
@@ -58,6 +70,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.datafix.DataFixesManager;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameType;
 import net.minecraft.world.ServerWorldEventHandler;
@@ -731,5 +746,93 @@ public abstract class AkarinHooks {
         if (!AkarinForge.disableForgeGenWorld.contains(chunk.world.getWorldInfo().getWorldName())) {
             GameRegistry.generateWorld(chunk.x, chunk.z, chunk.world, generator, chunk.world.getChunkProvider());
         }
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static boolean handlePlayerKickEvent(NetHandlerPlayServer connection, String s) {
+        // CraftBukkit start - fire PlayerKickEvent
+        if (connection.processedDisconnect) {
+            return false;
+        }
+        String leaveMessage = TextFormatting.YELLOW + connection.player.getName() + " left the game.";
+
+        PlayerKickEvent event = new PlayerKickEvent(connection.server.getPlayer(connection.player), s, leaveMessage);
+
+        if (connection.server.getServer().isServerRunning()) {
+        	connection.server.getPluginManager().callEvent(event);
+        }
+
+        if (event.isCancelled()) {
+            // Do not kick the player
+            return false;
+        }
+        // Send the possibly modified leave message
+        s = event.getReason();
+        
+        final TextComponentString chatcomponenttext = new TextComponentString(s);
+        connection.netManager.sendPacket(new SPacketDisconnect(chatcomponenttext), new GenericFutureListener<io.netty.util.concurrent.Future<? super Void>>() {
+            public void operationComplete(io.netty.util.concurrent.Future<? super Void> future) throws Exception {
+            	connection.netManager.closeChannel(chatcomponenttext);
+            }
+        }, new GenericFutureListener[0]);
+        
+        ((AkarinNetHandlerPlayerServer) connection).onDisconnect(chatcomponenttext);
+        
+        return true;
+	}
+	
+	public static boolean handlePlayerMoveEvent(NetHandlerPlayServer connection, CPacketVehicleMove packetIn) {
+        Player player = connection.getPlayer();
+        // Get the Players previous Event location.
+        Location from = new Location(player.getWorld(), connection.lastPosX, connection.lastPosY, connection.lastPosZ, connection.lastYaw, connection.lastPitch);
+        Location to = player.getLocation().clone(); // Start off the To location as the Players current location.
+
+        // If the packet contains movement information then we update the To location with the correct XYZ.
+        to.setX(packetIn.getX());
+        to.setY(packetIn.getY());
+        to.setZ(packetIn.getZ());
+
+        // If the packet contains look information then we update the To location with the correct Yaw & Pitch.
+        to.setYaw(packetIn.getYaw());
+        to.setPitch(packetIn.getPitch());
+
+        // Prevent 40 event-calls for less than a single pixel of movement >.>
+        double delta = Math.pow(connection.lastPosX - to.getX(), 2) + Math.pow(connection.lastPosY - to.getY(), 2) + Math.pow(connection.lastPosZ - to.getZ(), 2);
+        float deltaAngle = Math.abs(connection.lastYaw - to.getYaw()) + Math.abs(connection.lastPitch - to.getPitch());
+
+        if ((delta > 1f / 256 || deltaAngle > 10f) && !connection.player.isMovementBlocked()) {
+            connection.lastPosX = to.getX();
+            connection.lastPosY = to.getY();
+            connection.lastPosZ = to.getZ();
+            connection.lastYaw = to.getYaw();
+            connection.lastPitch = to.getPitch();
+
+            Location oldTo = to.clone();
+            PlayerMoveEvent event = new PlayerMoveEvent(player, from, to);
+            connection.server.getPluginManager().callEvent(event);
+
+            // If the event is cancelled we move the player back to their old location.
+            if (event.isCancelled()) {
+                connection.teleport(from);
+                return false;
+            }
+
+            // If a Plugin has changed the To destination then we teleport the Player
+            // there to avoid any 'Moved wrongly' or 'Moved too quickly' errors.
+            // We only do this if the Event was not cancelled.
+            if (!oldTo.equals(event.getTo()) && !event.isCancelled()) {
+                connection.player.getBukkitEntity().teleport(event.getTo(), TeleportCause.PLUGIN);
+                return false;
+            }
+
+            // Check to see if the Players Location has some how changed during the call of the event.
+            // This can happen due to a plugin teleporting the player instead of using .setTo()
+            if (!from.equals(connection.getPlayer().getLocation()) && connection.justTeleported) {
+                connection.justTeleported = false;
+                return false;
+            }
+        }
+        
+        return true;
 	}
 }
