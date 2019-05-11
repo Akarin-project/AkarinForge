@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.BlockCommandBlock;
@@ -120,6 +122,17 @@ import net.minecraft.world.WorldServer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_12_R1.util.CraftChatMessage;
+import org.bukkit.craftbukkit.v1_12_R1.util.LazyPlayerSet;
+import org.bukkit.craftbukkit.v1_12_R1.util.Waitable;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerChatEvent;
+import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
 {
@@ -157,9 +170,253 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
     private int movePacketCounter;
     private int lastMovePacketCounter;
     private ServerRecipeBookHelper field_194309_H = new ServerRecipeBookHelper();
+    // Akarin start
+    private final CraftServer server;
+    private double lastPosX = Double.MAX_VALUE;
+    private double lastPosY = Double.MAX_VALUE;
+    private double lastPosZ = Double.MAX_VALUE;
+    private float lastPitch = Float.MAX_VALUE;
+    private float lastYaw = Float.MAX_VALUE;
+    private boolean justTeleported = false;
+    
+    public CraftPlayer getPlayer() {
+        return (this.player == null) ? null : (CraftPlayer) this.player.getBukkitEntity();
+    }
+    
+    // CraftBukkit start - Delegate to teleport(Location)
+    public void setPlayerLocation(double d0, double d1, double d2, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {
+        this.setPlayerLocation(d0, d1, d2, f, f1, Collections.<SPacketPlayerPosLook.EnumFlags>emptySet(), cause);
+    }
+
+    public void setPlayerLocation(double d0, double d1, double d2, float f, float f1, Set<SPacketPlayerPosLook.EnumFlags> set, PlayerTeleportEvent.TeleportCause cause) {
+        Player player = this.getPlayer();
+        Location from = player.getLocation();
+
+        double x = d0;
+        double y = d1;
+        double z = d2;
+        float yaw = f;
+        float pitch = f1;
+        if (set.contains(SPacketPlayerPosLook.EnumFlags.X)) {
+            x += from.getX();
+        }
+        if (set.contains(SPacketPlayerPosLook.EnumFlags.Y)) {
+            y += from.getY();
+        }
+        if (set.contains(SPacketPlayerPosLook.EnumFlags.Z)) {
+            z += from.getZ();
+        }
+        if (set.contains(SPacketPlayerPosLook.EnumFlags.Y_ROT)) {
+            yaw += from.getYaw();
+        }
+        if (set.contains(SPacketPlayerPosLook.EnumFlags.X_ROT)) {
+            pitch += from.getPitch();
+        }
+
+
+        Location to = new Location(this.getPlayer().getWorld(), x, y, z, yaw, pitch);
+        PlayerTeleportEvent event = new PlayerTeleportEvent(player, from.clone(), to.clone(), cause);
+        this.server.getPluginManager().callEvent(event);
+
+        if (event.isCancelled() || !to.equals(event.getTo())) {
+            set.clear(); // Can't relative teleport
+            to = event.isCancelled() ? event.getFrom() : event.getTo();
+            d0 = to.getX();
+            d1 = to.getY();
+            d2 = to.getZ();
+            f = to.getYaw();
+            f1 = to.getPitch();
+        }
+
+        this.internalTeleport(d0, d1, d2, f, f1, set);
+    }
+    
+    public void teleport(Location dest) {
+        internalTeleport(dest.getX(), dest.getY(), dest.getZ(), dest.getYaw(), dest.getPitch(), Collections.<SPacketPlayerPosLook.EnumFlags>emptySet());
+    }
+
+    private void internalTeleport(double d0, double d1, double d2, float f, float f1, Set<SPacketPlayerPosLook.EnumFlags> set) {
+        // CraftBukkit start
+        if (Float.isNaN(f)) {
+            f = 0;
+        }
+        if (Float.isNaN(f1)) {
+            f1 = 0;
+        }
+
+        this.justTeleported = true;
+        // CraftBukkit end
+        double d3 = set.contains(SPacketPlayerPosLook.EnumFlags.X) ? this.player.posX : 0.0D;
+        double d4 = set.contains(SPacketPlayerPosLook.EnumFlags.Y) ? this.player.posY : 0.0D;
+        double d5 = set.contains(SPacketPlayerPosLook.EnumFlags.Z) ? this.player.posZ : 0.0D;
+
+        this.targetPos = new Vec3d(d0 + d3, d1 + d4, d2 + d5);
+        float f2 = f;
+        float f3 = f1;
+
+        if (set.contains(SPacketPlayerPosLook.EnumFlags.Y_ROT)) {
+            f2 = f + this.player.rotationYaw;
+        }
+
+        if (set.contains(SPacketPlayerPosLook.EnumFlags.X_ROT)) {
+            f3 = f1 + this.player.rotationPitch;
+        }
+
+        // CraftBukkit start - update last location
+        this.lastPosX = this.targetPos.x;
+        this.lastPosY = this.targetPos.y;
+        this.lastPosZ = this.targetPos.z;
+        this.lastYaw = f2;
+        this.lastPitch = f3;
+        // CraftBukkit end
+
+        if (++this.teleportId == Integer.MAX_VALUE) {
+            this.teleportId = 0;
+        }
+
+        this.lastPositionUpdate = this.networkTickCount;
+        this.player.setPositionAndRotation(this.targetPos.x, this.targetPos.y, this.targetPos.z, f2, f3);
+        this.player.connection.sendPacket(new SPacketPlayerPosLook(d0, d1, d2, f, f1, set, this.teleportId));
+    }
+    
+    public final boolean isDisconnected() {
+        return (!this.player.joining && !this.netManager.isChannelOpen()); // Paper
+    }
+    
+    public void disconnect(String s) {
+        // CraftBukkit start - fire PlayerKickEvent
+        String leaveMessage = TextFormatting.YELLOW + this.player.getName() + " left the game.";
+
+        PlayerKickEvent event = new PlayerKickEvent(this.server.getPlayer(this.player), s, leaveMessage);
+
+        if (this.server.getServer().isServerRunning()) {
+            this.server.getPluginManager().callEvent(event);
+        }
+
+        if (event.isCancelled()) {
+            // Do not kick the player
+            return;
+        }
+        // Send the possibly modified leave message
+        s = event.getReason();
+        // CraftBukkit end
+        final TextComponentString chatcomponenttext = new TextComponentString(s);
+
+        this.netManager.sendPacket(new SPacketDisconnect(chatcomponenttext), new GenericFutureListener() {
+            public void operationComplete(Future future) throws Exception { // CraftBukkit - decompile error
+                NetHandlerPlayServer.this.netManager.closeChannel(chatcomponenttext);
+            }
+        }, new GenericFutureListener[0]);
+        this.onDisconnect(chatcomponenttext); // CraftBukkit - fire quit instantly
+        this.netManager.disableAutoRead();
+        // CraftBukkit - Don't wait
+        this.serverController.addScheduledTask(new Runnable() {
+            public void run() {
+                NetHandlerPlayServer.this.netManager.checkDisconnected();
+            }
+        });
+    }
+    
+    public void chat(String s, boolean async) {
+        if (s.isEmpty() || this.player.getChatVisibility() == EntityPlayer.EnumChatVisibility.HIDDEN) {
+            return;
+        }
+
+        if (!async && s.startsWith("/")) {
+            // Paper Start
+            if (false) { // Akarin
+                final String fCommandLine = s;
+                /* // Akarin
+                MinecraftServer.LOGGER.log(org.apache.logging.log4j.Level.ERROR, "Command Dispatched Async: " + fCommandLine);
+                MinecraftServer.LOGGER.log(org.apache.logging.log4j.Level.ERROR, "Please notify author of plugin causing this execution to fix this bug! see: http://bit.ly/1oSiM6C", new Throwable());
+                Waitable wait = new Waitable() {
+                    @Override
+                    protected Object evaluate() {
+                        chat(fCommandLine, false);
+                        return null;
+                    }
+                };
+                minecraftServer.processQueue.add(wait);
+                try {
+                    wait.get();
+                    return;
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // This is proper habit for java. If we aren't handling it, pass it on!
+                } catch (Exception e) {
+                    throw new RuntimeException("Exception processing chat command", e.getCause());
+                }
+                */ // Akarin
+            }
+            // Paper End
+            this.handleSlashCommand(s);
+        } else if (this.player.getChatVisibility() == EntityPlayer.EnumChatVisibility.SYSTEM) {
+            // Do nothing, this is coming from a plugin
+        } else {
+            Player player = this.getPlayer();
+            AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(async, player, s, new LazyPlayerSet(serverController));
+            this.server.getPluginManager().callEvent(event);
+
+            if (PlayerChatEvent.getHandlerList().getRegisteredListeners().length != 0) {
+                // Evil plugins still listening to deprecated event
+                final PlayerChatEvent queueEvent = new PlayerChatEvent(player, event.getMessage(), event.getFormat(), event.getRecipients());
+                queueEvent.setCancelled(event.isCancelled());
+                Waitable waitable = new Waitable() {
+                    @Override
+                    protected Object evaluate() {
+                        org.bukkit.Bukkit.getPluginManager().callEvent(queueEvent);
+
+                        if (queueEvent.isCancelled()) {
+                            return null;
+                        }
+
+                        String message = String.format(queueEvent.getFormat(), queueEvent.getPlayer().getDisplayName(), queueEvent.getMessage());
+                        NetHandlerPlayServer.this.serverController.console.sendMessage(message);
+                        if (((LazyPlayerSet) queueEvent.getRecipients()).isLazy()) {
+                            for (Object player : NetHandlerPlayServer.this.serverController.getPlayerList().playerEntityList) {
+                                ((EntityPlayerMP) player).sendMessage(CraftChatMessage.fromString(message));
+                            }
+                        } else {
+                            for (Player player : queueEvent.getRecipients()) {
+                                player.sendMessage(message);
+                            }
+                        }
+                        return null;
+                    }};
+                if (async) {
+                    serverController.processQueue.add(waitable);
+                } else {
+                    waitable.run();
+                }
+                try {
+                    waitable.get();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // This is proper habit for java. If we aren't handling it, pass it on!
+                } catch (ExecutionException e) {
+                    throw new RuntimeException("Exception processing chat event", e.getCause());
+                }
+            } else {
+                if (event.isCancelled()) {
+                    return;
+                }
+
+                serverController.console.sendMessage(s);
+                if (((LazyPlayerSet) event.getRecipients()).isLazy()) {
+                    for (Object recipient : serverController.getPlayerList().playerEntityList) {
+                        ((EntityPlayerMP) recipient).sendMessage(CraftChatMessage.fromString(s));
+                    }
+                } else {
+                    for (Player recipient : event.getRecipients()) {
+                        recipient.sendMessage(s);
+                    }
+                }
+            }
+        }
+    }
+    // Akarin end
 
     public NetHandlerPlayServer(MinecraftServer server, NetworkManager networkManagerIn, EntityPlayerMP playerIn)
     {
+        this.server = server.server; // Akarin
         this.serverController = server;
         this.netManager = networkManagerIn;
         networkManagerIn.setNetHandler(this);
@@ -259,7 +516,7 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
         }
     }
 
-    private void captureCurrentPosition()
+    public void captureCurrentPosition()
     {
         this.firstGoodX = this.player.posX;
         this.firstGoodY = this.player.posY;
