@@ -336,6 +336,7 @@ public abstract class AkarinHooks {
 			}
 
 			net.minecraftforge.fml.common.FMLCommonHandler.instance().onPostWorldTick(world);
+			world.getEntityTracker().tick();
 		}
 	}
 	
