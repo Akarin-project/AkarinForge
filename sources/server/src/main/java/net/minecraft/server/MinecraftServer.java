@@ -203,6 +203,10 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     {
         SERVER = this;
         Runtime.getRuntime().addShutdownHook(new ServerShutdownThread(this));
+        
+        // Earlier create this to ensure the safety when register forge command
+        this.commandManager = this.createCommandManager();
+        
         this.serverThread = this.primaryThread = new Thread(SidedThreadGroups.SERVER, this, "Server thread");
         // Akarin end
         this.serverProxy = proxyIn;
@@ -212,7 +216,7 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
         this.profileCache = profileCacheIn;
         this.options = options; // Akarin - replace with options
         this.networkSystem = new NetworkSystem(this);
-        this.commandManager = this.createCommandManager();
+        // this.commandManager = this.createCommandManager(); // Akarin - eariler due to unsafe
         this.anvilConverterForAnvilFile = this.getActiveAnvilConverter(); // Akarin - use getter
         this.dataFixer = dataFixerIn;
     }

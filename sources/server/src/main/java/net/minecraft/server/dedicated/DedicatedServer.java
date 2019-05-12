@@ -170,7 +170,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
                 this.settings.setProperty("difficulty", Integer.valueOf(3));
             }
 
-            this.canSpawnStructures = this.settings.getBooleanProperty("generate-structures", true);
+            this.canSpawnStructures = this.settings.getBooleanProperty("generate-structures" ,true);
             int i = this.settings.getIntProperty("gamemode", GameType.SURVIVAL.getID());
             this.gameType = WorldSettings.getGameTypeById(i);
             LOGGER.info("Default game type: {}", (Object)this.gameType);
@@ -330,6 +330,9 @@ public class DedicatedServer extends MinecraftServer implements IServer
                 return net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerStarting(this);
                 // Akarin start
                 } finally {
+                    // Register vanilla and forge command, reuse manager so we have forge command
+                    this.server.registerVanillaCommands(this.commandManager);
+                	
                 	// Late bind post handle
                     if (false /*org.spigotmc.SpigotConfig.lateBind*/) {
                     try

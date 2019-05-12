@@ -5,12 +5,15 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.BanList.Type;
@@ -27,6 +30,7 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -35,6 +39,7 @@ import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.conversations.Conversable;
+import org.bukkit.craftbukkit.v1_12_R1.command.VanillaCommandWrapper;
 import org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftScheduler;
 import org.bukkit.craftbukkit.v1_12_R1.scoreboard.CraftScoreboardManager;
 import org.bukkit.entity.Entity;
@@ -59,10 +64,17 @@ import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.CachedServerIcon;
 
+import io.akarin.forge.server.command.ForgeCommandWrapper;
 import io.akarin.forge.server.logging.LogWrapper;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.ICommand;
+import net.minecraft.command.ICommandManager;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.command.ServerCommandManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.PendingCommand;
 import net.minecraft.server.management.PlayerList;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.storage.SaveHandler;
 import net.minecraftforge.common.DimensionManager;
 
@@ -76,10 +88,27 @@ public final class CraftServer implements Server {
 
 	public CraftServer(MinecraftServer server, PlayerList playerList) {
         Bukkit.setServer(this);
-        this.configuration = YamlConfiguration.loadConfiguration(this.getConfigFile());
+        this.console = MinecraftServer.instance();
         this.commandMap = new SimpleCommandMap(this);
+        this.configuration = YamlConfiguration.loadConfiguration(this.getConfigFile());
         this.pluginManager = new SimplePluginManager(this, this.commandMap);
 	}
+	
+    public void registerCommand(ICommand command) {
+    	Command wrapper = new ForgeCommandWrapper(command);
+        commandMap.register(command.getName().equals("forge") ? "forge" : "mod", wrapper);
+    }
+    
+    public void registerVanillaCommands(ICommandManager manager) {
+        Map<String, ICommand> commands = manager.getCommands();
+        for (ICommand cmd : commands.values()) {
+        	if (cmd.getName().equals("forge"))
+        		continue; // We already handled this through internal command registry
+        	
+            VanillaCommandWrapper wrapper = new VanillaCommandWrapper(cmd, I18n.translateToLocal(cmd.getUsage(null)));
+            commandMap.register("minecraft", wrapper);
+        }
+    }
 
 	@Override
 	public void sendPluginMessage(Plugin source, String channel, byte[] message) {
@@ -355,11 +384,22 @@ public final class CraftServer implements Server {
 		// TODO Auto-generated method stub
 		
 	}
+	
+    protected final MinecraftServer console;
 
 	@Override
 	public boolean dispatchCommand(CommandSender sender, String commandLine) throws CommandException {
-		// TODO Auto-generated method stub
-		return false;
+        Validate.notNull((Object)sender, (String)"Sender cannot be null", (Object[])new Object[0]);
+        Validate.notNull((Object)commandLine, (String)"CommandLine cannot be null", (Object[])new Object[0]);
+        
+        if (commandMap.dispatch(sender, commandLine)) {
+            return true;
+        }
+
+        if (StringUtils.isNotEmpty("unknown"))
+        	sender.sendMessage("unknown");
+
+        return false;
 	}
 
 	@Override
@@ -778,6 +818,10 @@ public final class CraftServer implements Server {
 	public Spigot spigot() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public ICommandSender getServer() {
+		return console;
 	}
     
 }

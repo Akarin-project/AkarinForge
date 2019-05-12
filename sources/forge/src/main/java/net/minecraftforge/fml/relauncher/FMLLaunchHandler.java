@@ -115,8 +115,8 @@ public class FMLLaunchHandler
     private void redirectStdOutputToLog()
     {
         FMLLog.log.debug("Injecting tracing printstreams for STDOUT/STDERR.");
-        System.setOut(new TracingPrintStream(LogManager.getLogger("STDOUT"), System.out));
-        System.setErr(new TracingPrintStream(LogManager.getLogger("STDERR"), System.err));
+        System.setOut(new TracingPrintStream(LogManager.getLogger(), System.out)); // Akarin - remove prefix
+        System.setErr(new TracingPrintStream(LogManager.getLogger(), System.err)); // Akarin - remove prefix
     }
 
     public static Side side()
