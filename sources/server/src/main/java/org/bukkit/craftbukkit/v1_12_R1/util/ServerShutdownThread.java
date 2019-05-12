@@ -10,7 +10,5 @@ public class ServerShutdownThread extends Thread {
     }
 
     @Override
-    public void run() {
-        server.stopServer();
-    }
+    public void run() {}
 }
