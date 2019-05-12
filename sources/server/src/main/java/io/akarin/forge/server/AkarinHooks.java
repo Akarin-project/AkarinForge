@@ -27,6 +27,7 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 
 import joptsimple.OptionSet;
 import net.minecraft.crash.CrashReport;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
 import net.minecraft.server.MinecraftServer;
@@ -70,6 +71,12 @@ public abstract class AkarinHooks {
 		else
 			// haven't finish initalization
 			return false;
+	}
+	
+	public static void registerBukkitEnchantments() {
+        for (Object enchantment : Enchantment.REGISTRY) {
+            org.bukkit.enchantments.Enchantment.registerEnchantment(new org.bukkit.craftbukkit.enchantments.CraftEnchantment((Enchantment) enchantment));
+        }
 	}
 	
 	public static Environment lookupEnvironment(int dim) {

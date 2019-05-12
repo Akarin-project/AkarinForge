@@ -22,7 +22,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class TileEntitySkull extends TileEntity implements ITickable
 {
     private int skullType;
-    private int skullRotation;
+    public int skullRotation; // Akarin - private -> public
     private GameProfile playerProfile;
     private int dragonAnimatedTicks;
     private boolean dragonAnimated;

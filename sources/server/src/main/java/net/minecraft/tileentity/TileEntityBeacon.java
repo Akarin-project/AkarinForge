@@ -44,11 +44,11 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
     @SideOnly(Side.CLIENT)
     private float beamRenderScale;
     private boolean isComplete;
-    private int levels = -1;
+    public int levels = -1; // Akarin - private -> public
     @Nullable
-    private Potion primaryEffect;
+	public Potion primaryEffect; // Akarin - private -> public
     @Nullable
-    private Potion secondaryEffect;
+	public Potion secondaryEffect; // Akarin - private -> public
     private ItemStack payment = ItemStack.EMPTY;
     private String customName;
 

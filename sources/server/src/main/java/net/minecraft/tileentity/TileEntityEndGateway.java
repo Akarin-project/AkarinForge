@@ -30,8 +30,8 @@ public class TileEntityEndGateway extends TileEntityEndPortal implements ITickab
     private static final Logger LOGGER = LogManager.getLogger();
     private long age;
     private int teleportCooldown;
-    private BlockPos exitPortal;
-    private boolean exactTeleport;
+    public BlockPos exitPortal; // Akarin - private -> public
+    public boolean exactTeleport; // Akarin - private -> public
 
     public NBTTagCompound writeToNBT(NBTTagCompound compound)
     {
