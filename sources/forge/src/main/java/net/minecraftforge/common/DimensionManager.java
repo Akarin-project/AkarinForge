@@ -211,7 +211,7 @@ public class DimensionManager
             worlds.put(id, world);
             weakWorldMap.put(world, world);
             server.worldTickTimes.put(id, new long[100]);
-            FMLLog.log.info("Loading dimension {} ({}) ({})", id, world.getWorldInfo().getWorldName(), world.getMinecraftServer());
+            FMLLog.log.info("Loading dimension {} ({})", id, world.getWorldInfo().getWorldName()); // Akarin - remove server
         }
         else
         {

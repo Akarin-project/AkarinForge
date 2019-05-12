@@ -11,7 +11,6 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.logging.log4j.LogManager;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.BanList.Type;
@@ -57,7 +56,6 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.plugin.messaging.Messenger;
-import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.CachedServerIcon;
 
@@ -73,7 +71,7 @@ import net.minecraftforge.common.DimensionManager;
  */
 public final class CraftServer implements Server {
 
-	private static final Logger LOGGER = LogWrapper.getLogger();
+	private static final Logger LOGGER = LogWrapper.getLogger("Minecraft");
 	public CraftScoreboardManager scoreboardManager;
 
 	public CraftServer(MinecraftServer server, PlayerList playerList) {
