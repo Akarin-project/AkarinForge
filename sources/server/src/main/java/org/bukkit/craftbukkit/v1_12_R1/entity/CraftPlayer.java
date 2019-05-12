@@ -53,6 +53,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.util.Vector;
 
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayerMP;
 
 public class CraftPlayer implements Player {
 
@@ -1853,7 +1854,7 @@ public class CraftPlayer implements Player {
 		return null;
 	}
 
-	public ICommandSender getHandle() {
+	public EntityPlayerMP getHandle() {
 
 		return null;
 	}

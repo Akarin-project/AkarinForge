@@ -46,8 +46,14 @@ import net.minecraft.world.WorldServer;
  */
 public class CraftWorld implements World {
 
+    private final WorldServer world;
+	
+    public WorldServer getHandle() {
+        return this.world;
+    }
+	
 	public CraftWorld(WorldServer worldServer, ChunkGenerator gen, Environment env) {
-		// TODO Auto-generated constructor stub
+        this.world = worldServer;
 	}
 
 	@Override
@@ -891,6 +897,11 @@ public class CraftWorld implements World {
 
 	@Override
 	public Spigot spigot() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Object getBlockMetadata() {
 		// TODO Auto-generated method stub
 		return null;
 	}

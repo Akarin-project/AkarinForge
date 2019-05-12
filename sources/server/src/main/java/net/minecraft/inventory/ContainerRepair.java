@@ -28,7 +28,7 @@ public class ContainerRepair extends Container
     private final BlockPos selfPosition;
     public int maximumCost;
     public int materialCost;
-    private String repairedItemName;
+    public String repairedItemName; // Akarin - private -> public
     private final EntityPlayer player;
 
     @SideOnly(Side.CLIENT)

@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
 import org.bukkit.craftbukkit.v1_12_R1.Main;
+import org.bukkit.craftbukkit.v1_12_R1.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.v1_12_R1.scoreboard.CraftScoreboardManager;
 import org.bukkit.craftbukkit.v1_12_R1.util.Waitable;
 import org.bukkit.event.server.RemoteServerCommandEvent;
@@ -75,7 +76,7 @@ public abstract class AkarinHooks {
 	
 	public static void registerBukkitEnchantments() {
         for (Object enchantment : Enchantment.REGISTRY) {
-            org.bukkit.enchantments.Enchantment.registerEnchantment(new org.bukkit.craftbukkit.enchantments.CraftEnchantment((Enchantment) enchantment));
+            org.bukkit.enchantments.Enchantment.registerEnchantment(new CraftEnchantment((Enchantment) enchantment));
         }
 	}
 	

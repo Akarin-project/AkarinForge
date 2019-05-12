@@ -84,6 +84,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 
 public abstract class Entity implements ICommandSender, net.minecraftforge.common.capabilities.ICapabilitySerializable<NBTTagCompound>
 {
@@ -181,6 +182,17 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
      * Setting this to true will prevent the world from calling {@link #onUpdate()} for this entity.
      */
     public boolean updateBlocked;
+    // Akarin start - AWS
+    public org.bukkit.projectiles.ProjectileSource projectileSource; // for projectiles only
+    protected CraftEntity bukkitEntity;
+    
+    public CraftEntity getBukkitEntity() {
+        if (bukkitEntity == null) {
+            bukkitEntity = CraftEntity.getEntity(MinecraftServer.instance().server, this);
+        }
+        return bukkitEntity;
+    }
+    // Akarin end
 
     public Entity(World worldIn)
     {

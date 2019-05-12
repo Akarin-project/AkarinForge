@@ -31,8 +31,15 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-public class CraftLivingEntity extends CraftEntity implements LivingEntity {
+import net.minecraft.entity.EntityLivingBase;
 
+public class CraftLivingEntity extends CraftEntity implements LivingEntity {
+    protected Entity entity;
+	
+    public EntityLivingBase getHandle() {
+        return (EntityLivingBase) entity;
+    }
+	
 	@Override
 	public AttributeInstance getAttribute(Attribute attribute) {
 

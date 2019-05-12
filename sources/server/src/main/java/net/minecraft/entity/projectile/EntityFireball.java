@@ -1,5 +1,7 @@
 package net.minecraft.entity.projectile;
 
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -23,6 +25,8 @@ public abstract class EntityFireball extends Entity
     public double accelerationX;
     public double accelerationY;
     public double accelerationZ;
+    public float bukkitYield = 1; // CraftBukkit
+    public boolean isIncendiary = true; // CraftBukkit
 
     public EntityFireball(World worldIn)
     {
@@ -64,12 +68,19 @@ public abstract class EntityFireball extends Entity
     {
         super(worldIn);
         this.shootingEntity = shooter;
+        this.projectileSource = (org.bukkit.entity.LivingEntity) shooter.getBukkitEntity(); // CraftBukkit
         this.setSize(1.0F, 1.0F);
         this.setLocationAndAngles(shooter.posX, shooter.posY, shooter.posZ, shooter.rotationYaw, shooter.rotationPitch);
         this.setPosition(this.posX, this.posY, this.posZ);
         this.motionX = 0.0D;
         this.motionY = 0.0D;
         this.motionZ = 0.0D;
+        // CraftBukkit start - Added setDirection method
+        this.setDirection(accelX, accelY, accelZ);
+    }
+
+    public void setDirection(double accelX, double accelY, double accelZ) {
+        // CraftBukkit end
         accelX = accelX + this.rand.nextGaussian() * 0.4D;
         accelY = accelY + this.rand.nextGaussian() * 0.4D;
         accelZ = accelZ + this.rand.nextGaussian() * 0.4D;
@@ -96,6 +107,7 @@ public abstract class EntityFireball extends Entity
             if (raytraceresult != null && !net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, raytraceresult))
             {
                 this.onImpact(raytraceresult);
+                if (this.isDead) CraftEventFactory.callProjectileHitEvent(this, raytraceresult); // Akarin - fire event
             }
 
             this.posX += this.motionX;
@@ -209,6 +221,7 @@ public abstract class EntityFireball extends Entity
 
             if (source.getTrueSource() != null)
             {
+            	if (CraftEventFactory.handleNonLivingEntityDamageEvent(this, source, amount)) return false; // Akarin - fire event
                 Vec3d vec3d = source.getTrueSource().getLookVec();
 
                 if (vec3d != null)

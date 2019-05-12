@@ -7,6 +7,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v1_12_R1.potion.CraftPotionUtil;
+import org.bukkit.entity.HumanEntity;
+
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStainedGlass;
@@ -51,6 +56,76 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
 	public Potion secondaryEffect; // Akarin - private -> public
     private ItemStack payment = ItemStack.EMPTY;
     private String customName;
+    // Akarin start - add fields and methods
+    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
+    private int maxStack = 64;
+
+    @Override
+    public List<ItemStack> getContents() {
+        return Arrays.asList(this.payment);
+    }
+
+    @Override
+    public void onOpen(CraftHumanEntity who) {
+        transaction.add(who);
+    }
+
+    @Override
+    public void onClose(CraftHumanEntity who) {
+        transaction.remove(who);
+    }
+
+    @Override
+    public List<HumanEntity> getViewers() {
+        return transaction;
+    }
+
+    @Override
+    public void setMaxStackSize(int size) {
+        maxStack = size;
+    }
+
+    public org.bukkit.potion.PotionEffect getPrimaryEffect() {
+        return (this.primaryEffect != null) ? CraftPotionUtil.toBukkit(new PotionEffect(this.primaryEffect, getLevel(), getAmplification(), true, true)) : null;
+    }
+
+    public org.bukkit.potion.PotionEffect getSecondaryEffect() {
+        return (hasSecondaryEffect()) ? CraftPotionUtil.toBukkit(new PotionEffect(this.secondaryEffect, getLevel(), getAmplification(), true, true)) : null;
+    }
+    
+    // AWS done this properly
+    private byte getAmplification() {
+        byte b0 = 0;
+        if (this.levels >= 4 && this.primaryEffect == this.secondaryEffect) {
+            b0 = 1;
+        }
+        return b0;
+    }
+
+    private int getLevel() {
+        int i = (9 + this.levels * 2) * 20;
+        return i;
+    }
+
+    public List<EntityPlayer> getHumansInRange() {
+        double d0 = (double) (this.levels * 10 + 10);
+
+        int j = this.pos.getX();
+        int k = this.pos.getY();
+        int l = this.pos.getZ();
+        AxisAlignedBB axisalignedbb = (new AxisAlignedBB((double) j, (double) k, (double) l, (double) (j + 1), (double) (k + 1), (double) (l + 1))).grow(d0).expand(0.0D, (double) this.world.getHeight(), 0.0D);
+        List<EntityPlayer> list = this.world.getEntitiesWithinAABB(EntityPlayer.class, axisalignedbb);
+
+        return list;
+    }
+
+    private boolean hasSecondaryEffect() {
+        if (this.levels >= 4 && this.primaryEffect != this.secondaryEffect && this.secondaryEffect != null) {
+            return true;
+        }
+        return false;
+    }
+    // Akarin end
 
     public void update()
     {

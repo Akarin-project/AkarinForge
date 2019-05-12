@@ -43,6 +43,8 @@ import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.bukkit.inventory.Recipe;
+
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
@@ -254,4 +256,13 @@ public class ShapedOreRecipe extends IForgeRegistryEntry.Impl<IRecipe> implement
         ItemStack result = CraftingHelper.getItemStack(JsonUtils.getJsonObject(json, "result"), context);
         return new ShapedOreRecipe(group.isEmpty() ? null : new ResourceLocation(group), result, primer);
     }
+    // Akarin start - AWS
+	@Override
+	public Recipe toBukkitRecipe() {
+		return null;
+	}
+	@Override
+	public void setKey(ResourceLocation key) {
+	}
+	// Akarin end
 }

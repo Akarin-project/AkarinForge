@@ -28,6 +28,24 @@ public class EntityTippedArrow extends EntityArrow
     private PotionType potion = PotionTypes.EMPTY;
     private final Set<PotionEffect> customPotionEffects = Sets.<PotionEffect>newHashSet();
     private boolean fixedColor;
+    // CraftBukkit start accessor methods
+    public void refreshEffects() {
+        this.getDataManager().set(EntityTippedArrow.COLOR, Integer.valueOf(PotionUtils.getPotionColorFromEffectList((Collection) PotionUtils.mergeEffects(this.potion, (Collection) this.customPotionEffects))));
+    }
+
+    public String getType() {
+        return ((ResourceLocation) PotionType.REGISTRY.getNameForObject(this.potion)).toString();
+    }
+
+    public void setType(String string) {
+        this.potion = PotionType.REGISTRY.getObject(new ResourceLocation(string));
+        this.dataManager.set(EntityTippedArrow.COLOR, Integer.valueOf(PotionUtils.getPotionColorFromEffectList((Collection) PotionUtils.mergeEffects(this.potion, (Collection) this.customPotionEffects))));
+    }
+
+    public boolean isTipped() {
+        return !(this.customPotionEffects.isEmpty() && this.potion == PotionTypes.EMPTY);
+    }
+    // CraftBukkit end
 
     public EntityTippedArrow(World worldIn)
     {
