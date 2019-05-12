@@ -1,6 +1,5 @@
 package org.bukkit.craftbukkit.v1_12_R1.command;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.conversations.ConversationAbandonedEvent;

@@ -35,6 +35,6 @@ default String getGroup()
     {
         return "";
     }
-	org.bukkit.inventory.Recipe toBukkitRecipe(); // CraftBukkit
-	void setKey(ResourceLocation key); // CraftBukkit
+    org.bukkit.inventory.Recipe toBukkitRecipe(); // Akarin
+    void setKey(ResourceLocation key); // Akarin
 }

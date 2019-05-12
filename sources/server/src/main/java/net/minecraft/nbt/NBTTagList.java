@@ -14,6 +14,11 @@ public class NBTTagList extends NBTBase implements java.lang.Iterable<NBTBase>
     private static final Logger LOGGER = LogManager.getLogger();
     private List<NBTBase> tagList = Lists.<NBTBase>newArrayList();
     private byte tagType = 0;
+    // Akarin start
+    public void sort(java.util.Comparator<? extends NBTBase> comparator) {
+        java.util.Collections.sort(tagList, (java.util.Comparator<NBTBase>) comparator);
+    }
+    // Akarin end
 
     void write(DataOutput output) throws IOException
     {

@@ -22,6 +22,7 @@ import org.bukkit.WorldBorder;
 import org.bukkit.WorldType;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.v1_12_R1.metadata.BlockMetadataStore;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -39,6 +40,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Consumer;
 import org.bukkit.util.Vector;
 
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 
 /*
@@ -900,10 +903,15 @@ public class CraftWorld implements World {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	private final BlockMetadataStore blockMetadata = new BlockMetadataStore(this);
 
-	public Object getBlockMetadata() {
-		// TODO Auto-generated method stub
-		return null;
+	public BlockMetadataStore getBlockMetadata() {
+		return blockMetadata;
+	}
+
+	public TileEntity getTileEntityAt(int x, int y, int z) {
+	      return world.getTileEntity(new BlockPos(x, y, z));
 	}
     
 }

@@ -36,7 +36,7 @@ public abstract class MobSpawnerBaseLogic
     public int spawnRange = 4; // Akarin - private -> public
 
     @Nullable
-    private ResourceLocation getEntityId()
+	public ResourceLocation getEntityId() // Akarin - public
     {
         String s = this.spawnData.getNbt().getString("id");
         return StringUtils.isNullOrEmpty(s) ? null : new ResourceLocation(s);

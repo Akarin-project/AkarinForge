@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import javax.annotation.Nullable;
+
+import org.bukkit.event.block.BlockRedstoneEvent;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyEnum;
@@ -18,6 +21,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
@@ -219,6 +223,14 @@ public class BlockRedstoneWire extends Block
         {
             j = k;
         }
+        // CraftBukkit start
+        if (i != j) {
+            BlockRedstoneEvent event = new BlockRedstoneEvent(worldIn.getWorld().getBlockAt(pos1.getX(), pos1.getY(), pos1.getZ()), i, j);
+            MinecraftServer.instance().server.getPluginManager().callEvent(event);
+
+            j = event.getNewCurrent();
+        }
+        // CraftBukkit end
 
         if (i != j)
         {
@@ -319,7 +331,7 @@ public class BlockRedstoneWire extends Block
         }
     }
 
-    private int getMaxCurrentStrength(World worldIn, BlockPos pos, int strength)
+    public int getMaxCurrentStrength(World worldIn, BlockPos pos, int strength) // Akarin - public
     {
         if (worldIn.getBlockState(pos).getBlock() != this)
         {

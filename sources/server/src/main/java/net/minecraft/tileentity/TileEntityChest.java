@@ -1,10 +1,18 @@
 package net.minecraft.tileentity;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.entity.HumanEntity;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerChest;
@@ -36,6 +44,40 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
     public int numPlayersUsing;
     private int ticksSinceSync;
     private BlockChest.Type cachedChestType;
+    // CraftBukkit start - add fields and methods
+    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
+    private int maxStack = 64;
+
+    @Override
+    public List<ItemStack> getContents() {
+        return this.chestContents;
+    }
+
+    @Override
+    public void onOpen(CraftHumanEntity who) {
+        transaction.add(who);
+    }
+
+    @Override
+    public void onClose(CraftHumanEntity who) {
+        transaction.remove(who);
+    }
+
+    @Override
+    public List<HumanEntity> getViewers() {
+        return transaction;
+    }
+
+    @Override
+    public void setMaxStackSize(int size) {
+        maxStack = size;
+    }
+    
+    @Override
+    public boolean onlyOpsCanSetNbt() {
+        return true;
+    }
+    // CraftBukkit end
 
     public TileEntityChest()
     {
@@ -324,9 +366,19 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
             {
                 this.numPlayersUsing = 0;
             }
+            int oldPower = Math.max(0, Math.min(15, this.numPlayersUsing)); // CraftBukkit - Get power before new viewer is added
 
             ++this.numPlayersUsing;
+            if (this.world == null) return; // CraftBukkit
             this.world.addBlockEvent(this.pos, this.getBlockType(), 1, this.numPlayersUsing);
+            // Akarin start - fire event
+            if (this.getBlockType() instanceof BlockChest && ((BlockChest) this.getBlockType()).chestType == BlockChest.Type.TRAP) {
+                int newPower = Math.max(0, Math.min(15, this.numPlayersUsing));
+
+                if (oldPower != newPower)
+                    CraftEventFactory.callRedstoneChange(world, pos.getX(), pos.getY(), pos.getZ(), oldPower, newPower);
+            }
+            // Akarin end
             this.world.notifyNeighborsOfStateChange(this.pos, this.getBlockType(), false);
 
             if (this.getChestType() == BlockChest.Type.TRAP)
@@ -340,12 +392,19 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
     {
         if (!player.isSpectator() && this.getBlockType() instanceof BlockChest)
         {
+            int oldPower = Math.max(0, Math.min(15, this.numPlayersUsing)); // CraftBukkit - Get power before new viewer is added
             --this.numPlayersUsing;
             this.world.addBlockEvent(this.pos, this.getBlockType(), 1, this.numPlayersUsing);
             this.world.notifyNeighborsOfStateChange(this.pos, this.getBlockType(), false);
 
             if (this.getChestType() == BlockChest.Type.TRAP)
             {
+            	// Akarin start - fire event
+                int newPower = Math.max(0, Math.min(15, this.numPlayersUsing));
+
+                if (oldPower != newPower)
+                    CraftEventFactory.callRedstoneChange(world, pos.getX(), pos.getY(), pos.getZ(), oldPower, newPower);
+                // Akarin end
                 this.world.notifyNeighborsOfStateChange(this.pos.down(), this.getBlockType(), false);
             }
         }

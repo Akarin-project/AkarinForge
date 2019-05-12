@@ -1,9 +1,16 @@
 package net.minecraft.entity.player;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
+
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.inventory.InventoryHolder;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.util.RecipeItemHelper;
 import net.minecraft.crash.CrashReport;
@@ -27,6 +34,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+// Akarin - AWS patch this
 public class InventoryPlayer implements IInventory
 {
     public final NonNullList<ItemStack> mainInventory = NonNullList.<ItemStack>withSize(36, ItemStack.EMPTY);
@@ -37,6 +45,48 @@ public class InventoryPlayer implements IInventory
     public EntityPlayer player;
     private ItemStack itemStack;
     private int timesChanged;
+    // CraftBukkit start - add fields and methods
+    public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
+    private int maxStack = 64;
+
+    public List<ItemStack> getContents() {
+        List<ItemStack> combined = new ArrayList<ItemStack>(mainInventory.size() + armorInventory.size() + offHandInventory.size());
+        for (List<net.minecraft.item.ItemStack> sub : this.allInventories) {
+            combined.addAll(sub);
+        }
+
+        return combined;
+    }
+
+    public List<ItemStack> getArmorContents() {
+        return this.armorInventory;
+    }
+
+    public void onOpen(CraftHumanEntity who) {
+        transaction.add(who);
+    }
+
+    public void onClose(CraftHumanEntity who) {
+        transaction.remove(who);
+    }
+
+    public List<HumanEntity> getViewers() {
+        return transaction;
+    }
+
+    public org.bukkit.inventory.InventoryHolder getOwner() {
+        return (InventoryHolder) this.player.getBukkitEntity();
+    }
+
+    public void setMaxStackSize(int size) {
+        maxStack = size;
+    }
+
+    @Override
+    public Location getLocation() {
+        return player.getBukkitEntity().getLocation();
+    }
+    // CraftBukkit end
 
     public InventoryPlayer(EntityPlayer playerIn)
     {

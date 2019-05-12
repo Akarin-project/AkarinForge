@@ -10,8 +10,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 
-public class RecipesArmorDyes extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<IRecipe> implements IRecipe
+public class RecipesArmorDyes extends ShapelessRecipes implements IRecipe // CraftBukkit - added extends
 {
+    // CraftBukkit start - Delegate to new parent class with bogus info
+    public RecipesArmorDyes() {
+        super("", new ItemStack(Items.LEATHER_HELMET, 0, 0), NonNullList.from(Ingredient.EMPTY, Ingredient.fromItem(Items.DYE)));
+    }
+    // CraftBukkit end
     public boolean matches(InventoryCrafting inv, World worldIn)
     {
         ItemStack itemstack = ItemStack.EMPTY;

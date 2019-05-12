@@ -64,8 +64,8 @@ import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.CachedServerIcon;
 
+import io.akarin.forge.misc.LogWrapper;
 import io.akarin.forge.server.command.ForgeCommandWrapper;
-import io.akarin.forge.server.logging.LogWrapper;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandManager;

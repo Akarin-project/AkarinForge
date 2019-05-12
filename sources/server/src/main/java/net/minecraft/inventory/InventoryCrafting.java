@@ -22,14 +22,6 @@ public class InventoryCrafting implements IInventory
     private final int inventoryWidth;
     private final int inventoryHeight;
     private final Container eventHandler;
-
-    public InventoryCrafting(Container eventHandlerIn, int width, int height)
-    {
-        this.stackList = NonNullList.<ItemStack>withSize(width * height, ItemStack.EMPTY);
-        this.eventHandler = eventHandlerIn;
-        this.inventoryWidth = width;
-        this.inventoryHeight = height;
-    }
     // CraftBukkit start - add fields
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     public IRecipe currentRecipe;
@@ -37,12 +29,10 @@ public class InventoryCrafting implements IInventory
     private EntityPlayer owner;
     private int maxStack = 64;
 
-    @Override
     public List<ItemStack> getContents() {
         return this.stackList;
     }
 
-    @Override
     public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
@@ -51,22 +41,18 @@ public class InventoryCrafting implements IInventory
         return stackList.size() == 4 ? InventoryType.CRAFTING : InventoryType.WORKBENCH;
     }
 
-    @Override
     public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
-    @Override
     public List<HumanEntity> getViewers() {
         return transaction;
     }
 
-    @Override
     public org.bukkit.inventory.InventoryHolder getOwner() {
-        return (owner == null) ? null : owner.getBukkitEntity();
+        return (owner == null) ? null : (org.bukkit.inventory.InventoryHolder) owner.getBukkitEntity();
     }
 
-    @Override
     public void setMaxStackSize(int size) {
         maxStack = size;
         resultInventory.setMaxStackSize(size);
@@ -82,6 +68,14 @@ public class InventoryCrafting implements IInventory
         this.owner = player;
     }
     // CraftBukkit end
+
+    public InventoryCrafting(Container eventHandlerIn, int width, int height)
+    {
+        this.stackList = NonNullList.<ItemStack>withSize(width * height, ItemStack.EMPTY);
+        this.eventHandler = eventHandlerIn;
+        this.inventoryWidth = width;
+        this.inventoryHeight = height;
+    }
 
     public int getSizeInventory()
     {

@@ -12,7 +12,8 @@ public abstract class TileEntityLockable extends TileEntity implements ILockable
 	// Akarin start - add implementation
     @Override
     public org.bukkit.Location getLocation() {
-        if (world == null) return null;
+        if (world == null)
+        	return null;
         return new org.bukkit.Location(world.getWorld(), pos.getX(), pos.getY(), pos.getZ());
     }
 	// Akarin end

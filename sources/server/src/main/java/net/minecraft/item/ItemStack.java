@@ -30,6 +30,7 @@ import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.stats.StatList;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
@@ -50,13 +51,14 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+// Akarin - AWS add handling
 public final class ItemStack implements net.minecraftforge.common.capabilities.ICapabilitySerializable<NBTTagCompound>
 {
     public static final ItemStack EMPTY = new ItemStack((Item)null);
     public static final DecimalFormat DECIMALFORMAT = new DecimalFormat("#.##");
     private int stackSize;
     private int animationsToGo;
-    private final Item item;
+    private Item item; // Akarin - remove final
     private NBTTagCompound stackTagCompound;
     private boolean isEmpty;
     int itemDamage;
@@ -69,6 +71,72 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
     private net.minecraftforge.registries.IRegistryDelegate<Item> delegate;
     private net.minecraftforge.common.capabilities.CapabilityDispatcher capabilities;
     private NBTTagCompound capNBT;
+    // Akarin start
+    private static final java.util.Comparator<NBTTagCompound> enchantSorter = java.util.Comparator.comparingInt(o -> o.getShort("id"));
+    
+    private void processEnchantOrder(NBTTagCompound tag) {
+        if (tag == null || !tag.hasKey("ench", 9)) {
+            return;
+        }
+        NBTTagList list = tag.getTagList("ench", 10);
+        if (list.tagCount() < 2) {
+            return;
+        }
+        try {
+            list.sort(enchantSorter); 
+        } catch (Exception ignored) {}
+    }
+
+    public ItemStack(Item itemIn, int amount, int meta, boolean convert) {
+        this.item = itemIn;
+        this.itemDamage = meta;
+        this.stackSize = amount;
+        
+        if (MinecraftServer.instance() != null)
+            this.setItemDamage(meta);
+        
+        if (convert)
+            this.convertStack();
+
+        this.updateEmptyState();
+        this.forgeInit();
+    }
+    
+    public void convertStack() {
+        if (MinecraftServer.instance() != null) {
+            // Don't convert beds - both the old and new data values are valid
+            // Conversion would make getting white beds (data value 0) impossible
+            if (this.item == Items.BED) {
+                return;
+            }
+
+            NBTTagCompound savedStack = new NBTTagCompound();
+            this.writeToNBT(savedStack);
+            MinecraftServer.instance().dataFixer.process(FixTypes.ITEM_INSTANCE, savedStack); // PAIL: convert
+            this.load(savedStack);
+        }
+    }
+    
+    public void setItem(Item item) {
+        this.item = item;
+        this.setItemDamage(this.getMetadata());
+    }
+    
+    // Akarin - AWS implement this properly
+    public void load(NBTTagCompound nbttagcompound) {
+        this.item = nbttagcompound.hasKey("id", 8) ? Item.getByNameOrId(nbttagcompound.getString("id")) : Item.getItemFromBlock(Blocks.AIR); // Paper - fix NumberFormatException caused by attempting to read an EMPTY ItemStack
+        this.stackSize = nbttagcompound.getByte("Count");
+        this.setItemDamage(nbttagcompound.getShort("Damage"));
+
+        if (nbttagcompound.hasKey("tag", 10)) {
+            this.stackTagCompound = (NBTTagCompound) nbttagcompound.getCompoundTag("tag").copy();
+            processEnchantOrder(this.stackTagCompound);
+            
+            if (this.item != null)
+                this.item.updateItemStackNBT(this.stackTagCompound);
+        }
+    }
+    // Akarin end
 
     public ItemStack(Block blockIn)
     {

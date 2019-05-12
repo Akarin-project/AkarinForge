@@ -5,10 +5,15 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import java.util.List;
+
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftShapelessRecipe;
+
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.JsonUtils;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class ShapelessRecipes extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<IRecipe> implements IRecipe
@@ -17,6 +22,26 @@ public class ShapelessRecipes extends net.minecraftforge.registries.IForgeRegist
     public final NonNullList<Ingredient> recipeItems;
     private final String group;
     private final boolean isSimple;
+    // CraftBukkit start
+    public ResourceLocation key;
+
+    @Override
+    public void setKey(ResourceLocation key) {
+        this.key = key;
+    }
+    
+    public org.bukkit.inventory.ShapelessRecipe toBukkitRecipe() {
+        CraftItemStack result = CraftItemStack.asCraftMirror(this.recipeOutput);
+        CraftShapelessRecipe recipe = new CraftShapelessRecipe(result, this);
+        for (Ingredient list : this.recipeItems) {
+            if (list != null) {
+                net.minecraft.item.ItemStack stack = list.matchingStacks[0];
+                recipe.addIngredient(org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers.getMaterial(stack.getItem()), (list.matchingStacks.length) > 1 ? 32767 : stack.getMetadata());
+            }
+        }
+        return recipe;
+    }
+    // CraftBukkit end
 
     public ShapelessRecipes(String group, ItemStack output, NonNullList<Ingredient> ingredients)
     {

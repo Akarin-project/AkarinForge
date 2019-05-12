@@ -49,7 +49,7 @@ public class CraftBeacon extends CraftContainer<TileEntityBeacon> implements Bea
             Collection<LivingEntity> bukkit = new ArrayList<LivingEntity>(nms.size());
 
             for (EntityPlayer human : nms) {
-                bukkit.add(human.getBukkitEntity());
+                bukkit.add((LivingEntity) human.getBukkitEntity());
             }
 
             return bukkit;
