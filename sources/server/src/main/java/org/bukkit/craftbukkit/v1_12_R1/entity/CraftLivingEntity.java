@@ -425,12 +425,6 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
 	}
 
 	@Override
-	public Spigot spigot() {
-
-		return null;
-	}
-
-	@Override
 	public boolean isPermissionSet(String name) {
 
 		return false;

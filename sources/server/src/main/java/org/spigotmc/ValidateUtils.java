@@ -1,3 +1,6 @@
+/*
+ * Akarin Forge
+ */
 package org.spigotmc;
 
 public class ValidateUtils {
@@ -8,3 +11,4 @@ public class ValidateUtils {
         return str;
     }
 }
+

@@ -103,11 +103,13 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityArrow;
+import net.minecraft.entity.projectile.EntityFireball;
 import net.minecraft.entity.projectile.EntityPotion;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
@@ -792,4 +794,10 @@ public class CraftEventFactory {
 
         return !event.isCancelled();
     }
+
+	public static boolean handleNonLivingEntityDamageEvent(EntityFireball entityFireball, DamageSource source,
+			float amount) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

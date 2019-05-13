@@ -489,12 +489,6 @@ public class CraftMinecartCommand implements CommandMinecart {
 	}
 
 	@Override
-	public Spigot spigot() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public boolean isPermissionSet(String name) {
 		// TODO Auto-generated method stub
 		return false;

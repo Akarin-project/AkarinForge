@@ -856,12 +856,6 @@ public class CraftPlayer implements Player {
 	}
 
 	@Override
-	public Spigot spigot() {
-
-		return null;
-	}
-
-	@Override
 	public boolean isPermissionSet(String name) {
 
 		return false;

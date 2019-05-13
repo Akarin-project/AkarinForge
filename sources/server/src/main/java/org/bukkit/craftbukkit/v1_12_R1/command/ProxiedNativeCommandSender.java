@@ -1,4 +1,3 @@
-
 package org.bukkit.craftbukkit.v1_12_R1.command;
 
 import java.util.Set;
@@ -11,8 +10,6 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
-
-import org.bukkit.command.CommandSender.Spigot;
 
 public class ProxiedNativeCommandSender implements ProxiedCommandSender {
 
@@ -124,12 +121,4 @@ public class ProxiedNativeCommandSender implements ProxiedCommandSender {
     public void setOp(boolean value) {
         getCaller().setOp(value);
     }
-
-    // Spigot start
-    @Override
-    public Spigot spigot()
-    {
-       return getCaller().spigot();
-    }
-    // Spigot end
 }

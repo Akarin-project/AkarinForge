@@ -77,27 +77,4 @@ public abstract class ServerCommandSender implements CommandSender {
     public Server getServer() {
         return Bukkit.getServer();
     }
-
-    // Spigot start
-    private final Spigot spigot = new Spigot()
-    {
-        @Override
-        public void sendMessage(net.md_5.bungee.api.chat.BaseComponent component)
-        {
-            ServerCommandSender.this.sendMessage(net.md_5.bungee.api.chat.TextComponent.toLegacyText(component));
-        }
-
-        @Override
-        public void sendMessage(net.md_5.bungee.api.chat.BaseComponent... components)
-        {
-            ServerCommandSender.this.sendMessage(net.md_5.bungee.api.chat.TextComponent.toLegacyText(components));
-        }
-    };
-
-    @Override
-    public Spigot spigot()
-    {
-        return spigot;
-    }
-    // Spigot end
 }

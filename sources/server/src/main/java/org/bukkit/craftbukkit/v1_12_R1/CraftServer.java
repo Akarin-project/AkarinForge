@@ -814,12 +814,6 @@ public final class CraftServer implements Server {
 		return null;
 	}
 
-	@Override
-	public Spigot spigot() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public ICommandSender getServer() {
 		return console;
 	}
