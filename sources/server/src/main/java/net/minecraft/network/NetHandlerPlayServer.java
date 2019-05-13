@@ -5,7 +5,7 @@ import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
 import com.google.common.util.concurrent.Futures;
 
-import io.akarin.forge.AkarinHooks;
+import io.akarin.forge.server.AkarinHooks;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import java.io.IOException;

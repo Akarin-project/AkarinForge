@@ -41,9 +41,6 @@ import org.bukkit.plugin.messaging.PluginMessageRecipient;
 import org.bukkit.util.Consumer;
 import org.bukkit.util.Vector;
 
-import io.akarin.forge.AkarinHooks;
-import net.minecraftforge.client.model.ItemLayerModel.Loader;
-
 public interface World
 extends PluginMessageRecipient,
 Metadatable {

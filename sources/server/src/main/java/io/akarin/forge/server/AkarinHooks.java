@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.bukkit.Location;
 import org.bukkit.WorldCreator;
 import org.bukkit.World.Environment;
+import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
 import org.bukkit.craftbukkit.v1_12_R1.Main;
 import org.bukkit.craftbukkit.v1_12_R1.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.v1_12_R1.scoreboard.CraftScoreboardManager;
@@ -28,6 +29,7 @@ import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.plugin.PluginLoadOrder;
 
 import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfileRepository;
@@ -400,6 +402,11 @@ public abstract class AkarinHooks {
         } catch (Throwable throwable) {
             LOGGER.fatal("Failed to start the minecraft server", throwable);
         }
+	}
+	
+	public static void initalizePlugins(CraftServer server) {
+        server.loadPlugins();
+        server.enablePlugins(PluginLoadOrder.STARTUP);
 	}
 
 	public static void initalizeConfiguration(DedicatedServer dedicatedServer) {

@@ -207,6 +207,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
                 return false;
             }
             //} // Akarin - late bind pre handle
+            AkarinHooks.initalizePlugins(server); // Akarin
 
             if (!this.isServerInOnlineMode())
             {
@@ -330,7 +331,7 @@ public class DedicatedServer extends MinecraftServer implements IServer
                 return net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerStarting(this);
                 // Akarin start
                 } finally {
-                    // Register vanilla and forge command, reuse manager so we have forge command
+                    // Register commands after forge initialized, reuse manager so we have forge command
                     this.server.registerVanillaCommands(this.commandManager);
                 	
                 	// Late bind post handle
