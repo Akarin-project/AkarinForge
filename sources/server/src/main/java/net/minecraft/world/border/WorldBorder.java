@@ -6,6 +6,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -23,6 +24,7 @@ public class WorldBorder
     private double damageBuffer;
     private int warningTime;
     private int warningDistance;
+    public WorldServer world; // CraftBukkit
 
     public WorldBorder()
     {
@@ -206,6 +208,7 @@ public class WorldBorder
 
     public void addListener(IBorderListener listener)
     {
+        if (listeners.contains(listener)) return; // CraftBukkit
         this.listeners.add(listener);
     }
 

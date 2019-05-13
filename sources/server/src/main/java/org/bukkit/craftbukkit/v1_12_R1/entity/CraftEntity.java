@@ -9,5 +9,10 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
 	public static CraftEntity getEntity(CraftServer server, Entity entity) {
 		return null;
 	}
+
+	public boolean canSee(CraftEntity bukkitEntity) {
+		// TODO Auto-generated method stub
+		return true;
+	}
     
 }

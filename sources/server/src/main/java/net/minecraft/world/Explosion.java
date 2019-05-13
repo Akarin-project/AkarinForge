@@ -37,7 +37,7 @@ public class Explosion
     private final double x;
     private final double y;
     private final double z;
-    private final Entity exploder;
+    public final Entity exploder; // Akarin - private -> public
     private final float size;
     private final List<BlockPos> affectedBlockPositions;
     private final Map<EntityPlayer, Vec3d> playerKnockbackMap;

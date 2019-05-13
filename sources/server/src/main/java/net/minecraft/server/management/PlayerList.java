@@ -94,7 +94,26 @@ public abstract class PlayerList
     private GameType gameType;
     private boolean commandsAllowedForAll;
     private int playerPingIndex;
-    private CraftServer cserver; // Akarin
+    // Akarin start
+    private CraftServer cserver;
+    
+    public void sendAll(Packet packet, EntityPlayer entityhuman) {
+        for (int i = 0; i < this.playerEntityList.size(); ++i) {
+            EntityPlayerMP entityplayer =  this.playerEntityList.get(i);
+            if (entityhuman != null && entityhuman instanceof EntityPlayerMP && !entityplayer.getBukkitEntity().canSee(((EntityPlayerMP) entityhuman).getBukkitEntity())) {
+                continue;
+            }
+            this.playerEntityList.get(i).connection.sendPacket(packet);
+        }
+    }
+
+    public void sendAll(Packet packet, World world) {
+        for (int i = 0; i < world.playerEntities.size(); ++i) {
+            ((EntityPlayerMP) world.playerEntities.get(i)).connection.sendPacket(packet);
+        }
+
+    }
+    // Akarin end
 
     public PlayerList(MinecraftServer server)
     {

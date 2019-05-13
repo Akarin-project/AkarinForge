@@ -823,5 +823,15 @@ public final class CraftServer implements Server {
 	public ICommandSender getServer() {
 		return console;
 	}
+
+	public void addWorld(CraftWorld world) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public PlayerList getHandle() {
+		// TODO Auto-generated method stub
+		return MinecraftServer.instance().getPlayerList();
+	}
     
 }

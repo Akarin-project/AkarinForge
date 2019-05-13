@@ -19,7 +19,7 @@ public class MapStorage
 {
     private final ISaveHandler saveHandler;
     protected Map<String, WorldSavedData> loadedDataMap = Maps.<String, WorldSavedData>newHashMap();
-    private final List<WorldSavedData> loadedDataList = Lists.<WorldSavedData>newArrayList();
+    public final List<WorldSavedData> loadedDataList = Lists.<WorldSavedData>newArrayList(); // Akarin - private -> public
     private final Map<String, Short> idCounts = Maps.<String, Short>newHashMap();
 
     public MapStorage(ISaveHandler saveHandlerIn)
