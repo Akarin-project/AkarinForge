@@ -1,28 +1,27 @@
-/*
- * Akarin Forge
- * 
- * Could not load the following classes:
- *  net.md_5.specialsource.JarMapping
- *  net.md_5.specialsource.JarRemapper
- *  net.md_5.specialsource.provider.ClassLoaderProvider
- *  net.md_5.specialsource.provider.InheritanceProvider
- *  net.md_5.specialsource.provider.JointProvider
- *  net.md_5.specialsource.repo.ClassRepo
- *  net.md_5.specialsource.repo.RuntimeRepo
- *  net.minecraft.launchwrapper.LaunchClassLoader
- *  org.apache.commons.lang.Validate
- */
 package org.bukkit.plugin.java;
+
+import io.akarin.forge.server.layers.ClassInheritanceProvider;
+import io.akarin.forge.server.layers.MappingLoader;
+import io.akarin.forge.server.layers.SneakyRemapper;
+import io.akarin.forge.server.layers.misc.Constants;
+import io.akarin.forge.server.layers.reflection.ReflectionTransformer;
+import net.md_5.specialsource.JarMapping;
+import net.md_5.specialsource.JarRemapper;
+import net.md_5.specialsource.provider.ClassLoaderProvider;
+import net.md_5.specialsource.provider.InheritanceProvider;
+import net.md_5.specialsource.provider.JointProvider;
+import net.md_5.specialsource.repo.RuntimeRepo;
+import net.minecraft.launchwrapper.LaunchClassLoader;
+import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.net.URLConnection;
 import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.util.HashMap;
@@ -30,34 +29,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import net.md_5.specialsource.JarMapping;
-import net.md_5.specialsource.JarRemapper;
-import net.md_5.specialsource.provider.ClassLoaderProvider;
-import net.md_5.specialsource.provider.InheritanceProvider;
-import net.md_5.specialsource.provider.JointProvider;
-import net.md_5.specialsource.repo.ClassRepo;
-import net.md_5.specialsource.repo.RuntimeRepo;
-import net.minecraft.launchwrapper.LaunchClassLoader;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+
 import org.apache.commons.lang.Validate;
-import org.bukkit.Server;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginLoader;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.java.JavaPluginLoader;
 
-import io.akarin.forge.remapper.SneakyRemapper;
-import io.akarin.forge.remapper.reflection.ReflectionTransformer;
-import io.akarin.forge.remapper.ClassInheritanceProvider;
-import io.akarin.forge.remapper.MappingLoader;
-import io.akarin.forge.server.utility.Constants;
-
-final class PluginClassLoader
-extends URLClassLoader {
+/**
+ * A ClassLoader for plugins, to allow shared classes across multiple plugins
+ */
+final class PluginClassLoader extends URLClassLoader {
     private final JavaPluginLoader loader;
-    private final Map<String, Class<?>> classes = new HashMap();
+    private final Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
     private final PluginDescriptionFile description;
     private final File dataFolder;
     private final File file;
@@ -67,109 +49,181 @@ extends URLClassLoader {
     final JavaPlugin plugin;
     private JavaPlugin pluginInit;
     private IllegalStateException pluginState;
+    // Akarin start
     private JarRemapper remapper;
     private JarMapping jarMapping;
+    
+    private Class<?> remapClass(String name) throws ClassNotFoundException {
+        Class<?> result = null;
+        try {
+            InputStream stream;
+            String path = name.replace('.', '/').concat(".class");
+            URL url = this.findResource(path);
+            if (url != null && (stream = url.openStream()) != null) {
+                byte[] bytecode = this.remapper.remapClassFile(stream, RuntimeRepo.getInstance());
+                
+                result = this.defineClass(name, bytecode = ReflectionTransformer.transform(bytecode), 0, bytecode.length, new CodeSource(((JarURLConnection) url.openConnection()).getJarFileURL(), new CodeSigner[0]));
+                if (result != null) {
+                    this.resolveClass(result);
+                }
+            }
+        }
+        catch (Throwable t) {
+            throw new ClassNotFoundException("Failed to remap class " + name, t);
+        }
+        return result;
+    }
 
-    PluginClassLoader(JavaPluginLoader loader, ClassLoader parent, PluginDescriptionFile description, File dataFolder, File file) throws IOException, InvalidPluginException, MalformedURLException {
-        super(new URL[]{file.toURI().toURL()}, parent);
-        Validate.notNull((Object)loader, (String)"Loader cannot be null");
+    @Override
+    protected Package getPackage(String name) {
+        if (name.startsWith(Constants.OBC_PREFIX_DOMAIN))
+            name = Constants.OBC_DOMAIN;
+        
+        return super.getPackage(name);
+    }
+    // Akarin end
+
+    PluginClassLoader(final JavaPluginLoader loader, final ClassLoader parent, final PluginDescriptionFile description, final File dataFolder, final File file) throws IOException, InvalidPluginException, MalformedURLException {
+        super(new URL[] {file.toURI().toURL()}, parent);
+        Validate.notNull(loader, "Loader cannot be null");
+
         this.loader = loader;
         this.description = description;
         this.dataFolder = dataFolder;
         this.file = file;
         this.jar = new JarFile(file);
-        this.manifest = this.jar.getManifest();
+        this.manifest = jar.getManifest();
         this.url = file.toURI().toURL();
+        // Akarin start
         this.jarMapping = MappingLoader.loadMapping();
+        
         JointProvider provider = new JointProvider();
         provider.add((InheritanceProvider)new ClassInheritanceProvider());
         provider.add((InheritanceProvider)new ClassLoaderProvider((ClassLoader)this));
         this.jarMapping.setFallbackInheritanceProvider((InheritanceProvider)provider);
+        
         this.remapper = new SneakyRemapper(this.jarMapping);
+        // Akarin end
+
         try {
-            Class jarClass;
-            Class<JavaPlugin> pluginClass;
+            Class<?> jarClass;
             try {
                 jarClass = Class.forName(description.getMain(), true, this);
+            } catch (ClassNotFoundException ex) {
+                throw new InvalidPluginException("Cannot find main class `" + description.getMain() + "'", ex);
             }
-            catch (ClassNotFoundException ex2) {
-                throw new InvalidPluginException("Cannot find main class `" + description.getMain() + "'", ex2);
-            }
+
+            Class<? extends JavaPlugin> pluginClass;
             try {
                 pluginClass = jarClass.asSubclass(JavaPlugin.class);
+            } catch (ClassCastException ex) {
+                throw new InvalidPluginException("main class `" + description.getMain() + "' does not extend JavaPlugin", ex);
             }
-            catch (ClassCastException ex3) {
-                throw new InvalidPluginException("main class `" + description.getMain() + "' does not extend JavaPlugin", ex3);
-            }
-            this.plugin = pluginClass.newInstance();
-        }
-        catch (IllegalAccessException ex4) {
-            throw new InvalidPluginException("No public constructor", ex4);
-        }
-        catch (InstantiationException ex5) {
-            throw new InvalidPluginException("Abnormal plugin type", ex5);
+
+            plugin = pluginClass.newInstance();
+        } catch (IllegalAccessException ex) {
+            throw new InvalidPluginException("No public constructor", ex);
+        } catch (InstantiationException ex) {
+            throw new InvalidPluginException("Abnormal plugin type", ex);
         }
     }
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-        return this.findClass(name, true);
+        return findClass(name, true);
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
-     */
     Class<?> findClass(String name, boolean checkGlobal) throws ClassNotFoundException {
-        if (name.startsWith("net.minecraft.server." + Constants.NMS_VERSION)) {
-            String remappedClass = (String)this.jarMapping.classes.get(name.replaceAll("\\.", "\\/"));
-            Class clazz = ((LaunchClassLoader)MinecraftServer.instance().getClass().getClassLoader()).findClass(remappedClass);
+    	// Akarin start - remapping NMS classes
+        if (name.startsWith(Constants.NMS_DOMAIN)) {
+            String remappedClass = this.jarMapping.classes.get(name.replaceAll("\\.", "\\/"));
+            Class<?> clazz = ((LaunchClassLoader) MinecraftServer.instance().getClass().getClassLoader()).findClass(remappedClass);
             return clazz;
         }
         if (name.startsWith("org.bukkit.")) {
+        // Akarin end
             throw new ClassNotFoundException(name);
         }
-        Class result = this.classes.get(name);
-        String clazz = name.intern();
-        synchronized (clazz) {
-            if (result == null) {
-                if (checkGlobal) {
-                    result = this.loader.getClassByName(name);
-                }
-                if (result == null && (result = this.remappedFindClass(name)) != null) {
-                    this.loader.setClass(name, result);
-                }
-                if (result == null) {
-                    LaunchClassLoader lw2 = (LaunchClassLoader)MinecraftServer.instance().getClass().getClassLoader();
-                    try {
-                        result = lw2.findClass(name);
-                    }
-                    catch (Throwable throwable) {
-                        try {
-                            lw2.addTransformerExclusion(name);
-                            result = lw2.findClass(name);
-                        }
-                        catch (Throwable throwable1) {
-                            try {
-                                result = null;
-                            }
-                            catch (Throwable throwable2) {
-                                Set set = (Set)ReflectionHelper.getPrivateValue(LaunchClassLoader.class, lw2, new String[]{"transformerExceptions"});
-                                set.remove(name);
-                                throw throwable2;
-                            }
-                            Set set = (Set)ReflectionHelper.getPrivateValue(LaunchClassLoader.class, lw2, new String[]{"transformerExceptions"});
-                            set.remove(name);
-                        }
-                        Set set = (Set)ReflectionHelper.getPrivateValue(LaunchClassLoader.class, lw2, new String[]{"transformerExceptions"});
-                        set.remove(name);
-                    }
-                    if (result == null) {
-                        throw new ClassNotFoundException(name);
-                    }
-                }
-                this.classes.put(name, result);
+        Class<?> result = classes.get(name);
+
+        if (result == null) {
+            if (checkGlobal) {
+                result = loader.getClassByName(name);
             }
+
+            // Akarin start
+            if (result == null && (result = this.remapClass(name)) != null) {
+                this.loader.setClass(name, result);
+            }
+            
+            if (result == null) {
+                LaunchClassLoader classLoader = (LaunchClassLoader) MinecraftServer.instance().getClass().getClassLoader();
+                
+                try {
+                    result = classLoader.findClass(name);
+                } catch (Throwable throwable) {
+                    classLoader.addTransformerExclusion(name);
+                    result = classLoader.findClass(name);
+                    @SuppressWarnings("deprecation")
+					Set<?> set = ReflectionHelper.getPrivateValue(LaunchClassLoader.class, classLoader, "transformerExceptions");
+                    set.remove(name);
+                }
+                
+                if (result == null)
+                    throw new ClassNotFoundException(name);
+            }
+            
+            /* // Akarin end
+            if (result == null) {
+                String path = name.replace('.', '/').concat(".class");
+                JarEntry entry = jar.getJarEntry(path);
+
+                if (entry != null) {
+                    byte[] classBytes;
+
+                    try (InputStream is = jar.getInputStream(entry)) {
+                        classBytes = ByteStreams.toByteArray(is);
+                    } catch (IOException ex) {
+                        throw new ClassNotFoundException(name, ex);
+                    }
+
+                    int dot = name.lastIndexOf('.');
+                    if (dot != -1) {
+                        String pkgName = name.substring(0, dot);
+                        if (getPackage(pkgName) == null) {
+                            try {
+                                if (manifest != null) {
+                                    definePackage(pkgName, manifest, url);
+                                } else {
+                                    definePackage(pkgName, null, null, null, null, null, null, null);
+                                }
+                            } catch (IllegalArgumentException ex) {
+                                if (getPackage(pkgName) == null) {
+                                    throw new IllegalStateException("Cannot find package " + pkgName);
+                                }
+                            }
+                        }
+                    }
+
+                    CodeSigner[] signers = entry.getCodeSigners();
+                    CodeSource source = new CodeSource(url, signers);
+
+                    result = defineClass(name, classBytes, 0, classBytes.length, source);
+                }
+
+                if (result == null) {
+                    result = super.findClass(name);
+                }
+
+                if (result != null) {
+                    loader.setClass(name, result);
+                }
+            }
+            */ // Akarin
+
+            classes.put(name, result);
         }
+
         return result;
     }
 
@@ -177,57 +231,25 @@ extends URLClassLoader {
     public void close() throws IOException {
         try {
             super.close();
-        }
-        finally {
-            this.jar.close();
+        } finally {
+            jar.close();
         }
     }
 
     Set<String> getClasses() {
-        return this.classes.keySet();
+        return classes.keySet();
     }
 
     synchronized void initialize(JavaPlugin javaPlugin) {
-        Validate.notNull((Object)javaPlugin, (String)"Initializing plugin cannot be null");
-        Validate.isTrue((boolean)(javaPlugin.getClass().getClassLoader() == this), (String)"Cannot initialize plugin outside of this class loader");
+        Validate.notNull(javaPlugin, "Initializing plugin cannot be null");
+        Validate.isTrue(javaPlugin.getClass().getClassLoader() == this, "Cannot initialize plugin outside of this class loader");
         if (this.plugin != null || this.pluginInit != null) {
-            throw new IllegalArgumentException("Plugin already initialized!", this.pluginState);
+            throw new IllegalArgumentException("Plugin already initialized!", pluginState);
         }
-        this.pluginState = new IllegalStateException("Initial initialization");
+
+        pluginState = new IllegalStateException("Initial initialization");
         this.pluginInit = javaPlugin;
-        javaPlugin.init(this.loader, this.loader.server, this.description, this.dataFolder, this.file, this);
-    }
 
-    private Class<?> remappedFindClass(String name) throws ClassNotFoundException {
-        Class result = null;
-        try {
-            InputStream stream;
-            String path = name.replace('.', '/').concat(".class");
-            URL url = this.findResource(path);
-            if (url != null && (stream = url.openStream()) != null) {
-                JarURLConnection jarURLConnection;
-                URL jarURL;
-                CodeSource codeSource;
-                byte[] bytecode = null;
-                bytecode = this.remapper.remapClassFile(stream, (ClassRepo)RuntimeRepo.getInstance());
-                result = this.defineClass(name, bytecode = ReflectionTransformer.transform(bytecode), 0, bytecode.length, codeSource = new CodeSource(jarURL = (jarURLConnection = (JarURLConnection)url.openConnection()).getJarFileURL(), new CodeSigner[0]));
-                if (result != null) {
-                    this.resolveClass(result);
-                }
-            }
-        }
-        catch (Throwable t2) {
-            throw new ClassNotFoundException("Failed to remap class " + name, t2);
-        }
-        return result;
-    }
-
-    @Override
-    protected Package getPackage(String name) {
-        if (name.startsWith("org.bukkit.craftbukkit")) {
-            name = "org.bukkit.craftbukkit." + Constants.NMS_VERSION;
-        }
-        return super.getPackage(name);
+        javaPlugin.init(loader, loader.server, description, dataFolder, file, this);
     }
 }
-

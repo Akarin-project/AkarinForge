@@ -36,7 +36,7 @@ import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 
-import io.akarin.forge.remapper.reflection.ReflectionTransformer;
+import io.akarin.forge.server.layers.reflection.ReflectionTransformer;
 import io.netty.util.concurrent.GenericFutureListener;
 import joptsimple.OptionSet;
 import net.minecraft.block.BlockSand;
@@ -77,6 +77,11 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public abstract class AkarinHooks {
 	private static final Logger LOGGER = LogManager.getRootLogger();
+	
+	static {
+		// Resolves trace level for unknown reason
+		java.util.logging.LogManager.getLogManager().reset();
+	}
 	
 	private static boolean initalizedConnection;
 	private static int initalizeConnectionSteps = 2;
@@ -406,6 +411,7 @@ public abstract class AkarinHooks {
 	}
 	
 	public static void initalizePlugins(CraftServer server) {
+		// try for NMS mapping
 		ReflectionTransformer.init();
 		
         server.loadPlugins();

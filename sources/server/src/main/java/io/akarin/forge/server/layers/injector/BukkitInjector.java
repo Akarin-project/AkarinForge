@@ -3,8 +3,6 @@ package io.akarin.forge.server.layers.injector;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
@@ -16,7 +14,6 @@ import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.registries.GameData;
-import net.minecraftforge.registries.IForgeRegistry;
 import org.apache.logging.log4j.Level;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
@@ -31,7 +28,7 @@ import io.akarin.forge.server.layers.entity.CraftModdedEntity;
 public class BukkitInjector {
     public static boolean initializedBukkit = false;
 
-    public static void injectItemBukkitMaterials() {
+    public static void injectItemMaterials() {
         for (Entry<ResourceLocation, Item> entry : ForgeRegistries.ITEMS.getEntries()) {
             ResourceLocation key = entry.getKey();
             Item item = entry.getValue();
@@ -49,7 +46,7 @@ public class BukkitInjector {
         }
     }
 
-    public static void injectBlockBukkitMaterials() {
+    public static void injectBlockMaterials() {
         for (Material material : Material.values()) {
             //if (material.getId() >= 256) // TODO
             //    continue;
@@ -83,7 +80,7 @@ public class BukkitInjector {
         }
     }
 
-    public static void injectEntityType() {
+    public static void injectEntityTypes() {
         Map NAME_MAP = ReflectionHelper.getPrivateValue(EntityType.class, null, "NAME_MAP");
         Map ID_MAP = ReflectionHelper.getPrivateValue(EntityType.class, null, "ID_MAP");
         for (Entry<String, Class<? extends Entity>> entity : EntityRegistry.entityClassMap.entrySet()) {

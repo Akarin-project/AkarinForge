@@ -5,6 +5,12 @@ import java.util.logging.Logger;
 
 import org.apache.logging.log4j.LogManager;
 
+/*
+ * This simple class wrapped a log4j with java style logging interface,
+ * it redirect Bukkit's logger to use log4j and allows colourful console.
+ * 
+ * The logging level has been tried best to match each other.
+ */
 public class LogWrapper extends Logger {
 	private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getRootLogger();
 	

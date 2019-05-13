@@ -1,90 +1,75 @@
-package io.akarin.forge.remapper.reflection;
+package io.akarin.forge.server.layers.reflection;
 
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
-import io.akarin.forge.remapper.ClassInheritanceProvider;
-import io.akarin.forge.remapper.MappingLoader;
-import io.akarin.forge.remapper.SneakyRemapper;
+import io.akarin.forge.server.layers.ClassInheritanceProvider;
+import io.akarin.forge.server.layers.MappedClassLoader;
+import io.akarin.forge.server.layers.MappingLoader;
+import io.akarin.forge.server.layers.SneakyRemapper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.provider.InheritanceProvider;
 import net.md_5.specialsource.provider.JointProvider;
+import net.minecraft.server.MinecraftServer;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 
 public class ReflectionTransformer {
-    public static final String DESC_ReflectionMethods = Type.getInternalName(ReflectionMethodMapper.class);
-    public static final String DESC_RemapMethodHandle = Type.getInternalName(ReflectionMethodHandler.class);
+	private static final String MAPPED_CLASS_LOADER = MappedClassLoader.class.getName().replace('.', '/');
+	
+    public static final String DESC_REFLECTION_METHOD_MAPPER  = Type.getInternalName(ReflectionMethodMapper.class);
+    public static final String DESC_REFLECTION_METHOD_HANDLER = Type.getInternalName(ReflectionMethodHandler.class);
+    
     public static JarMapping jarMapping;
     public static SneakyRemapper remapper;
-    public static final HashMap<String, String> classDeMapping;
-    public static final Multimap<String, String> methodDeMapping;
-    public static final Multimap<String, String> fieldDeMapping;
-    public static final Multimap<String, String> methodFastMapping;
-    private static boolean disable;
+    public static final HashMap<String, String>  REVERSE_CLASS_MAPPING     = Maps.newHashMap();
+    public static final Multimap<String, String> REVERSE_METHOD_MAPPING    = HashMultimap.create();
+    public static final Multimap<String, String> REVERSE_FIELD_MAPPING     = HashMultimap.create();
+    public static final Multimap<String, String> SIMPLE_CLASS_NAME_MAPPING = HashMultimap.create();
 
     public static void init() {
         try {
             Reflections.getCallerClassloader();
+        } catch (Throwable t) {
+            MinecraftServer.LOGGER.error("Unsupported Java version, NMS remapping is disabled!", t);
+            return;
         }
-        catch (Throwable e2) {
-            new RuntimeException("Unsupported Java version, disabled reflection remap!", e2).printStackTrace();
-            disable = true;
-        }
+        
         jarMapping = MappingLoader.loadMapping();
         JointProvider provider = new JointProvider();
         provider.add((InheritanceProvider)new ClassInheritanceProvider());
         jarMapping.setFallbackInheritanceProvider((InheritanceProvider)provider);
         remapper = new SneakyRemapper(jarMapping);
-        ReflectionTransformer.jarMapping.classes.forEach((k2, v2) -> {
-            classDeMapping.put(v2, k2);
-        }
-        );
-        ReflectionTransformer.jarMapping.methods.forEach((k2, v2) -> {
-            methodDeMapping.put(v2, k2);
-        }
-        );
-        ReflectionTransformer.jarMapping.fields.forEach((k2, v2) -> {
-            fieldDeMapping.put(v2, k2);
-        }
-        );
-        ReflectionTransformer.jarMapping.methods.forEach((k2, v2) -> {
-            methodFastMapping.put(k2.split("\\s+")[0], k2);
-        }
-        );
-        try {
-            Class.forName("io.akarin.forge.remapper.reflection.ReflectionMethodHandler");
-        }
-        catch (ClassNotFoundException e3) {
-            e3.printStackTrace();
-        }
+        
+        ReflectionTransformer.jarMapping.classes.forEach((k, v) -> REVERSE_CLASS_MAPPING    .put(v, k));
+        ReflectionTransformer.jarMapping.methods.forEach((k, v) -> REVERSE_METHOD_MAPPING   .put(v, k));
+        ReflectionTransformer.jarMapping.fields .forEach((k, v) -> REVERSE_FIELD_MAPPING    .put(v, k));
+        
+        ReflectionTransformer.jarMapping.methods.forEach((k, v) -> SIMPLE_CLASS_NAME_MAPPING.put(k.split("\\s+")[0], k));
     }
 
-    public static byte[] transform(byte[] code) {
+    @SuppressWarnings("deprecation")
+	public static byte[] transform(byte[] code) {
         ClassReader reader = new ClassReader(code);
         ClassNode node = new ClassNode();
         reader.accept((ClassVisitor)node, 0);
         boolean remapCL = false;
         if (node.superName.equals("java/net/URLClassLoader")) {
-            node.superName = "io/akarin/forge/remapper/MappedClassLoader";
+            node.superName = MAPPED_CLASS_LOADER;
             remapCL = true;
         }
         for (MethodNode method : node.methods) {
@@ -93,7 +78,7 @@ public class ReflectionTransformer {
                 AbstractInsnNode next = iterator.next();
                 TypeInsnNode insn;
                 if (next instanceof TypeInsnNode && (insn = (TypeInsnNode)next).getOpcode() == 187 && insn.desc.equals("java/net/URLClassLoader")) {
-                    insn.desc = "io/akarin/forge/remapper/MappedClassLoader";
+                    insn.desc = MAPPED_CLASS_LOADER;
                     remapCL = true;
                 }
                 if (!(next instanceof MethodInsnNode)) continue;
@@ -117,7 +102,7 @@ public class ReflectionTransformer {
                 if (!min.owner.equals("javax/script/ScriptEngineManager") || !min.desc.equals("()V") || !min.name.equals("<init>")) continue;
                 
                 min.desc = "(Ljava/lang/ClassLoader;)V";
-                method.instructions.insertBefore((AbstractInsnNode)min, (AbstractInsnNode)new MethodInsnNode(184, "java/lang/ClassLoader", "getSystemClassLoader", "()Ljava/lang/ClassLoader;"));
+                method.instructions.insertBefore(min, new MethodInsnNode(184, "java/lang/ClassLoader", "getSystemClassLoader", "()Ljava/lang/ClassLoader;"));
                 ++method.maxStack;
             }
         }
@@ -129,16 +114,16 @@ public class ReflectionTransformer {
     public static void remapForName(AbstractInsnNode insn) {
         MethodInsnNode method = (MethodInsnNode)insn;
         if (method.owner.equals("java/lang/invoke/MethodType") && method.name.equals("fromMethodDescriptorString")) {
-            method.owner = DESC_RemapMethodHandle;
+            method.owner = DESC_REFLECTION_METHOD_HANDLER;
         }
-        if (disable || !method.owner.equals("java/lang/Class") || !method.name.equals("forName")) {
+        if (!method.owner.equals("java/lang/Class") || !method.name.equals("forName")) {
             return;
         }
-        method.owner = DESC_ReflectionMethods;
+        method.owner = DESC_REFLECTION_METHOD_MAPPER;
     }
-
+    
     public static void remapVirtual(AbstractInsnNode insn) {
-        MethodInsnNode method = (MethodInsnNode)insn;
+        MethodInsnNode method = (MethodInsnNode) insn;
         boolean remapFlag = false;
         if (method.owner.equals("java/lang/Class")) {
             switch (method.name) {
@@ -165,12 +150,12 @@ public class ReflectionTransformer {
                 case "findStatic": 
                 case "findSpecial": 
                 case "unreflect": {
-                    ReflectionTransformer.virtualToStatic(method, DESC_RemapMethodHandle);
+                    ReflectionTransformer.virtualToStatic(method, DESC_REFLECTION_METHOD_HANDLER);
                 }
             }
         }
         if (remapFlag) {
-            ReflectionTransformer.virtualToStatic(method, DESC_ReflectionMethods);
+            ReflectionTransformer.virtualToStatic(method, DESC_REFLECTION_METHOD_MAPPER);
         }
     }
 
@@ -178,9 +163,9 @@ public class ReflectionTransformer {
         if (!method.owner.equals("java/net/URLClassLoader") || !method.name.equals("<init>")) {
             return;
         }
-        method.owner = "io/akarin/forge/remapper/MappedClassLoader";
+        method.owner = MAPPED_CLASS_LOADER;
     }
-
+    
     private static void virtualToStatic(MethodInsnNode method, String desc) {
         Type returnType = Type.getReturnType((String)method.desc);
         ArrayList<Type> args = new ArrayList<Type>();
@@ -189,14 +174,6 @@ public class ReflectionTransformer {
         method.setOpcode(184);
         method.owner = desc;
         method.desc = Type.getMethodDescriptor((Type)returnType, (Type[])args.toArray(new Type[0]));
-    }
-
-    static {
-        classDeMapping = Maps.newHashMap();
-        methodDeMapping = ArrayListMultimap.create();
-        fieldDeMapping = ArrayListMultimap.create();
-        methodFastMapping = ArrayListMultimap.create();
-        disable = false;
     }
 }
 

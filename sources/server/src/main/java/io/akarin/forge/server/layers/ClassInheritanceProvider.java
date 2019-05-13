@@ -1,9 +1,9 @@
-package io.akarin.forge.remapper;
+package io.akarin.forge.server.layers;
 
 import java.util.Collection;
 import java.util.HashSet;
 
-import io.akarin.forge.remapper.reflection.ReflectionTransformer;
+import io.akarin.forge.server.layers.reflection.ReflectionTransformer;
 import net.md_5.specialsource.provider.InheritanceProvider;
 
 public class ClassInheritanceProvider implements InheritanceProvider {
@@ -15,11 +15,11 @@ public class ClassInheritanceProvider implements InheritanceProvider {
             Class<?> reference = Class.forName(className.replace('/', '.').replace('$', '.'), false, this.getClass().getClassLoader());
             Class<?> extend = reference.getSuperclass();
             if (extend != null) {
-                parents.add(Remaps.reverseMap(extend));
+                parents.add(Remaps.reverseMapClassName(extend));
             }
             for (Class<?> inter : reference.getInterfaces()) {
                 if (inter == null) continue;
-                parents.add(Remaps.reverseMap(inter));
+                parents.add(Remaps.reverseMapClassName(inter));
             }
             return parents;
         } catch (Throwable parents) {

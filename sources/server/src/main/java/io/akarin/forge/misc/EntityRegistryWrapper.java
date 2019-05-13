@@ -10,6 +10,12 @@ import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.registries.GameData;
 
+/*
+ * The entity registry has been handled by Forge and removed the vanilla handler. 
+ * 
+ * This class wrapped the Forge entity registry with vanilla interface,
+ * which allows plugins that accessing NMS to register entity works normally.
+ */
 public class EntityRegistryWrapper extends RegistryNamespaced<ResourceLocation, Class<? extends Entity>> {
 	
 	public static EntityRegistryWrapper create() {

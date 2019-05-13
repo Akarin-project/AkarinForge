@@ -7,7 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mojang.authlib.GameProfile;
 
-import io.akarin.forge.server.utility.DataFixer;
+import io.akarin.forge.misc.DataFixer;
 import io.netty.buffer.Unpooled;
 import java.io.File;
 import java.net.SocketAddress;

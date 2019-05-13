@@ -1,4 +1,4 @@
-package io.akarin.forge.remapper;
+package io.akarin.forge.server.layers;
 
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.JarRemapper;

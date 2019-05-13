@@ -5,8 +5,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 
 import gnu.trove.map.hash.TObjectIntHashMap;
+import io.akarin.forge.misc.MCUtil;
 import io.akarin.forge.server.AkarinHooks;
-import io.akarin.forge.server.utility.MCUtil;
 
 import java.util.Arrays;
 import java.util.List;

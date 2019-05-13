@@ -1,4 +1,4 @@
-package io.akarin.forge.server.utility;
+package io.akarin.forge.misc;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang.exception.ExceptionUtils;

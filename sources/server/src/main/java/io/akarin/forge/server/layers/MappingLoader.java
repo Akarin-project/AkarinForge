@@ -1,10 +1,11 @@
-package io.akarin.forge.remapper;
+package io.akarin.forge.server.layers;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
-import io.akarin.forge.server.utility.Constants;
+
+import io.akarin.forge.server.layers.misc.Constants;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.transformer.MappingTransformer;
 import net.md_5.specialsource.transformer.MavenShade;

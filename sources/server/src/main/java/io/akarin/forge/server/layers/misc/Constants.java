@@ -1,4 +1,4 @@
-package io.akarin.forge.server.utility;
+package io.akarin.forge.server.layers.misc;
 
 public class Constants {
     public static final String GAME_VERSION = "1.12.2";

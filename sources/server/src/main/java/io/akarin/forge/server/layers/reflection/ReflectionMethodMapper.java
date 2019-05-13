@@ -1,47 +1,46 @@
-package io.akarin.forge.remapper.reflection;
+package io.akarin.forge.server.layers.reflection;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.Maps;
 
-import io.akarin.forge.remapper.Remaps;
-import io.akarin.forge.server.utility.Constants;
-import net.md_5.specialsource.JarMapping;
+import io.akarin.forge.server.layers.Remaps;
+import io.akarin.forge.server.layers.misc.Constants;
 
 public class ReflectionMethodMapper {
-    private static final ConcurrentHashMap<String, String> fieldGetNameCache = new ConcurrentHashMap();
-    private static final ConcurrentHashMap<String, String> methodGetNameCache = new ConcurrentHashMap();
-    private static final ConcurrentHashMap<String, String> simpleNameGetNameCache = new ConcurrentHashMap();
+    private static final Map<String, String> FIELD_NAME_CACHE  = Maps.newConcurrentMap();
+    private static final Map<String, String> METHOD_NAME_CACHE = Maps.newConcurrentMap();
+    private static final Map<String, String> SIMPLE_NAME_CACHE = Maps.newConcurrentMap();
 
     public static Class<?> forName(String className) throws ClassNotFoundException {
         return ReflectionMethodMapper.forName(className, true, Reflections.getCallerClassloader());
     }
 
     public static Class<?> forName(String className, boolean initialize, ClassLoader classLoader) throws ClassNotFoundException {
-        if (className.startsWith("net.minecraft.server." + Constants.NMS_VERSION)) {
+        if (className.startsWith(Constants.NMS_DOMAIN)) {
             className = ReflectionTransformer.jarMapping.classes.getOrDefault(className.replace('.', '/'), className).replace('/', '.');
         }
         return Class.forName(className, initialize, classLoader);
     }
 
     public static Field getField(Class<?> inst, String name) throws NoSuchFieldException, SecurityException {
-        if (Remaps.isClassNeedRemap(inst, true)) {
+        if (Remaps.shouldRemapClass(inst, true)) {
             name = Remaps.mapFieldName(inst, name);
         }
         return inst.getField(name);
     }
 
     public static Field getDeclaredField(Class<?> inst, String name) throws NoSuchFieldException, SecurityException {
-        if (Remaps.isClassNeedRemap(inst, false)) {
-            name = ReflectionTransformer.remapper.mapFieldName(Remaps.reverseMap(inst), name, null);
+        if (Remaps.shouldRemapClass(inst, false)) {
+            name = ReflectionTransformer.remapper.mapFieldName(Remaps.reverseMapClassName(inst), name, null);
         }
         return inst.getDeclaredField(name);
     }
 
-    public static /* varargs */ Method getMethod(Class<?> inst, String name, Class<?> ... parameterTypes) throws NoSuchMethodException, SecurityException {
-        if (Remaps.isClassNeedRemap(inst, true)) {
-            name = Remaps.mapMethod(inst, name, parameterTypes);
+    public static Method getMethod(Class<?> inst, String name, Class<?> ... parameterTypes) throws NoSuchMethodException, SecurityException {
+        if (Remaps.shouldRemapClass(inst, true)) {
+            name = Remaps.remapMethod(inst, name, parameterTypes);
         }
         try {
             return inst.getMethod(name, parameterTypes);
@@ -51,9 +50,9 @@ public class ReflectionMethodMapper {
         }
     }
 
-    public static /* varargs */ Method getDeclaredMethod(Class<?> inst, String name, Class<?> ... parameterTypes) throws NoSuchMethodException, SecurityException {
-        if (Remaps.isClassNeedRemap(inst, true)) {
-            name = Remaps.mapMethod(inst, name, parameterTypes);
+    public static Method getDeclaredMethod(Class<?> inst, String name, Class<?> ... parameterTypes) throws NoSuchMethodException, SecurityException {
+        if (Remaps.shouldRemapClass(inst, true)) {
+            name = Remaps.remapMethod(inst, name, parameterTypes);
         }
         try {
             return inst.getDeclaredMethod(name, parameterTypes);
@@ -64,50 +63,50 @@ public class ReflectionMethodMapper {
     }
 
     public static String getName(Field field) {
-        if (!Remaps.isClassNeedRemap(field.getDeclaringClass(), false)) {
+        if (!Remaps.shouldRemapClass(field.getDeclaringClass(), false)) {
             return field.getName();
         }
         String hash = String.valueOf(field.hashCode());
-        String cache = fieldGetNameCache.get(hash);
+        String cache = FIELD_NAME_CACHE.get(hash);
         if (cache != null) {
             return cache;
         }
         String retn = Remaps.demapFieldName(field);
-        fieldGetNameCache.put(hash, retn);
+        FIELD_NAME_CACHE.put(hash, retn);
         return retn;
     }
 
     public static String getName(Method method) {
-        if (!Remaps.isClassNeedRemap(method.getDeclaringClass(), true)) {
+        if (!Remaps.shouldRemapClass(method.getDeclaringClass(), true)) {
             return method.getName();
         }
         String hash = String.valueOf(method.hashCode());
-        String cache = methodGetNameCache.get(hash);
+        String cache = METHOD_NAME_CACHE.get(hash);
         if (cache != null) {
             return cache;
         }
         String retn = Remaps.demapMethodName(method);
-        methodGetNameCache.put(hash, retn);
+        METHOD_NAME_CACHE.put(hash, retn);
         return retn;
     }
 
     public static String getSimpleName(Class<?> inst) {
-        if (!Remaps.isClassNeedRemap(inst, false)) {
+        if (!Remaps.shouldRemapClass(inst, false)) {
             return inst.getSimpleName();
         }
         String hash = String.valueOf(inst.hashCode());
-        String cache = simpleNameGetNameCache.get(hash);
+        String cache = SIMPLE_NAME_CACHE.get(hash);
         if (cache != null) {
             return cache;
         }
-        String[] name = Remaps.reverseMapExternal(inst).split("\\.");
+        String[] name = Remaps.reverseMapClassNameExternally(inst).split("\\.");
         String retn = name[name.length - 1];
-        simpleNameGetNameCache.put(hash, retn);
+        SIMPLE_NAME_CACHE.put(hash, retn);
         return retn;
     }
 
     public static Class<?> loadClass(ClassLoader inst, String className) throws ClassNotFoundException {
-        if (className.startsWith("net.minecraft.")) {
+        if (className.startsWith(Constants.MINECRAFT_DOMAIN)) {
             className = Remaps.mapClass(className.replace('.', '/')).replace('/', '.');
         }
         return inst.loadClass(className);

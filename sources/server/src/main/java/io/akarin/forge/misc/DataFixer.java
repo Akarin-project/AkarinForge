@@ -1,4 +1,4 @@
-package io.akarin.forge.server.utility;
+package io.akarin.forge.misc;
 
 import org.bukkit.util.NumberConversions;
 

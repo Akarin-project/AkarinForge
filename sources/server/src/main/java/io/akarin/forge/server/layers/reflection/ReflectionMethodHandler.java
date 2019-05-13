@@ -1,11 +1,8 @@
-package io.akarin.forge.remapper.reflection;
-
+package io.akarin.forge.server.layers.reflection;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -13,23 +10,25 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import io.akarin.forge.remapper.MappingLoader;
-import io.akarin.forge.remapper.Remaps;
-import io.akarin.forge.server.utility.Constants;
+import com.google.common.collect.Maps;
+
+import io.akarin.forge.server.layers.MappingLoader;
+import io.akarin.forge.server.layers.Remaps;
+import io.akarin.forge.server.layers.misc.Constants;
 
 public class ReflectionMethodHandler {
-    private static HashMap<String, String> map = new HashMap();
+    private static final HashMap<String, String> METHOD_DESC_MAPPING = Maps.newHashMap();
 
     public static MethodHandle findSpecial(MethodHandles.Lookup lookup, Class<?> refc, String name, MethodType type, Class<?> specialCaller) throws NoSuchMethodException, IllegalAccessException {
-        if (refc.getName().startsWith("net.minecraft.")) {
-            name = Remaps.mapMethod(refc, name, type.parameterArray());
+        if (refc.getName().startsWith(Constants.MINECRAFT_DOMAIN)) {
+            name = Remaps.remapMethod(refc, name, type.parameterArray());
         }
         return lookup.findSpecial(refc, name, type, specialCaller);
     }
 
     public static MethodHandle findVirtual(MethodHandles.Lookup lookup, Class<?> refc, String name, MethodType oldType) throws NoSuchMethodException, IllegalAccessException {
-        if (refc.getName().startsWith("net.minecraft.")) {
-            name = Remaps.mapMethod(refc, name, oldType.parameterArray());
+        if (refc.getName().startsWith(Constants.MINECRAFT_DOMAIN)) {
+            name = Remaps.remapMethod(refc, name, oldType.parameterArray());
         } else if (refc.getName().equals("java.lang.Class") || refc.getName().equals("java.lang.ClassLoader")) {
             switch (name) {
                 case "getField": 
@@ -39,7 +38,7 @@ public class ReflectionMethodHandler {
                 case "getSimpleName": 
                 case "getName": 
                 case "loadClass": {
-                    Class[] newParArr = new Class[oldType.parameterArray().length + 1];
+                    Class<?>[] newParArr = new Class[oldType.parameterArray().length + 1];
                     newParArr[0] = refc.getName().equals("java.lang.Class") ? Class.class : ClassLoader.class;
                     System.arraycopy(oldType.parameterArray(), 0, newParArr, 1, oldType.parameterArray().length);
                     MethodType newType = MethodType.methodType(oldType.returnType(), newParArr);
@@ -52,8 +51,8 @@ public class ReflectionMethodHandler {
     }
 
     public static MethodHandle findStatic(MethodHandles.Lookup lookup, Class<?> refc, String name, MethodType type) throws NoSuchMethodException, IllegalAccessException {
-        if (refc.getName().startsWith("net.minecraft.")) {
-            name = Remaps.mapMethod(refc, name, type.parameterArray());
+        if (refc.getName().startsWith(Constants.MINECRAFT_DOMAIN)) {
+            name = Remaps.remapMethod(refc, name, type.parameterArray());
         } else if (refc.getName().equals("java.lang.Class") && name.equals("forName")) {
             refc = ReflectionMethodMapper.class;
         }
@@ -61,7 +60,7 @@ public class ReflectionMethodHandler {
     }
 
     public static MethodType fromMethodDescriptorString(String descriptor, ClassLoader loader) {
-        String remapDesc = map.getOrDefault(descriptor, descriptor);
+        String remapDesc = METHOD_DESC_MAPPING.getOrDefault(descriptor, descriptor);
         return MethodType.fromMethodDescriptorString(remapDesc, loader);
     }
 
@@ -117,7 +116,7 @@ public class ReflectionMethodHandler {
             String[] sp2 = line.split("\\s+");
             String firDesc = sp2[2];
             String secDesc = sp2[4];
-            map.put(firDesc, secDesc);
+            METHOD_DESC_MAPPING.put(firDesc, secDesc);
         }
     }
 
