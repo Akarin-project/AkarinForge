@@ -11,8 +11,8 @@ public class PlayerCapabilities
     public boolean allowFlying;
     public boolean isCreativeMode;
     public boolean allowEdit = true;
-    public float flySpeed = 0.05F;
-    public float walkSpeed = 0.1F;
+    public float flySpeed = 0.05F; // Akarin
+    public float walkSpeed = 0.1F; // Akarin
 
     public void writeCapabilitiesToNBT(NBTTagCompound tagCompound)
     {

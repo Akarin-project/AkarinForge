@@ -984,15 +984,12 @@ public class CraftEventFactory {
         return event;
     }
 
-    // Paper start
-
     /**
      * Incase plugins hooked into this or Spigot adds a new inventory close event. Prefer to pass a reason
      * @param human
      */
     public static void handleInventoryCloseEvent(EntityPlayer human) {
         InventoryCloseEvent event = new InventoryCloseEvent(human.openContainer.getBukkitView());
-        // Paper end
         human.world.getServer().getPluginManager().callEvent(event);
         human.openContainer.transferTo(human.inventoryContainer, human.getBukkitEntity());
     }

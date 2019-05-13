@@ -508,9 +508,4 @@ public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
             entity.remove();
         }
     }
-
-	public boolean isOnline() {
-		// TODO Auto-generated method stub
-		return false;
-	}
 }

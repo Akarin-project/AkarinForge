@@ -22,6 +22,30 @@ public abstract class EntityAgeable extends EntityCreature
     private float ageWidth = -1.0F;
     private float ageHeight;
     public boolean ageLocked; // CraftBukkit
+    // Spigot start
+    @Override
+    public void inactiveTick()
+    {
+        super.inactiveTick();
+        if ( this.world.isRemote || this.ageLocked )
+        { // CraftBukkit
+            this.setScaleForAge( this.isChild() );
+        } else
+        {
+            int i = this.getGrowingAge();
+
+            if ( i < 0 )
+            {
+                ++i;
+                this.setGrowingAge( i );
+            } else if ( i > 0 )
+            {
+                --i;
+                this.setGrowingAge( i );
+            }
+        }
+    }
+    // Spigot end
 
     public EntityAgeable(World worldIn)
     {

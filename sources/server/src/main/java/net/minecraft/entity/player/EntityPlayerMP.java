@@ -690,7 +690,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
             }
 
             if (this.oldLevel != this.experienceLevel) {
-                CraftEventFactory.callPlayerLevelChangeEvent(MinecraftServer.instance().server.getPlayer((EntityPlayerMP) this), this.oldLevel, this.experienceLevel);
+                CraftEventFactory.callPlayerLevelChangeEvent(this.world.getServer().getPlayer((EntityPlayerMP) this), this.oldLevel, this.experienceLevel);
                 this.oldLevel = this.experienceLevel;
             }
             // Akarin end
@@ -707,7 +707,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
     private void updateScorePoints(IScoreCriteria criteria, int points)
     {
         // Akarin start
-        for (Score score : MinecraftServer.instance().server.getScoreboardManager().getScoreboardScores(criteria, this.getName(), Lists.newArrayList()))
+        for (Score score : this.world.getServer().getScoreboardManager().getScoreboardScores(criteria, this.getName(), Lists.newArrayList()))
         {
             //Score score = this.getWorldScoreboard().getOrCreateScore(this.getName(), scoreobjective);
             score.setScorePoints(points);
@@ -776,7 +776,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         this.closeContainer();
         this.setSpectatingEntity(this); // Remove spectated target
         
-        Collection<Score> collection = MinecraftServer.instance().server.getScoreboardManager().getScoreboardScores(IScoreCriteria.DEATH_COUNT, this.getName(), Lists.newArrayList());
+        Collection<Score> collection = this.world.getServer().getScoreboardManager().getScoreboardScores(IScoreCriteria.DEATH_COUNT, this.getName(), Lists.newArrayList());
         for (Score score : collection) {
             score.incrementScore();
         }
@@ -858,12 +858,12 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         {
             super.awardKillScore(p_191956_1_, p_191956_2_, p_191956_3_);
             this.addScore(p_191956_2_);
-            Collection<Score> collection = MinecraftServer.instance().server.getScoreboardManager().getScoreboardScores(IScoreCriteria.TOTAL_KILL_COUNT, this.getName(), Lists.newArrayList()); // Akarin
+            Collection<Score> collection = this.world.getServer().getScoreboardManager().getScoreboardScores(IScoreCriteria.TOTAL_KILL_COUNT, this.getName(), Lists.newArrayList()); // Akarin
 
             if (p_191956_1_ instanceof EntityPlayer)
             {
                 this.addStat(StatList.PLAYER_KILLS);
-                MinecraftServer.instance().server.getScoreboardManager().getScoreboardScores(IScoreCriteria.PLAYER_KILL_COUNT, this.getName(), collection); // Akarin
+                this.world.getServer().getScoreboardManager().getScoreboardScores(IScoreCriteria.PLAYER_KILL_COUNT, this.getName(), collection); // Akarin
             }
             else
             {
@@ -908,7 +908,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
 
             if (j >= 0 && j < IScoreCriteria.TEAM_KILL.length)
             {
-                return MinecraftServer.instance().server.getScoreboardManager().getScoreboardScores(IScoreCriteria.TEAM_KILL[j], this.getName(), Lists.newArrayList()); // Akarin
+                return this.world.getServer().getScoreboardManager().getScoreboardScores(IScoreCriteria.TEAM_KILL[j], this.getName(), Lists.newArrayList()); // Akarin
             }
         }
 
@@ -1003,7 +1003,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
                 dimensionIn = 1;
             }
 
-            PlayerTeleportEvent.TeleportCause cause = this.dimension == 1 || dimensionIn == 1 ? PlayerTeleportEvent.TeleportCause.END_PORTAL : (this.dimension == -1 || dimensionIn == -1 ? PlayerTeleportEvent.TeleportCause.NETHER_PORTAL : PlayerTeleportEvent.TeleportCause.PLUGIN); // Akarin
+            PlayerTeleportEvent.TeleportCause cause = this.dimension == 1 || dimensionIn == 1 ? PlayerTeleportEvent.TeleportCause.END_PORTAL : (this.dimension == -1 || dimensionIn == -1 ? PlayerTeleportEvent.TeleportCause.NETHER_PORTAL : PlayerTeleportEvent.TeleportCause.UNKNOWN); // Akarin
             this.mcServer.getPlayerList().transferPlayerToDimension(this, dimensionIn, teleporter); // Akarin
             this.connection.sendPacket(new SPacketEffect(1032, BlockPos.ORIGIN, 0, false));
             this.lastExperience = -1;
@@ -1823,7 +1823,7 @@ public class EntityPlayerMP extends EntityPlayer implements IContainerListener
         if (entity != this.spectatingEntity)
         {
             this.connection.sendPacket(new SPacketCamera(this.spectatingEntity));
-            this.connection.setPlayerLocation(this.spectatingEntity.posX, this.spectatingEntity.posY, this.spectatingEntity.posZ, this.rotationYaw, this.rotationPitch);
+            this.connection.setPlayerLocation(this.spectatingEntity.posX, this.spectatingEntity.posY, this.spectatingEntity.posZ, this.rotationYaw, this.rotationPitch); // Akarin
         }
     }
 

@@ -1,3 +1,6 @@
+/*
+ * Akarin reference
+ */
 package net.minecraft.entity.player;
 
 import java.util.ArrayList;
@@ -9,7 +12,6 @@ import javax.annotation.Nullable;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
 import org.bukkit.entity.HumanEntity;
-import org.bukkit.inventory.InventoryHolder;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.util.RecipeItemHelper;
@@ -34,7 +36,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-// Akarin - AWS patch this
 public class InventoryPlayer implements IInventory
 {
     public final NonNullList<ItemStack> mainInventory = NonNullList.<ItemStack>withSize(36, ItemStack.EMPTY);
@@ -45,7 +46,7 @@ public class InventoryPlayer implements IInventory
     public EntityPlayer player;
     private ItemStack itemStack;
     private int timesChanged;
-    // CraftBukkit start - add fields and methods
+ // CraftBukkit start - add fields and methods
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     private int maxStack = 64;
 
@@ -75,7 +76,7 @@ public class InventoryPlayer implements IInventory
     }
 
     public org.bukkit.inventory.InventoryHolder getOwner() {
-        return (InventoryHolder) this.player.getBukkitEntity();
+        return this.player.getBukkitEntity();
     }
 
     public void setMaxStackSize(int size) {
@@ -114,6 +115,22 @@ public class InventoryPlayer implements IInventory
     {
         return stack1.getItem() == stack2.getItem() && (!stack1.getHasSubtypes() || stack1.getMetadata() == stack2.getMetadata()) && ItemStack.areItemStackTagsEqual(stack1, stack2);
     }
+    // CraftBukkit start - Watch method above! :D
+    public int canHold(ItemStack itemstack) {
+        int remains = itemstack.getCount();
+        for (int i = 0; i < this.mainInventory.size(); ++i) {
+            ItemStack itemstack1 = this.getStackInSlot(i);
+            if (itemstack1.isEmpty()) return itemstack.getCount();
+
+            // Taken from firstPartial(ItemStack)
+            if (!itemstack1.isEmpty() && itemstack1.getItem() == itemstack.getItem() && itemstack1.isStackable() && itemstack1.getCount() < itemstack1.getMaxStackSize() && itemstack1.getCount() < this.getInventoryStackLimit() && (!itemstack1.getHasSubtypes() || itemstack1.getMetadata() == itemstack.getMetadata()) && ItemStack.areItemStackTagsEqual(itemstack1, itemstack)) {
+                remains -= (itemstack1.getMaxStackSize() < this.getInventoryStackLimit() ? itemstack1.getMaxStackSize() : this.getInventoryStackLimit()) - itemstack1.getCount();
+            }
+            if (remains <= 0) return itemstack.getCount();
+        }
+        return itemstack.getCount() - remains;
+    }
+    // CraftBukkit end
 
     public int getFirstEmptyStack()
     {
@@ -775,7 +792,7 @@ public class InventoryPlayer implements IInventory
 
     public int getInventoryStackLimit()
     {
-        return 64;
+        return maxStack; // CraftBukkit
     }
 
     public boolean canHarvestBlock(IBlockState state)
@@ -852,6 +869,11 @@ public class InventoryPlayer implements IInventory
 
     public ItemStack getItemStack()
     {
+        // CraftBukkit start
+        if (this.itemStack.isEmpty()) {
+            this.setItemStack(ItemStack.EMPTY);
+        }
+        // CraftBukkit end
         return this.itemStack;
     }
 
