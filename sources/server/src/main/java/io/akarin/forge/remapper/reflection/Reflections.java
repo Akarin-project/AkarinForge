@@ -1,9 +1,9 @@
-package io.akarin.forge.remapper;
+package io.akarin.forge.remapper.reflection;
 
 import java.lang.reflect.Field;
 import sun.misc.Unsafe;
 
-public class ReflectionUtils {
+public class Reflections {
     private static SecurityManager sm = new SecurityManager();
 
     public static Class<?> getCallerClass(int skip) {
@@ -11,7 +11,7 @@ public class ReflectionUtils {
     }
 
     public static ClassLoader getCallerClassloader() {
-        return ReflectionUtils.getCallerClass(3).getClassLoader();
+        return Reflections.getCallerClass(3).getClassLoader();
     }
 
     public static Class<?>[] getStackClass() {

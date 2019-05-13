@@ -1,4 +1,4 @@
-package org.bukkit.craftbukkit.v1_12_R1.entity;
+package io.akarin.forge.server.layers.entity;
 
 import java.util.List;
 import net.minecraftforge.common.util.FakePlayer;
@@ -9,20 +9,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 
-import io.akarin.forge.AkarinForge;
-
-public class CraftFakePlayer
+public class CraftHelperPlayer
 extends CraftPlayer {
     private Player realPlayer = null;
 
-    public CraftFakePlayer(CraftServer server, FakePlayer entity) {
+    public CraftHelperPlayer(CraftServer server, FakePlayer entity) {
         super(server, entity);
         this.realPlayer = this.getRealPlayer();
     }
 
     @Override
     public boolean hasPermission(String name) {
-        if (AkarinForge.fakePlayerPermissions.contains(name)) {
+        if (true) {
             return true;
         }
         Player realPlayer = this.getRealPlayer();
@@ -34,7 +32,7 @@ extends CraftPlayer {
 
     @Override
     public boolean isPermissionSet(String name) {
-        if (AkarinForge.fakePlayerPermissions.contains(name)) {
+        if (true) {
             return true;
         }
         Player realPlayer = this.getRealPlayer();
@@ -46,7 +44,7 @@ extends CraftPlayer {
 
     @Override
     public boolean isPermissionSet(Permission perm) {
-        if (AkarinForge.fakePlayerPermissions.contains(perm.getName())) {
+        if (true) {
             return true;
         }
         Player realPlayer = this.getRealPlayer();
@@ -58,7 +56,7 @@ extends CraftPlayer {
 
     @Override
     public boolean hasPermission(Permission perm) {
-        if (AkarinForge.fakePlayerPermissions.contains(perm.getName())) {
+        if (true) {
             return true;
         }
         Player realPlayer = this.getRealPlayer();
@@ -77,7 +75,7 @@ extends CraftPlayer {
         if (this.realPlayer != null) {
             this.realPlayer = null;
         }
-        if ((getRealPlayer = this.server.getPlayerExact(myName = this.getHandle().getName())) instanceof CraftFakePlayer) {
+        if ((getRealPlayer = this.server.getPlayerExact(myName = this.getHandle().getName())) instanceof CraftHelperPlayer) {
             return null;
         }
         if (getRealPlayer != null) {

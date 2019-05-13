@@ -36,6 +36,7 @@ import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 
+import io.akarin.forge.remapper.reflection.ReflectionTransformer;
 import io.netty.util.concurrent.GenericFutureListener;
 import joptsimple.OptionSet;
 import net.minecraft.block.BlockSand;
@@ -405,6 +406,8 @@ public abstract class AkarinHooks {
 	}
 	
 	public static void initalizePlugins(CraftServer server) {
+		ReflectionTransformer.init();
+		
         server.loadPlugins();
         server.enablePlugins(PluginLoadOrder.STARTUP);
 	}
@@ -681,7 +684,7 @@ public abstract class AkarinHooks {
             BlockSand.fallInstantly = false;
 		}
         
-        chunk.world.getServer().getPluginManager().callEvent(new ChunkPopulateEvent(chunk.bukkitChunk));
+        MinecraftServer.instance().server.getPluginManager().callEvent(new ChunkPopulateEvent(chunk.bukkitChunk));
         
         // Populate forge
         GameRegistry.generateWorld(chunk.x, chunk.z, chunk.world, generator, chunk.world.getChunkProvider());

@@ -71,7 +71,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
     private final EnumPacketDirection direction;
     private final Queue<InboundHandlerTuplePacketListener> outboundPacketsQueue = Queues.<InboundHandlerTuplePacketListener>newConcurrentLinkedQueue();
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private Channel channel;
+    public Channel channel; // Akarin - public for plugin access
     public SocketAddress socketAddress;
     // Spigot Start
     public java.util.UUID spoofedUUID;

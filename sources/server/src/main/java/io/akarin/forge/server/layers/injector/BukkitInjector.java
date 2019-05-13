@@ -1,4 +1,4 @@
-package io.akarin.forge;
+package io.akarin.forge.server.layers.injector;
 
 import java.util.Locale;
 import java.util.Map;
@@ -26,7 +26,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.potion.PotionEffectType;
 
-import io.akarin.forge.entity.CraftCustomEntity;
+import io.akarin.forge.server.layers.entity.CraftModdedEntity;
 
 public class BukkitInjector {
     public static boolean initializedBukkit = false;
@@ -90,7 +90,7 @@ public class BukkitInjector {
             String name = entity.getKey();
             String entityType = name.replace("-", "_").toUpperCase();
             int typeId = GameData.getEntityRegistry().getID(EntityRegistry.getEntry(entity.getValue()));
-            EntityType bukkitType = EnumHelper.addEnum(EntityType.class, entityType, new Class[]{String.class, Class.class, Integer.TYPE, Boolean.TYPE}, new Object[]{name, CraftCustomEntity.class, typeId, false});
+            EntityType bukkitType = EnumHelper.addEnum(EntityType.class, entityType, new Class[]{String.class, Class.class, Integer.TYPE, Boolean.TYPE}, new Object[]{name, CraftModdedEntity.class, typeId, false});
             NAME_MAP.put(name.toLowerCase(), bukkitType);
             ID_MAP.put((short)typeId, bukkitType);
         }

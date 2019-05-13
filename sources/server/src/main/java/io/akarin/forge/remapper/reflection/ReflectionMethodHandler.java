@@ -1,7 +1,4 @@
-/*
- * Decompiled with CFR 0_119.
- */
-package io.akarin.forge.remapper;
+package io.akarin.forge.remapper.reflection;
 
 
 import java.io.BufferedReader;
@@ -16,21 +13,23 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import io.akarin.forge.AkarinForge;
+import io.akarin.forge.remapper.MappingLoader;
+import io.akarin.forge.remapper.Remaps;
+import io.akarin.forge.server.utility.Constants;
 
-public class CatHandleLookup {
+public class ReflectionMethodHandler {
     private static HashMap<String, String> map = new HashMap();
 
     public static MethodHandle findSpecial(MethodHandles.Lookup lookup, Class<?> refc, String name, MethodType type, Class<?> specialCaller) throws NoSuchMethodException, IllegalAccessException {
         if (refc.getName().startsWith("net.minecraft.")) {
-            name = RemapUtils.mapMethod(refc, name, type.parameterArray());
+            name = Remaps.mapMethod(refc, name, type.parameterArray());
         }
         return lookup.findSpecial(refc, name, type, specialCaller);
     }
 
     public static MethodHandle findVirtual(MethodHandles.Lookup lookup, Class<?> refc, String name, MethodType oldType) throws NoSuchMethodException, IllegalAccessException {
         if (refc.getName().startsWith("net.minecraft.")) {
-            name = RemapUtils.mapMethod(refc, name, oldType.parameterArray());
+            name = Remaps.mapMethod(refc, name, oldType.parameterArray());
         } else if (refc.getName().equals("java.lang.Class") || refc.getName().equals("java.lang.ClassLoader")) {
             switch (name) {
                 case "getField": 
@@ -44,7 +43,7 @@ public class CatHandleLookup {
                     newParArr[0] = refc.getName().equals("java.lang.Class") ? Class.class : ClassLoader.class;
                     System.arraycopy(oldType.parameterArray(), 0, newParArr, 1, oldType.parameterArray().length);
                     MethodType newType = MethodType.methodType(oldType.returnType(), newParArr);
-                    MethodHandle handle = lookup.findStatic(ReflectionMethods.class, name, newType);
+                    MethodHandle handle = lookup.findStatic(ReflectionMethodMapper.class, name, newType);
                     return handle;
                 }
             }
@@ -54,9 +53,9 @@ public class CatHandleLookup {
 
     public static MethodHandle findStatic(MethodHandles.Lookup lookup, Class<?> refc, String name, MethodType type) throws NoSuchMethodException, IllegalAccessException {
         if (refc.getName().startsWith("net.minecraft.")) {
-            name = RemapUtils.mapMethod(refc, name, type.parameterArray());
+            name = Remaps.mapMethod(refc, name, type.parameterArray());
         } else if (refc.getName().equals("java.lang.Class") && name.equals("forName")) {
-            refc = ReflectionMethods.class;
+            refc = ReflectionMethodMapper.class;
         }
         return lookup.findStatic(refc, name, type);
     }
@@ -70,36 +69,36 @@ public class CatHandleLookup {
         if (m2.getDeclaringClass().getName().equals("java.lang.Class")) {
             switch (m2.getName()) {
                 case "forName": {
-                    return CatHandleLookup.getClassReflectionMethod(lookup, m2.getName(), String.class);
+                    return ReflectionMethodHandler.getClassReflectionMethod(lookup, m2.getName(), String.class);
                 }
                 case "getField": 
                 case "getDeclaredField": {
-                    return CatHandleLookup.getClassReflectionMethod(lookup, m2.getName(), Class.class, String.class);
+                    return ReflectionMethodHandler.getClassReflectionMethod(lookup, m2.getName(), Class.class, String.class);
                 }
                 case "getMethod": 
                 case "getDeclaredMethod": {
-                    return CatHandleLookup.getClassReflectionMethod(lookup, m2.getName(), Class.class, String.class, Class[].class);
+                    return ReflectionMethodHandler.getClassReflectionMethod(lookup, m2.getName(), Class.class, String.class, Class[].class);
                 }
                 case "getSimpleName": {
-                    return CatHandleLookup.getClassReflectionMethod(lookup, m2.getName(), Class.class);
+                    return ReflectionMethodHandler.getClassReflectionMethod(lookup, m2.getName(), Class.class);
                 }
             }
         } else if (m2.getName().equals("getName")) {
             if (m2.getDeclaringClass().getName().equals("java.lang.reflect.Field")) {
-                return CatHandleLookup.getClassReflectionMethod(lookup, m2.getName(), Field.class);
+                return ReflectionMethodHandler.getClassReflectionMethod(lookup, m2.getName(), Field.class);
             }
             if (m2.getDeclaringClass().getName().equals("java.lang.reflect.Method")) {
-                return CatHandleLookup.getClassReflectionMethod(lookup, m2.getName(), Method.class);
+                return ReflectionMethodHandler.getClassReflectionMethod(lookup, m2.getName(), Method.class);
             }
         } else if (m2.getName().equals("loadClass") && m2.getDeclaringClass().getName().equals("java.lang.ClassLoader")) {
-            return CatHandleLookup.getClassReflectionMethod(lookup, m2.getName(), ClassLoader.class, String.class);
+            return ReflectionMethodHandler.getClassReflectionMethod(lookup, m2.getName(), ClassLoader.class, String.class);
         }
         return lookup.unreflect(m2);
     }
 
     private static /* varargs */ MethodHandle getClassReflectionMethod(MethodHandles.Lookup lookup, String name, Class<?> ... p2) {
         try {
-            return lookup.unreflect(ReflectionMethods.class.getMethod(name, p2));
+            return lookup.unreflect(ReflectionMethodMapper.class.getMethod(name, p2));
         }
         catch (IllegalAccessException | NoSuchMethodException e2) {
             e2.printStackTrace();
@@ -124,7 +123,7 @@ public class CatHandleLookup {
 
     static {
         try {
-            CatHandleLookup.loadMappings(new BufferedReader(new InputStreamReader(MappingLoader.class.getClassLoader().getResourceAsStream("mappings/" + AkarinForge.getNativeVersion() + "/spigot.asrg"))));
+            ReflectionMethodHandler.loadMappings(new BufferedReader(new InputStreamReader(MappingLoader.class.getClassLoader().getResourceAsStream("mappings/" + Constants.NMS_VERSION + "/spigot.asrg"))));
         }
         catch (IOException e2) {
             e2.printStackTrace();

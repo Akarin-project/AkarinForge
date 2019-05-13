@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mojang.authlib.GameProfile;
 
+import io.akarin.forge.server.utility.DataFixer;
 import io.netty.buffer.Unpooled;
 import java.io.File;
 import java.net.SocketAddress;
@@ -174,6 +175,8 @@ public abstract class PlayerList
             s1 = netManager.getRemoteAddress().toString();
         }
 
+        DataFixer.fixPosition(playerIn);
+        DataFixer.fixVector(playerIn);
         //LOGGER.info("{}[{}] logged in with entity id {} at ({}, {}, {})", playerIn.getName(), s1, Integer.valueOf(playerIn.getEntityId()), Double.valueOf(playerIn.posX), Double.valueOf(playerIn.posY), Double.valueOf(playerIn.posZ)); // Akarin
         WorldServer worldserver = this.mcServer.getWorld(playerIn.dimension);
         WorldInfo worldinfo = worldserver.getWorldInfo();

@@ -1,8 +1,8 @@
-package io.akarin.forge.entity;
+package io.akarin.forge.server.layers.entity;
 
 import com.mojang.authlib.GameProfile;
 
-import io.akarin.forge.entity.CraftCustomEntity;
+import io.akarin.forge.server.layers.entity.CraftModdedEntity;
 import net.minecraft.entity.Entity;
 
 import java.util.UUID;
@@ -11,13 +11,13 @@ import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
 import org.bukkit.entity.Projectile;
 import org.bukkit.projectiles.ProjectileSource;
 
-public class CraftCustomProjectile extends CraftCustomEntity
-implements Projectile {
+public class CraftModdedProjectile extends CraftModdedEntity implements Projectile {
+    public static final GameProfile dropper = new GameProfile(UUID.nameUUIDFromBytes("[Dropper]".getBytes()), "[Dropper]");
+	
     private ProjectileSource shooter = null;
     private boolean doesBounce;
-    public static final GameProfile dropper = new GameProfile(UUID.nameUUIDFromBytes("[Dropper]".getBytes()), "[Dropper]");
 
-    public CraftCustomProjectile(CraftServer server, Entity entity) {
+    public CraftModdedProjectile(CraftServer server, Entity entity) {
         super(server, entity);
     }
 
@@ -43,7 +43,7 @@ implements Projectile {
 
     @Override
     public String toString() {
-        return "CraftCustomProjectile";
+        return "CraftModdedProjectile";
     }
 }
 

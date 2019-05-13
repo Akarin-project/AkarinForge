@@ -1,6 +1,4 @@
-package io.akarin.forge.entity;
-
-import java.util.Map;
+package io.akarin.forge.server.layers.entity;
 
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
@@ -9,16 +7,16 @@ import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 import org.bukkit.entity.EntityType;
 
-public class CraftCustomEntity
-extends CraftEntity {
+public class CraftModdedEntity extends CraftEntity {
     private String entityName;
 
-    public CraftCustomEntity(CraftServer server, Entity entity) {
+    public CraftModdedEntity(CraftServer server, Entity entity) {
         super(server, entity);
+        
         this.entityName = EntityRegistry.entityTypeMap.get(entity.getClass());
-        if (this.entityName == null) {
+        
+        if (this.entityName == null)
             this.entityName = entity.getName();
-        }
     }
 
     @Override
@@ -33,20 +31,23 @@ extends CraftEntity {
 
     @Override
     public EntityType getType() {
-        EntityType type = EntityType.fromName(this.entityName);
-        if (type != null) {
+		@SuppressWarnings("deprecation")
+		EntityType type = EntityType.fromName(this.entityName);
+		
+        if (type != null)
             return type;
-        }
+        
         return EntityType.UNKNOWN;
     }
 
     @Override
     public String getCustomName() {
         String name = this.getHandle().getCustomNameTag();
-        if (name == null || name.length() == 0) {
-            return this.entity.getName();
-        }
-        return name;
+        
+        if (name != null && name.length() > 0)
+            return name;
+        
+        return this.entity.getName();
     }
 }
 

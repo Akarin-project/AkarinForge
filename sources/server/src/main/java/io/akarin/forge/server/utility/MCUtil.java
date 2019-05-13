@@ -1,7 +1,6 @@
-package io.akarin.forge.utils;
+package io.akarin.forge.server.utility;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.mojang.authlib.GameProfile;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;

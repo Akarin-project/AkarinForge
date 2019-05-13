@@ -5,8 +5,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import io.akarin.forge.WorldCapture;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;

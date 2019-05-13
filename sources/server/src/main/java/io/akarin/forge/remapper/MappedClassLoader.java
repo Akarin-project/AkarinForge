@@ -1,27 +1,12 @@
-/*
- * Decompiled with CFR 0_119.
- * 
- * Could not load the following classes:
- *  net.md_5.specialsource.JarMapping
- *  net.md_5.specialsource.JarRemapper
- *  net.md_5.specialsource.provider.ClassLoaderProvider
- *  net.md_5.specialsource.provider.InheritanceProvider
- *  net.md_5.specialsource.provider.JointProvider
- *  net.md_5.specialsource.repo.ClassRepo
- *  net.md_5.specialsource.repo.RuntimeRepo
- *  net.minecraft.launchwrapper.LaunchClassLoader
- */
 package io.akarin.forge.remapper;
 
 import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.net.URLConnection;
 import java.net.URLStreamHandlerFactory;
 import java.security.CodeSigner;
 import java.security.CodeSource;
-import java.util.HashMap;
 import java.util.Map;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.JarRemapper;
@@ -35,42 +20,37 @@ import net.minecraft.server.MinecraftServer;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 
-import io.akarin.forge.AkarinForge;
+import com.google.common.collect.Maps;
 
-public class CatURLClassLoader
-extends URLClassLoader {
+import io.akarin.forge.remapper.reflection.ReflectionTransformer;
+import io.akarin.forge.server.utility.Constants;
+
+public class MappedClassLoader extends URLClassLoader {
     private JarMapping jarMapping = MappingLoader.loadMapping();
     private JarRemapper remapper;
-    private final Map<String, Class<?>> classes;
+    private final Map<String, Class<?>> classes = Maps.newHashMap();
 
-    public CatURLClassLoader(URL[] urls, ClassLoader parent) {
+    public MappedClassLoader(URL[] urls, ClassLoader parent) {
         super(urls, parent);
-        JointProvider provider = new JointProvider();
-        provider.add((InheritanceProvider)new ClassInheritanceProvider());
-        provider.add((InheritanceProvider)new ClassLoaderProvider((ClassLoader)this));
-        this.jarMapping.setFallbackInheritanceProvider((InheritanceProvider)provider);
-        this.remapper = new CatServerRemapper(this.jarMapping);
-        this.classes = new HashMap();
+        initalizeRemapper();
     }
 
-    public CatURLClassLoader(URL[] urls) {
+    public MappedClassLoader(URL[] urls) {
         super(urls);
-        JointProvider provider = new JointProvider();
-        provider.add((InheritanceProvider)new ClassInheritanceProvider());
-        provider.add((InheritanceProvider)new ClassLoaderProvider((ClassLoader)this));
-        this.jarMapping.setFallbackInheritanceProvider((InheritanceProvider)provider);
-        this.remapper = new CatServerRemapper(this.jarMapping);
-        this.classes = new HashMap();
+        initalizeRemapper();
     }
 
-    public CatURLClassLoader(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
+    public MappedClassLoader(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
         super(urls, parent, factory);
+        initalizeRemapper();
+    }
+    
+    private void initalizeRemapper() {
         JointProvider provider = new JointProvider();
         provider.add((InheritanceProvider)new ClassInheritanceProvider());
         provider.add((InheritanceProvider)new ClassLoaderProvider((ClassLoader)this));
         this.jarMapping.setFallbackInheritanceProvider((InheritanceProvider)provider);
-        this.remapper = new CatServerRemapper(this.jarMapping);
-        this.classes = new HashMap();
+        this.remapper = new SneakyRemapper(this.jarMapping);
     }
 
     @Override
@@ -78,16 +58,13 @@ extends URLClassLoader {
         return this.findClass(name, true);
     }
 
-    /*
-     * WARNING - Removed try catching itself - possible behaviour change.
-     */
     private Class<?> findClass(String name, boolean checkGlobal) throws ClassNotFoundException {
-        if (name.startsWith("net.minecraft.server." + AkarinForge.getNativeVersion())) {
+        if (name.startsWith("net.minecraft.server." + Constants.NMS_VERSION)) {
             String remappedClass = (String)this.jarMapping.classes.get(name.replaceAll("\\.", "\\/"));
-            Class clazz = ((LaunchClassLoader)MinecraftServer.instance().getClass().getClassLoader()).findClass(remappedClass);
+            Class<?> clazz = ((LaunchClassLoader)MinecraftServer.instance().getClass().getClassLoader()).findClass(remappedClass);
             return clazz;
         }
-        Class result = this.classes.get(name);
+        Class<?> result = this.classes.get(name);
         String clazz = name.intern();
         synchronized (clazz) {
             if (result == null) {
@@ -113,17 +90,14 @@ extends URLClassLoader {
     }
 
     private Class<?> remappedFindClass(String name) throws ClassNotFoundException {
-        Class result = null;
+        Class<?> result = null;
         try {
             InputStream stream;
             String path = name.replace('.', '/').concat(".class");
             URL url = this.findResource(path);
             if (url != null && (stream = url.openStream()) != null) {
-                JarURLConnection jarURLConnection;
-                URL jarURL;
-                CodeSource codeSource;
                 byte[] bytecode = this.remapper.remapClassFile(stream, (ClassRepo)RuntimeRepo.getInstance());
-                result = this.defineClass(name, bytecode = ReflectionTransformer.transform(bytecode), 0, bytecode.length, codeSource = new CodeSource(jarURL = (jarURLConnection = (JarURLConnection)url.openConnection()).getJarFileURL(), new CodeSigner[0]));
+                result = this.defineClass(name, bytecode = ReflectionTransformer.transform(bytecode), 0, bytecode.length, new CodeSource(((JarURLConnection) url.openConnection()).getJarFileURL(), new CodeSigner[0]));
                 if (result != null) {
                     this.resolveClass(result);
                 }

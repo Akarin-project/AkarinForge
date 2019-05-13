@@ -1,26 +1,17 @@
-/*
- * Decompiled with CFR 0_119.
- * 
- * Could not load the following classes:
- *  net.md_5.specialsource.JarMapping
- *  net.md_5.specialsource.JarRemapper
- */
 package io.akarin.forge.remapper;
 
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.JarRemapper;
 
-public class CatServerRemapper
-extends JarRemapper {
-    public CatServerRemapper(JarMapping jarMapping) {
+public class SneakyRemapper extends JarRemapper {
+    public SneakyRemapper(JarMapping jarMapping) {
         super(jarMapping);
     }
 
     public String mapSignature(String signature, boolean typeSignature) {
         try {
             return super.mapSignature(signature, typeSignature);
-        }
-        catch (Exception e2) {
+        } catch (Throwable t) {
             return signature;
         }
     }
@@ -29,4 +20,3 @@ extends JarRemapper {
         return super.mapFieldName(owner, name, desc, -1);
     }
 }
-

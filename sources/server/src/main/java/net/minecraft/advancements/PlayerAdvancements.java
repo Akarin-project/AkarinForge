@@ -39,7 +39,7 @@ public class PlayerAdvancements
     };
     private final MinecraftServer server;
     private final File progressFile;
-    private final Map<Advancement, AdvancementProgress> progress = Maps.<Advancement, AdvancementProgress>newLinkedHashMap();
+    public final Map<Advancement, AdvancementProgress> progress = Maps.<Advancement, AdvancementProgress>newLinkedHashMap(); // Akarin - public for plugin access
     private final Set<Advancement> visible = Sets.<Advancement>newLinkedHashSet();
     private final Set<Advancement> visibilityChanged = Sets.<Advancement>newLinkedHashSet();
     private final Set<Advancement> progressChanged = Sets.<Advancement>newLinkedHashSet();

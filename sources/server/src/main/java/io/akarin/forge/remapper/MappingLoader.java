@@ -2,14 +2,9 @@ package io.akarin.forge.remapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import io.akarin.forge.AkarinForge;
+import io.akarin.forge.server.utility.Constants;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.transformer.MappingTransformer;
 import net.md_5.specialsource.transformer.MavenShade;
@@ -32,7 +27,7 @@ public class MappingLoader {
             jarMapping.packages.put(org_bukkit_craftbukkit + "/libs/joptsimple", "joptsimple");
             jarMapping.methods.put("org/bukkit/Bukkit/getOnlinePlayers ()[Lorg/bukkit/entity/Player;", "getOnlinePlayers_1710");
             jarMapping.methods.put("org/bukkit/Server/getOnlinePlayers ()[Lorg/bukkit/entity/Player;", "getOnlinePlayers_1710");
-            MappingLoader.loadNmsMappings(jarMapping, AkarinForge.getNativeVersion());
+            MappingLoader.loadNmsMappings(jarMapping, Constants.NMS_VERSION);
         }
         catch (Exception e2) {
             e2.printStackTrace();

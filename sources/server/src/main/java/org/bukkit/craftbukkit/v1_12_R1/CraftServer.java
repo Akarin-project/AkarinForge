@@ -10,7 +10,6 @@ import com.google.common.collect.MapMaker;
 import com.mojang.authlib.GameProfile;
 
 import io.akarin.forge.misc.LogWrapper;
-import io.akarin.forge.remapper.ReflectionTransformer;
 import io.akarin.forge.server.AkarinHooks;
 import io.akarin.forge.server.command.ForgeCommandWrapper;
 import io.netty.buffer.ByteBuf;
@@ -378,7 +377,6 @@ public final class CraftServer implements Server {
     }
 
     public void loadPlugins() {
-        ReflectionTransformer.init();
         this.pluginManager.registerInterface(JavaPluginLoader.class);
         File pluginFolder = (File)this.console.options.valueOf("plugins");
         if (pluginFolder.exists()) {

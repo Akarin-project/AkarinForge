@@ -1,13 +1,12 @@
-package io.akarin.forge;
+package io.akarin.forge.server.utility;
 
 import org.bukkit.util.NumberConversions;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.math.BlockPos;
 
-public class PlayerDataFixer {
-    public static void checkVector(Entity entity) {
+public class DataFixer {
+    public static void fixVector(Entity entity) {
         if (!NumberConversions.isFinite(entity.motionX)) {
             entity.motionX = 0.0;
         }
@@ -19,9 +18,12 @@ public class PlayerDataFixer {
         }
     }
 
-    public static void checkLocation(EntityPlayerMP entity) {
-        if (!(NumberConversions.isFinite(entity.posX) && NumberConversions.isFinite(entity.posY) && NumberConversions.isFinite(entity.posZ))) {
-            BlockPos pos = entity.getEntityWorld().getSpawnPoint();
+    public static void fixPosition(Entity entity) {
+        if (!(NumberConversions.isFinite(entity.posX) ||
+              NumberConversions.isFinite(entity.posY) ||
+              NumberConversions.isFinite(entity.posZ ))) {
+        	
+            BlockPos pos = entity.world.getSpawnPoint();
             entity.setPosition(pos.getX(), pos.getY(), pos.getZ());
         }
     }
