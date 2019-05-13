@@ -23,6 +23,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
 import net.minecraft.entity.item.EntityMinecartCommandBlock;
+import net.minecraft.server.MinecraftServer;
 
 public class CraftMinecartCommand implements CommandMinecart {
 
@@ -233,7 +234,7 @@ public class CraftMinecartCommand implements CommandMinecart {
 	@Override
 	public Server getServer() {
 		// TODO Auto-generated method stub
-		return null;
+		return MinecraftServer.instance().server;
 	}
 
 	@Override

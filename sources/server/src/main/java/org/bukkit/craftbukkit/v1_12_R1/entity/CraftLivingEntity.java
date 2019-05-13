@@ -32,6 +32,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.server.MinecraftServer;
 
 public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     protected Entity entity;
@@ -169,7 +170,7 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
 	@Override
 	public Server getServer() {
 
-		return null;
+		return MinecraftServer.instance().server;
 	}
 
 	@Override

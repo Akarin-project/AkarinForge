@@ -36,6 +36,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import net.minecraft.server.MinecraftServer;
+
 public class CraftVillager implements Villager, InventoryHolder {
 
 	@Override
@@ -467,7 +469,7 @@ public class CraftVillager implements Villager, InventoryHolder {
 	@Override
 	public Server getServer() {
 
-		return null;
+		return MinecraftServer.instance().server;
 	}
 
 	@Override

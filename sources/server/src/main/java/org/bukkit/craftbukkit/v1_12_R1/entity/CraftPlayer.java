@@ -54,6 +54,7 @@ import org.bukkit.util.Vector;
 
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
 
 public class CraftPlayer implements Player {
 
@@ -606,7 +607,7 @@ public class CraftPlayer implements Player {
 	@Override
 	public Server getServer() {
 
-		return null;
+		return MinecraftServer.instance().server;
 	}
 
 	@Override
