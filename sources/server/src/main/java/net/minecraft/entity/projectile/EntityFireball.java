@@ -68,7 +68,6 @@ public abstract class EntityFireball extends Entity
     {
         super(worldIn);
         this.shootingEntity = shooter;
-        this.projectileSource = (org.bukkit.entity.LivingEntity) shooter.getBukkitEntity(); // CraftBukkit
         this.setSize(1.0F, 1.0F);
         this.setLocationAndAngles(shooter.posX, shooter.posY, shooter.posZ, shooter.rotationYaw, shooter.rotationPitch);
         this.setPosition(this.posX, this.posY, this.posZ);
@@ -107,7 +106,11 @@ public abstract class EntityFireball extends Entity
             if (raytraceresult != null && !net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, raytraceresult))
             {
                 this.onImpact(raytraceresult);
-                if (this.isDead) CraftEventFactory.callProjectileHitEvent(this, raytraceresult); // Akarin - fire event
+                // CraftBukkit start - Fire ProjectileHitEvent
+                if (this.isDead) {
+                    CraftEventFactory.callProjectileHitEvent(this, raytraceresult);
+                }
+                // CraftBukkit end
             }
 
             this.posX += this.motionX;
@@ -221,7 +224,11 @@ public abstract class EntityFireball extends Entity
 
             if (source.getTrueSource() != null)
             {
-            	if (CraftEventFactory.handleNonLivingEntityDamageEvent(this, source, amount)) return false; // Akarin - fire event
+                // CraftBukkit start
+                if (CraftEventFactory.handleNonLivingEntityDamageEvent(this, source, amount)) {
+                    return false;
+                }
+                // CraftBukkit end
                 Vec3d vec3d = source.getTrueSource().getLookVec();
 
                 if (vec3d != null)

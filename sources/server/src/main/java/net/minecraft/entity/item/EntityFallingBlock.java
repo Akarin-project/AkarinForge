@@ -38,7 +38,7 @@ public class EntityFallingBlock extends Entity
     public int fallTime;
     public boolean shouldDropItem = true;
     private boolean dontSetBlock;
-    private boolean hurtEntities;
+    public boolean hurtEntities;
     private int fallHurtMax = 40;
     private float fallHurtAmount = 2.0F;
     public NBTTagCompound tileEntityData;

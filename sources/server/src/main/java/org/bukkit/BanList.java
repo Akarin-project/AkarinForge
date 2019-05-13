@@ -1,72 +1,31 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit;
 
 import java.util.Date;
 import java.util.Set;
+import org.bukkit.BanEntry;
 
-/**
- * A ban list, containing bans of some {@link Type}.
- */
 public interface BanList {
+    public BanEntry getBanEntry(String var1);
 
-    /**
-     * Represents a ban-type that a {@link BanList} may track.
-     */
-    public enum Type {
-        /**
-         * Banned player names
-         */
-        NAME,
-        /**
-         * Banned player IP addresses
-         */
-        IP,
-        ;
-    }
+    public BanEntry addBan(String var1, String var2, Date var3, String var4);
 
-    /**
-     * Gets a {@link BanEntry} by target.
-     *
-     * @param target entry parameter to search for
-     * @return the corresponding entry, or null if none found
-     */
-    public BanEntry getBanEntry(String target);
-
-    /**
-     * Adds a ban to the this list. If a previous ban exists, this will
-     * update the previous entry.
-     *
-     * @param target the target of the ban
-     * @param reason reason for the ban, null indicates implementation default
-     * @param expires date for the ban's expiration (unban), or null to imply
-     *     forever
-     * @param source source of the ban, null indicates implementation default
-     * @return the entry for the newly created ban, or the entry for the
-     *     (updated) previous ban
-     */
-    public BanEntry addBan(String target, String reason, Date expires, String source);
-
-    /**
-     * Gets a set containing every {@link BanEntry} in this list.
-     *
-     * @return an immutable set containing every entry tracked by this list
-     */
     public Set<BanEntry> getBanEntries();
 
-    /**
-     * Gets if a {@link BanEntry} exists for the target, indicating an active
-     * ban status.
-     *
-     * @param target the target to find
-     * @return true if a {@link BanEntry} exists for the name, indicating an
-     *     active ban status, false otherwise
-     */
-    public boolean isBanned(String target);
+    public boolean isBanned(String var1);
 
-    /**
-     * Removes the specified target from this list, therefore indicating a
-     * "not banned" status.
-     *
-     * @param target the target to remove from this list
-     */
-    public void pardon(String target);
+    public void pardon(String var1);
+
+    public static enum Type {
+        NAME,
+        IP;
+        
+
+        private Type() {
+        }
+    }
+
 }
+

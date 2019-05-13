@@ -1,14 +1,17 @@
+/*
+ * Akarin Forge
+ * 
+ * Could not load the following classes:
+ *  com.google.common.collect.Maps
+ *  org.apache.commons.lang.Validate
+ */
 package org.bukkit;
 
+import com.google.common.collect.Maps;
 import java.util.HashMap;
-
+import java.util.Locale;
 import org.apache.commons.lang.Validate;
 
-import com.google.common.collect.Maps;
-
-/**
- * Represents the art on a painting
- */
 public enum Art {
     KEBAB(0, 1, 1),
     AZTEC(1, 1, 1),
@@ -36,76 +39,49 @@ public enum Art {
     BURNINGSKULL(23, 4, 4),
     SKELETON(24, 4, 3),
     DONKEYKONG(25, 4, 3);
+    
+    private int id;
+    private int width;
+    private int height;
+    private static final HashMap<String, Art> BY_NAME;
+    private static final HashMap<Integer, Art> BY_ID;
 
-    private int id, width, height;
-    private static final HashMap<String, Art> BY_NAME = Maps.newHashMap();
-    private static final HashMap<Integer, Art> BY_ID = Maps.newHashMap();
-
-    private Art(int id, int width, int height) {
-        this.id = id;
+    private Art(int id2, int width, int height) {
+        this.id = id2;
         this.width = width;
         this.height = height;
     }
 
-    /**
-     * Gets the width of the painting, in blocks
-     *
-     * @return The width of the painting, in blocks
-     */
     public int getBlockWidth() {
-        return width;
+        return this.width;
     }
 
-    /**
-     * Gets the height of the painting, in blocks
-     *
-     * @return The height of the painting, in blocks
-     */
     public int getBlockHeight() {
-        return height;
+        return this.height;
     }
 
-    /**
-     * Get the ID of this painting.
-     *
-     * @return The ID of this painting
-     * @deprecated Magic value
-     */
     @Deprecated
     public int getId() {
-        return id;
+        return this.id;
     }
 
-    /**
-     * Get a painting by its numeric ID
-     *
-     * @param id The ID
-     * @return The painting
-     * @deprecated Magic value
-     */
     @Deprecated
-    public static Art getById(int id) {
-        return BY_ID.get(id);
+    public static Art getById(int id2) {
+        return BY_ID.get(id2);
     }
 
-    /**
-     * Get a painting by its unique name
-     * <p>
-     * This ignores underscores and capitalization
-     *
-     * @param name The name
-     * @return The painting
-     */
     public static Art getByName(String name) {
-        Validate.notNull(name, "Name cannot be null");
-
-        return BY_NAME.get(name.toLowerCase(java.util.Locale.ENGLISH).replaceAll("_", ""));
+        Validate.notNull((Object)name, (String)"Name cannot be null");
+        return BY_NAME.get(name.toLowerCase(Locale.ENGLISH).replaceAll("_", ""));
     }
 
     static {
-        for (Art art : values()) {
-            BY_ID.put(art.id, art);
-            BY_NAME.put(art.toString().toLowerCase(java.util.Locale.ENGLISH).replaceAll("_", ""), art);
+        BY_NAME = Maps.newHashMap();
+        BY_ID = Maps.newHashMap();
+        for (Art art2 : Art.values()) {
+            BY_ID.put(art2.id, art2);
+            BY_NAME.put(art2.toString().toLowerCase(Locale.ENGLISH).replaceAll("_", ""), art2);
         }
     }
 }
+

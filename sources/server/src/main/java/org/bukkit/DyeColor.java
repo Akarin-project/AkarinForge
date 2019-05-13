@@ -1,209 +1,110 @@
+/*
+ * Akarin Forge
+ * 
+ * Could not load the following classes:
+ *  com.google.common.collect.ImmutableMap
+ *  com.google.common.collect.ImmutableMap$Builder
+ */
 package org.bukkit;
 
-import java.util.Map;
-
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+import org.bukkit.Color;
 
-/**
- * All supported color values for dyes and cloth
- */
 public enum DyeColor {
-
-    /**
-     * Represents white dye.
-     */
-    WHITE(0x0, 0xF, Color.fromRGB(0xF9FFFE), Color.fromRGB(0xF0F0F0)),
-    /**
-     * Represents orange dye.
-     */
-    ORANGE(0x1, 0xE, Color.fromRGB(0xF9801D), Color.fromRGB(0xEB8844)),
-    /**
-     * Represents magenta dye.
-     */
-    MAGENTA(0x2, 0xD, Color.fromRGB(0xC74EBD), Color.fromRGB(0xC354CD)),
-    /**
-     * Represents light blue dye.
-     */
-    LIGHT_BLUE(0x3, 0xC, Color.fromRGB(0x3AB3DA), Color.fromRGB(0x6689D3)),
-    /**
-     * Represents yellow dye.
-     */
-    YELLOW(0x4, 0xB, Color.fromRGB(0xFED83D), Color.fromRGB(0xDECF2A)),
-    /**
-     * Represents lime dye.
-     */
-    LIME(0x5, 0xA, Color.fromRGB(0x80C71F), Color.fromRGB(0x41CD34)),
-    /**
-     * Represents pink dye.
-     */
-    PINK(0x6, 0x9, Color.fromRGB(0xF38BAA), Color.fromRGB(0xD88198)),
-    /**
-     * Represents gray dye.
-     */
-    GRAY(0x7, 0x8, Color.fromRGB(0x474F52), Color.fromRGB(0x434343)),
-    /**
-     * Represents silver dye.
-     */
-    SILVER(0x8, 0x7, Color.fromRGB(0x9D9D97), Color.fromRGB(0xABABAB)),
-    /**
-     * Represents cyan dye.
-     */
-    CYAN(0x9, 0x6, Color.fromRGB(0x169C9C), Color.fromRGB(0x287697)),
-    /**
-     * Represents purple dye.
-     */
-    PURPLE(0xA, 0x5, Color.fromRGB(0x8932B8), Color.fromRGB(0x7B2FBE)),
-    /**
-     * Represents blue dye.
-     */
-    BLUE(0xB, 0x4, Color.fromRGB(0x3C44AA), Color.fromRGB(0x253192)),
-    /**
-     * Represents brown dye.
-     */
-    BROWN(0xC, 0x3, Color.fromRGB(0x835432), Color.fromRGB(0x51301A)),
-    /**
-     * Represents green dye.
-     */
-    GREEN(0xD, 0x2, Color.fromRGB(0x5E7C16), Color.fromRGB(0x3B511A)),
-    /**
-     * Represents red dye.
-     */
-    RED(0xE, 0x1, Color.fromRGB(0xB02E26), Color.fromRGB(0xB3312C)),
-    /**
-     * Represents black dye.
-     */
-    BLACK(0xF, 0x0, Color.fromRGB(0x1D1D21), Color.fromRGB(0x1E1B1B));
-
+    WHITE(0, 15, Color.fromRGB(16383998), Color.fromRGB(15790320)),
+    ORANGE(1, 14, Color.fromRGB(16351261), Color.fromRGB(15435844)),
+    MAGENTA(2, 13, Color.fromRGB(13061821), Color.fromRGB(12801229)),
+    LIGHT_BLUE(3, 12, Color.fromRGB(3847130), Color.fromRGB(6719955)),
+    YELLOW(4, 11, Color.fromRGB(16701501), Color.fromRGB(14602026)),
+    LIME(5, 10, Color.fromRGB(8439583), Color.fromRGB(4312372)),
+    PINK(6, 9, Color.fromRGB(15961002), Color.fromRGB(14188952)),
+    GRAY(7, 8, Color.fromRGB(4673362), Color.fromRGB(4408131)),
+    SILVER(8, 7, Color.fromRGB(10329495), Color.fromRGB(11250603)),
+    CYAN(9, 6, Color.fromRGB(1481884), Color.fromRGB(2651799)),
+    PURPLE(10, 5, Color.fromRGB(8991416), Color.fromRGB(8073150)),
+    BLUE(11, 4, Color.fromRGB(3949738), Color.fromRGB(2437522)),
+    BROWN(12, 3, Color.fromRGB(8606770), Color.fromRGB(5320730)),
+    GREEN(13, 2, Color.fromRGB(6192150), Color.fromRGB(3887386)),
+    RED(14, 1, Color.fromRGB(11546150), Color.fromRGB(11743532)),
+    BLACK(15, 0, Color.fromRGB(1908001), Color.fromRGB(1973019));
+    
     private final byte woolData;
     private final byte dyeData;
     private final Color color;
     private final Color firework;
-    private final static DyeColor[] BY_WOOL_DATA;
-    private final static DyeColor[] BY_DYE_DATA;
-    private final static Map<Color, DyeColor> BY_COLOR;
-    private final static Map<Color, DyeColor> BY_FIREWORK;
+    private static final DyeColor[] BY_WOOL_DATA;
+    private static final DyeColor[] BY_DYE_DATA;
+    private static final Map<Color, DyeColor> BY_COLOR;
+    private static final Map<Color, DyeColor> BY_FIREWORK;
 
-    private DyeColor(final int woolData, final int dyeData, Color color, Color firework) {
-        this.woolData = (byte) woolData;
-        this.dyeData = (byte) dyeData;
+    private DyeColor(int woolData, int dyeData, Color color, Color firework) {
+        this.woolData = (byte)woolData;
+        this.dyeData = (byte)dyeData;
         this.color = color;
         this.firework = firework;
     }
 
-    /**
-     * Gets the associated wool data value representing this color.
-     *
-     * @return A byte containing the wool data value of this color
-     * @see #getDyeData()
-     * @deprecated Magic value
-     */
     @Deprecated
     public byte getWoolData() {
-        return woolData;
+        return this.woolData;
     }
 
-    /**
-     * Gets the associated dye data value representing this color.
-     *
-     * @return A byte containing the dye data value of this color
-     * @see #getWoolData()
-     * @deprecated Magic value
-     */
     @Deprecated
     public byte getDyeData() {
-        return dyeData;
+        return this.dyeData;
     }
 
-    /**
-     * Gets the color that this dye represents.
-     *
-     * @return The {@link Color} that this dye represents
-     */
     public Color getColor() {
-        return color;
+        return this.color;
     }
 
-    /**
-     * Gets the firework color that this dye represents.
-     *
-     * @return The {@link Color} that this dye represents
-     */
     public Color getFireworkColor() {
-        return firework;
+        return this.firework;
     }
 
-    /**
-     * Gets the DyeColor with the given wool data value.
-     *
-     * @param data Wool data value to fetch
-     * @return The {@link DyeColor} representing the given value, or null if
-     *     it doesn't exist
-     * @see #getByDyeData(byte)
-     * @deprecated Magic value
-     */
     @Deprecated
-    public static DyeColor getByWoolData(final byte data) {
-        int i = 0xff & data;
-        if (i >= BY_WOOL_DATA.length) {
+    public static DyeColor getByWoolData(byte data) {
+        int i2 = 255 & data;
+        if (i2 >= BY_WOOL_DATA.length) {
             return null;
         }
-        return BY_WOOL_DATA[i];
+        return BY_WOOL_DATA[i2];
     }
 
-    /**
-     * Gets the DyeColor with the given dye data value.
-     *
-     * @param data Dye data value to fetch
-     * @return The {@link DyeColor} representing the given value, or null if
-     *     it doesn't exist
-     * @see #getByWoolData(byte)
-     * @deprecated Magic value
-     */
     @Deprecated
-    public static DyeColor getByDyeData(final byte data) {
-        int i = 0xff & data;
-        if (i >= BY_DYE_DATA.length) {
+    public static DyeColor getByDyeData(byte data) {
+        int i2 = 255 & data;
+        if (i2 >= BY_DYE_DATA.length) {
             return null;
         }
-        return BY_DYE_DATA[i];
+        return BY_DYE_DATA[i2];
     }
 
-    /**
-     * Gets the DyeColor with the given color value.
-     *
-     * @param color Color value to get the dye by
-     * @return The {@link DyeColor} representing the given value, or null if
-     *     it doesn't exist
-     */
-    public static DyeColor getByColor(final Color color) {
+    public static DyeColor getByColor(Color color) {
         return BY_COLOR.get(color);
     }
 
-    /**
-     * Gets the DyeColor with the given firework color value.
-     *
-     * @param color Color value to get dye by
-     * @return The {@link DyeColor} representing the given value, or null if
-     *     it doesn't exist
-     */
-    public static DyeColor getByFireworkColor(final Color color) {
+    public static DyeColor getByFireworkColor(Color color) {
         return BY_FIREWORK.get(color);
     }
 
     static {
-        BY_WOOL_DATA = values();
-        BY_DYE_DATA = values();
-        ImmutableMap.Builder<Color, DyeColor> byColor = ImmutableMap.builder();
-        ImmutableMap.Builder<Color, DyeColor> byFirework = ImmutableMap.builder();
-
-        for (DyeColor color : values()) {
-            BY_WOOL_DATA[color.woolData & 0xff] = color;
-            BY_DYE_DATA[color.dyeData & 0xff] = color;
-            byColor.put(color.getColor(), color);
-            byFirework.put(color.getFireworkColor(), color);
+        BY_WOOL_DATA = DyeColor.values();
+        BY_DYE_DATA = DyeColor.values();
+        ImmutableMap.Builder byColor = ImmutableMap.builder();
+        ImmutableMap.Builder byFirework = ImmutableMap.builder();
+        DyeColor[] arrdyeColor = DyeColor.values();
+        int n2 = arrdyeColor.length;
+        for (int i2 = 0; i2 < n2; ++i2) {
+            DyeColor color = arrdyeColor[i2];
+            DyeColor.BY_WOOL_DATA[color.woolData & 255] = color;
+            DyeColor.BY_DYE_DATA[color.dyeData & 255] = color;
+            byColor.put((Object)color.getColor(), (Object)color);
+            byFirework.put((Object)color.getFireworkColor(), (Object)color);
         }
-
         BY_COLOR = byColor.build();
         BY_FIREWORK = byFirework.build();
     }
 }
+

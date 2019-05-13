@@ -11,8 +11,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class CooldownTracker
 {
-    private final Map<Item, CooldownTracker.Cooldown> cooldowns = Maps.<Item, CooldownTracker.Cooldown>newHashMap();
-    private int ticks;
+    public final Map<Item, CooldownTracker.Cooldown> cooldowns = Maps.<Item, CooldownTracker.Cooldown>newHashMap();
+    public int ticks;
 
     public boolean hasCooldown(Item itemIn)
     {
@@ -77,10 +77,10 @@ public class CooldownTracker
     {
     }
 
-    class Cooldown
+    public class Cooldown
     {
         final int createTicks;
-        final int expireTicks;
+        public final int expireTicks;
 
         private Cooldown(int createTicksIn, int expireTicksIn)
         {

@@ -1,7 +1,10 @@
 package net.minecraft.entity;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -43,7 +46,10 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemElytra;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagFloat;
+import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -54,6 +60,7 @@ import net.minecraft.network.play.server.SPacketEntityEquipment;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.potion.PotionUtils;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.stats.StatList;
 import net.minecraft.util.CombatRules;
 import net.minecraft.util.CombatTracker;
@@ -76,6 +83,9 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.craftbukkit.v1_12_R1.attribute.CraftAttributeMap;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 
 public abstract class EntityLivingBase extends Entity
 {
@@ -84,13 +94,13 @@ public abstract class EntityLivingBase extends Entity
     private static final AttributeModifier SPRINTING_SPEED_BOOST = (new AttributeModifier(SPRINTING_SPEED_BOOST_ID, "Sprinting speed boost", 0.30000001192092896D, 2)).setSaved(false);
     public static final net.minecraft.entity.ai.attributes.IAttribute SWIM_SPEED = new net.minecraft.entity.ai.attributes.RangedAttribute(null, "forge.swimSpeed", 1.0D, 0.0D, 1024.0D).setShouldWatch(true);
     protected static final DataParameter<Byte> HAND_STATES = EntityDataManager.<Byte>createKey(EntityLivingBase.class, DataSerializers.BYTE);
-    private static final DataParameter<Float> HEALTH = EntityDataManager.<Float>createKey(EntityLivingBase.class, DataSerializers.FLOAT);
+    public static final DataParameter<Float> HEALTH = EntityDataManager.<Float>createKey(EntityLivingBase.class, DataSerializers.FLOAT);
     private static final DataParameter<Integer> POTION_EFFECTS = EntityDataManager.<Integer>createKey(EntityLivingBase.class, DataSerializers.VARINT);
     private static final DataParameter<Boolean> HIDE_PARTICLES = EntityDataManager.<Boolean>createKey(EntityLivingBase.class, DataSerializers.BOOLEAN);
     private static final DataParameter<Integer> ARROW_COUNT_IN_ENTITY = EntityDataManager.<Integer>createKey(EntityLivingBase.class, DataSerializers.VARINT);
     private AbstractAttributeMap attributeMap;
-    private final CombatTracker _combatTracker = new CombatTracker(this);
-    private final Map<Potion, PotionEffect> activePotionsMap = Maps.<Potion, PotionEffect>newHashMap();
+    protected CombatTracker _combatTracker = new CombatTracker(this); // Akarin
+    public final Map<Potion, PotionEffect> activePotionsMap = Maps.<Potion, PotionEffect>newHashMap();
     private final NonNullList<ItemStack> handInventory = NonNullList.<ItemStack>withSize(2, ItemStack.EMPTY);
     private final NonNullList<ItemStack> armorArray = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
     public boolean isSwingInProgress;
@@ -117,7 +127,7 @@ public abstract class EntityLivingBase extends Entity
     public float rotationYawHead;
     public float prevRotationYawHead;
     public float jumpMovementFactor = 0.02F;
-    protected EntityPlayer attackingPlayer;
+    public EntityPlayer attackingPlayer;
     protected int recentlyHit;
     protected boolean dead;
     protected int idleTime;
@@ -127,7 +137,7 @@ public abstract class EntityLivingBase extends Entity
     protected float prevMovedDistance;
     protected float unused180;
     protected int scoreValue;
-    protected float lastDamage;
+    public float lastDamage;
     protected boolean isJumping;
     public float moveStrafing;
     public float moveVertical;
@@ -139,8 +149,8 @@ public abstract class EntityLivingBase extends Entity
     protected double interpTargetZ;
     protected double interpTargetYaw;
     protected double interpTargetPitch;
-    private boolean potionsNeedUpdate = true;
-    private EntityLivingBase revengeTarget;
+    protected boolean potionsNeedUpdate = true; // Akarin - protected
+    protected EntityLivingBase revengeTarget; // Akarin
     private int revengeTimer;
     private EntityLivingBase lastAttackedEntity;
     private int lastAttackedEntityTime;
@@ -153,6 +163,33 @@ public abstract class EntityLivingBase extends Entity
     private BlockPos prevBlockpos;
     private DamageSource lastDamageSource;
     private long lastDamageStamp;
+    // CraftBukkit start
+    public int expToDrop;
+    public int maxAirTicks = 300;
+    boolean forceDrops;
+    protected ArrayList<org.bukkit.inventory.ItemStack> drops = new ArrayList<org.bukkit.inventory.ItemStack>();
+    public CraftAttributeMap craftAttributes;
+    public boolean collides = true;
+    public boolean canPickUpLoot;
+    
+    private boolean isTickingEffects = false;
+    private List<Object> effectsToProcess = Lists.newArrayList();
+
+    @Override
+    public float getBukkitYaw() {
+        return getRotationYawHead();
+    }
+    
+    public int getExpReward() {
+        int exp = this.getExperiencePoints(this.attackingPlayer);
+
+        if (!this.world.isRemote && (this.recentlyHit > 0 || this.isPlayer()) && this.canDropLoot() && this.world.getGameRules().getBoolean("doMobLoot")) {
+            return exp;
+        } else {
+            return 0;
+        }
+    }
+    // CraftBukkit end
 
     public void onKillCommand()
     {
@@ -163,7 +200,7 @@ public abstract class EntityLivingBase extends Entity
     {
         super(worldIn);
         this.applyEntityAttributes();
-        this.setHealth(this.getMaxHealth());
+        // CraftBukkit - setHealth(getMaxHealth()) inlined and simplified to skip the instanceof check for EntityPlayer, as getBukkitEntity() is not initialized in constructor
         this.preventEntitySpawning = true;
         this.randomUnused1 = (float)((Math.random() + 1.0D) * 0.009999999776482582D);
         this.setPosition(this.posX, this.posY, this.posZ);
@@ -207,8 +244,13 @@ public abstract class EntityLivingBase extends Entity
             {
                 double d0 = Math.min((double)(0.2F + f / 15.0F), 2.5D);
                 int i = (int)(150.0D * d0);
-                if (!state.getBlock().addLandingEffects(state, (WorldServer)this.world, pos, state, this, i))
-                ((WorldServer)this.world).spawnParticle(EnumParticleTypes.BLOCK_DUST, this.posX, this.posY, this.posZ, i, 0.0D, 0.0D, 0.0D, 0.15000000596046448D, Block.getStateId(state));
+                // CraftBukkit start - visiblity api
+                if (this instanceof EntityPlayerMP && !state.getBlock().addLandingEffects(state, (WorldServer)this.world, pos, state, this, i)) {
+                    ((WorldServer) this.world).sendParticles((EntityPlayerMP) this, EnumParticleTypes.BLOCK_DUST, false, this.posX, this.posY, this.posZ, i, 0.0D, 0.0D, 0.0D, 0.15000000596046448D, new int[] { Block.getStateId(state)});
+                } else {
+                    ((WorldServer) this.world).spawnParticle(EnumParticleTypes.BLOCK_DUST, this.posX, this.posY, this.posZ, i, 0.0D, 0.0D, 0.0D, 0.15000000596046448D, new int[] { Block.getStateId(state)});
+                }
+                // CraftBukkit end
             }
         }
 
@@ -260,7 +302,11 @@ public abstract class EntityLivingBase extends Entity
         {
             if (!this.isInsideOfMaterial(Material.WATER))
             {
-                this.setAir(300);
+                // CraftBukkit start - Only set if needed to work around a DataWatcher inefficiency
+                if (this.getAir() != 300) {
+                    this.setAir(maxAirTicks);
+                }
+                // CraftBukkit end
             }
             else
             {
@@ -378,8 +424,18 @@ public abstract class EntityLivingBase extends Entity
     {
         ++this.deathTime;
 
-        if (this.deathTime == 20)
+        if (this.deathTime >= 20 && !this.isDead) // CraftBukkit - (this.deathTicks == 20) -> (this.deathTicks >= 20 && !this.dead)
         {
+        	// Akarin start
+            int i = this.expToDrop;
+            while (i > 0) {
+                int j = EntityXPOrb.getXPSplit(i);
+                i -= j;
+                this.world.spawnEntity(new EntityXPOrb(this.world, this.posX, this.posY, this.posZ, j));
+            }
+            
+            this.expToDrop = 0;
+            /* // Akarin end
             if (!this.world.isRemote && (this.isPlayer() || this.recentlyHit > 0 && this.canDropLoot() && this.world.getGameRules().getBoolean("doMobLoot")))
             {
                 int i = this.getExperiencePoints(this.attackingPlayer);
@@ -391,6 +447,7 @@ public abstract class EntityLivingBase extends Entity
                     this.world.spawnEntity(new EntityXPOrb(this.world, this.posX, this.posY, this.posZ, j));
                 }
             }
+            */ // Akarin end
 
             this.setDead();
 
@@ -565,6 +622,16 @@ public abstract class EntityLivingBase extends Entity
                 }
             }
         }
+        // CraftBukkit start
+        if (compound.hasKey("Bukkit.MaxHealth")) {
+            NBTBase nbtbase = compound.getTag("Bukkit.MaxHealth");
+            if (nbtbase.getId() == 5) {
+                this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(((NBTTagFloat) nbtbase).getDouble());
+            } else if (nbtbase.getId() == 3) {
+                this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(((NBTTagInt) nbtbase).getDouble());
+            }
+        }
+        // CraftBukkit end
 
         if (compound.hasKey("Health", 99))
         {
@@ -596,6 +663,7 @@ public abstract class EntityLivingBase extends Entity
     {
         Iterator<Potion> iterator = this.activePotionsMap.keySet().iterator();
 
+        isTickingEffects = true; // CraftBukkit
         try
         {
             while (iterator.hasNext())
@@ -621,6 +689,17 @@ public abstract class EntityLivingBase extends Entity
         {
             ;
         }
+        // CraftBukkit start
+        isTickingEffects = false;
+        for (Object e : effectsToProcess) {
+            if (e instanceof PotionEffect) {
+                addPotionEffect((PotionEffect) e);
+            } else {
+                removePotionEffect((Potion) e);
+            }
+        }
+        effectsToProcess.clear();
+        // CraftBukkit end
 
         if (this.potionsNeedUpdate)
         {
@@ -740,6 +819,12 @@ public abstract class EntityLivingBase extends Entity
 
     public void addPotionEffect(PotionEffect potioneffectIn)
     {
+        // CraftBukkit start
+        if (isTickingEffects) {
+            effectsToProcess.add(potioneffectIn);
+            return;
+        }
+        // CraftBukkit end
         if (this.isPotionApplicable(potioneffectIn))
         {
             PotionEffect potioneffect = this.activePotionsMap.get(potioneffectIn.getPotion());
@@ -784,6 +869,12 @@ public abstract class EntityLivingBase extends Entity
     @Nullable
     public PotionEffect removeActivePotionEffect(@Nullable Potion potioneffectin)
     {
+        // CraftBukkit start
+        if (isTickingEffects) {
+            effectsToProcess.add(potioneffectin);
+            return null;
+        }
+        // CraftBukkit end
         return this.activePotionsMap.remove(potioneffectin);
     }
 
@@ -832,23 +923,61 @@ public abstract class EntityLivingBase extends Entity
 
     public void heal(float healAmount)
     {
+        // Akarin start
+        heal(healAmount, EntityRegainHealthEvent.RegainReason.CUSTOM);
+    }
+
+    public void heal(float healAmount, EntityRegainHealthEvent.RegainReason regainReason) {
+        heal(healAmount, regainReason, false);
+    }
+
+    public void heal(float healAmount, EntityRegainHealthEvent.RegainReason regainReason, boolean isFastRegen) {
+        // Akarin end
         healAmount = net.minecraftforge.event.ForgeEventFactory.onLivingHeal(this, healAmount);
         if (healAmount <= 0) return;
         float f = this.getHealth();
 
         if (f > 0.0F)
         {
-            this.setHealth(f + healAmount);
+            // Akarin start
+            EntityRegainHealthEvent event = new EntityRegainHealthEvent(this.getBukkitEntity(), healAmount, regainReason);
+            MinecraftServer.instance().server.getPluginManager().callEvent(event);
+
+            if (!event.isCancelled()) {
+                this.setHealth((float) (f + event.getAmount()));
+            }
+            // Akarin end
         }
     }
 
     public final float getHealth()
     {
+        // CraftBukkit start - Use unscaled health
+        if (this instanceof EntityPlayerMP) {
+            return (float) ((EntityPlayerMP) this).getBukkitEntity().getHealth();
+        }
+        // CraftBukkit end
         return ((Float)this.dataManager.get(HEALTH)).floatValue();
     }
 
     public void setHealth(float health)
     {
+        // CraftBukkit start - Handle scaled health
+        if (this instanceof EntityPlayerMP) {
+            org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer player = (CraftPlayer) ((EntityPlayerMP) this).getBukkitEntity();
+            // Squeeze
+            if (health < 0.0F) {
+                player.setRealHealth(0.0D);
+            } else if (health > player.getMaxHealth()) {
+                player.setRealHealth(player.getMaxHealth());
+            } else {
+                player.setRealHealth(health);
+            }
+
+            player.updateScaledHealth();
+            return;
+        }
+        // CraftBukkit end
         this.dataManager.set(HEALTH, Float.valueOf(MathHelper.clamp(health, 0.0F, this.getMaxHealth())));
     }
 

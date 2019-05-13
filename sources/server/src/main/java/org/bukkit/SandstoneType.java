@@ -1,51 +1,42 @@
+/*
+ * Akarin Forge
+ * 
+ * Could not load the following classes:
+ *  com.google.common.collect.Maps
+ */
 package org.bukkit;
 
+import com.google.common.collect.Maps;
+import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-
-/**
- * Represents the three different types of Sandstone
- */
 public enum SandstoneType {
-    CRACKED(0x0),
-    GLYPHED(0x1),
-    SMOOTH(0x2);
-
+    CRACKED(0),
+    GLYPHED(1),
+    SMOOTH(2);
+    
     private final byte data;
-    private final static Map<Byte, SandstoneType> BY_DATA = Maps.newHashMap();
+    private static final Map<Byte, SandstoneType> BY_DATA;
 
-    private SandstoneType(final int data) {
-        this.data = (byte) data;
+    private SandstoneType(int data) {
+        this.data = (byte)data;
     }
 
-    /**
-     * Gets the associated data value representing this type of sandstone
-     *
-     * @return A byte containing the data value of this sandstone type
-     * @deprecated Magic value
-     */
     @Deprecated
     public byte getData() {
-        return data;
+        return this.data;
     }
 
-    /**
-     * Gets the type of sandstone with the given data value
-     *
-     * @param data Data value to fetch
-     * @return The {@link SandstoneType} representing the given value, or null
-     *     if it doesn't exist
-     * @deprecated Magic value
-     */
     @Deprecated
-    public static SandstoneType getByData(final byte data) {
-        return BY_DATA.get(data);
+    public static SandstoneType getByData(byte data) {
+        return BY_DATA.get(Byte.valueOf(data));
     }
 
     static {
-        for (SandstoneType type : values()) {
-            BY_DATA.put(type.data, type);
+        BY_DATA = Maps.newHashMap();
+        for (SandstoneType type : SandstoneType.values()) {
+            BY_DATA.put(Byte.valueOf(type.data), type);
         }
     }
 }
+

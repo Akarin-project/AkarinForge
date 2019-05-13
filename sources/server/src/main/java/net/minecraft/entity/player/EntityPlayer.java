@@ -7,6 +7,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.TrigMath;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftItem;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerDropItemEvent;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.BlockHorizontal;
@@ -56,6 +63,7 @@ import net.minecraft.network.play.server.SPacketEntityVelocity;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.Team;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.stats.StatBase;
 import net.minecraft.stats.StatList;
 import net.minecraft.tileentity.CommandBlockBaseLogic;
@@ -109,10 +117,10 @@ public abstract class EntityPlayer extends EntityLivingBase
     protected static final DataParameter<NBTTagCompound> LEFT_SHOULDER_ENTITY = EntityDataManager.<NBTTagCompound>createKey(EntityPlayer.class, DataSerializers.COMPOUND_TAG);
     protected static final DataParameter<NBTTagCompound> RIGHT_SHOULDER_ENTITY = EntityDataManager.<NBTTagCompound>createKey(EntityPlayer.class, DataSerializers.COMPOUND_TAG);
     public InventoryPlayer inventory = new InventoryPlayer(this);
-    protected InventoryEnderChest enderChest = new InventoryEnderChest();
+    protected InventoryEnderChest enderChest = new InventoryEnderChest(this); // CraftBukkit - add "this" to constructor
     public Container inventoryContainer;
     public Container openContainer;
-    protected FoodStats foodStats = new FoodStats();
+    protected FoodStats foodStats = new FoodStats(this); // CraftBukkit - add "this" to constructor
     protected int flyToggleTimer;
     public float prevCameraYaw;
     public float cameraYaw;
@@ -123,9 +131,9 @@ public abstract class EntityPlayer extends EntityLivingBase
     public double chasingPosX;
     public double chasingPosY;
     public double chasingPosZ;
-    protected boolean sleeping;
+    public boolean sleeping; // Akarin - public
     public BlockPos bedLocation;
-    private int sleepTimer;
+    public int sleepTimer; // Akarin - public
     public float renderOffsetX;
     @SideOnly(Side.CLIENT)
     public float renderOffsetY;
@@ -146,6 +154,16 @@ public abstract class EntityPlayer extends EntityLivingBase
     private final CooldownTracker cooldownTracker = this.createCooldownTracker();
     @Nullable
     public EntityFishHook fishEntity;
+    // CraftBukkit start
+    public boolean fauxSleeping;
+    public String spawnWorld = "";
+    public int oldLevel = -1;
+
+    @Override
+    public CraftHumanEntity getBukkitEntity() {
+        return (CraftHumanEntity) super.getBukkitEntity();
+    }
+    // CraftBukkit end
 
     protected CooldownTracker createCooldownTracker()
     {
@@ -408,7 +426,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         return SoundCategory.PLAYERS;
     }
 
-    protected int getFireImmuneTicks()
+    public int getFireImmuneTicks()
     {
         return 20;
     }
@@ -499,7 +517,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         {
             if (this.getHealth() < this.getMaxHealth() && this.ticksExisted % 20 == 0)
             {
-                this.heal(1.0F);
+                this.heal(1.0F, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.REGEN); // CraftBukkit - added regain reason of "REGEN" for filtering purposes.
             }
 
             if (this.foodStats.needFood() && this.ticksExisted % 10 == 0)
@@ -527,7 +545,7 @@ public abstract class EntityPlayer extends EntityLivingBase
 
         this.setAIMoveSpeed((float)iattributeinstance.getAttributeValue());
         float f = MathHelper.sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ);
-        float f1 = (float)(Math.atan(-this.motionY * 0.20000000298023224D) * 15.0D);
+        float f1 = (float) (TrigMath.atan(-this.motionY * 0.20000000298023224D) * 15.0D); // CraftBukkit
 
         if (f > 0.1F)
         {
@@ -749,6 +767,29 @@ public abstract class EntityPlayer extends EntityLivingBase
                 entityitem.motionY += (double)((this.rand.nextFloat() - this.rand.nextFloat()) * 0.1F);
                 entityitem.motionZ += Math.sin((double)f3) * (double)f2;
             }
+            // CraftBukkit start - fire PlayerDropItemEvent
+            Player player = (Player) this.getBukkitEntity();
+            CraftItem drop = new CraftItem(MinecraftServer.instance().server, entityitem);
+
+            PlayerDropItemEvent event = new PlayerDropItemEvent(player, drop);
+            MinecraftServer.instance().server.getPluginManager().callEvent(event);
+
+            if (event.isCancelled()) {
+                org.bukkit.inventory.ItemStack cur = player.getInventory().getItemInHand();
+                if (traceItem && (cur == null || cur.getAmount() == 0)) {
+                    // The complete stack was dropped
+                    player.getInventory().setItemInHand(drop.getItemStack());
+                } else if (traceItem && cur.isSimilar(drop.getItemStack()) && cur.getAmount() < cur.getMaxStackSize() && drop.getItemStack().getAmount() == 1) {
+                    // Only one item is dropped
+                    cur.setAmount(cur.getAmount() + 1);
+                    player.getInventory().setItemInHand(cur);
+                } else {
+                    // Fallback
+                    player.getInventory().addItem(drop.getItemStack());
+                }
+                return null;
+            }
+            // CraftBukkit end
 
             ItemStack itemstack = this.dropItemAndGetStack(entityitem);
 
@@ -892,6 +933,12 @@ public abstract class EntityPlayer extends EntityLivingBase
             this.bedLocation = new BlockPos(this);
             this.wakeUpPlayer(true, true, false);
         }
+        // CraftBukkit start
+        this.spawnWorld = compound.getString("SpawnWorld");
+        if ("".equals(spawnWorld)) {
+            this.spawnWorld = MinecraftServer.instance().server.getWorlds().get(0).getName();
+        }
+        // CraftBukkit end
 
         if (compound.hasKey("SpawnX", 99) && compound.hasKey("SpawnY", 99) && compound.hasKey("SpawnZ", 99))
         {
@@ -987,6 +1034,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         {
             compound.setTag("ShoulderEntityRight", this.getRightShoulderEntity());
         }
+        compound.setString("SpawnWorld", spawnWorld); // CraftBukkit - fixes bed spawns for multiworld worlds
     }
 
     public boolean attackEntityFrom(DamageSource source, float amount)
@@ -1015,13 +1063,13 @@ public abstract class EntityPlayer extends EntityLivingBase
                     this.wakeUpPlayer(true, true, false);
                 }
 
-                this.spawnShoulderEntities();
+                // this.spawnShoulderEntities(); // Akarin
 
                 if (source.isDifficultyScaled())
                 {
                     if (this.world.getDifficulty() == EnumDifficulty.PEACEFUL)
                     {
-                        amount = 0.0F;
+                        return false; // CraftBukkit - f = 0.0f -> return false
                     }
 
                     if (this.world.getDifficulty() == EnumDifficulty.EASY)
@@ -1035,7 +1083,13 @@ public abstract class EntityPlayer extends EntityLivingBase
                     }
                 }
 
-                return amount == 0.0F ? false : super.attackEntityFrom(source, amount);
+                // CraftBukkit start - Don't filter out 0 damage
+                boolean damaged = super.attackEntityFrom(source, amount);
+                if (damaged) {
+                    this.spawnShoulderEntities();
+                }
+                return damaged;
+                // CraftBukkit end
             }
         }
     }
@@ -1052,6 +1106,30 @@ public abstract class EntityPlayer extends EntityLivingBase
 
     public boolean canAttackPlayer(EntityPlayer other)
     {
+    	// Akarin start
+        // To summarize this method's logic, it's "Can parameter hurt this"
+        org.bukkit.scoreboard.Team team;
+        if (other instanceof EntityPlayerMP) {
+            EntityPlayerMP thatPlayer = (EntityPlayerMP) other;
+            team = thatPlayer.getBukkitEntity().getScoreboard().getPlayerTeam(thatPlayer.getBukkitEntity());
+            if (team == null || team.allowFriendlyFire()) {
+                return true;
+            }
+        } else {
+            // This should never be called, but is implemented anyway
+            org.bukkit.OfflinePlayer thisPlayer = MinecraftServer.instance().server.getOfflinePlayer(other.getName());
+            team = MinecraftServer.instance().server.getScoreboardManager().getMainScoreboard().getPlayerTeam(thisPlayer);
+            if (team == null || team.allowFriendlyFire()) {
+                return true;
+            }
+        }
+
+        if (this instanceof EntityPlayerMP) {
+            return !team.hasPlayer(((EntityPlayerMP) this).getBukkitEntity());
+        }
+        return !team.hasPlayer(MinecraftServer.instance().server.getOfflinePlayer(this.getName()));
+    	
+    	/* // Akarin end
         Team team = this.getTeam();
         Team team1 = other.getTeam();
 
@@ -1063,6 +1141,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         {
             return !team.isSameTeam(team1) ? true : team.getAllowFriendlyFire();
         }
+        */ // Akarin
     }
 
     protected void damageArmor(float damage)
@@ -2481,7 +2560,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         return (NBTTagCompound)this.dataManager.get(LEFT_SHOULDER_ENTITY);
     }
 
-    protected void setLeftShoulderEntity(NBTTagCompound tag)
+    public void setLeftShoulderEntity(NBTTagCompound tag) // Akarin - public
     {
         this.dataManager.set(LEFT_SHOULDER_ENTITY, tag);
     }
@@ -2491,7 +2570,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         return (NBTTagCompound)this.dataManager.get(RIGHT_SHOULDER_ENTITY);
     }
 
-    protected void setRightShoulderEntity(NBTTagCompound tag)
+    public void setRightShoulderEntity(NBTTagCompound tag) // Akarin - public
     {
         this.dataManager.set(RIGHT_SHOULDER_ENTITY, tag);
     }

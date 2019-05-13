@@ -50,7 +50,7 @@ public class InventoryMerchant implements IInventory
     }
 
     public org.bukkit.inventory.InventoryHolder getOwner() {
-        return (merchant instanceof EntityVillager) ? (org.bukkit.inventory.InventoryHolder) ((EntityVillager) this.merchant).getBukkitEntity() : null;
+        return (merchant instanceof EntityVillager) ? (CraftVillager) ((EntityVillager) this.merchant).getBukkitEntity() : null;
     }
 
     @Override

@@ -1,11 +1,22 @@
+/*
+ * Akarin Forge
+ * 
+ * Could not load the following classes:
+ *  com.google.common.collect.Maps
+ *  javax.annotation.Nullable
+ *  org.apache.commons.lang.Validate
+ */
 package org.bukkit;
 
+import com.google.common.collect.Maps;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
-
+import javax.annotation.Nullable;
 import org.apache.commons.lang.Validate;
-import org.bukkit.map.MapView;
+import org.bukkit.material.Banner;
 import org.bukkit.material.Bed;
 import org.bukkit.material.Button;
 import org.bukkit.material.Cake;
@@ -34,6 +45,7 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.material.MonsterEggs;
 import org.bukkit.material.Mushroom;
 import org.bukkit.material.NetherWarts;
+import org.bukkit.material.Observer;
 import org.bukkit.material.PistonBaseMaterial;
 import org.bukkit.material.PistonExtensionMaterial;
 import org.bukkit.material.PoweredRail;
@@ -60,14 +72,6 @@ import org.bukkit.material.Wood;
 import org.bukkit.material.WoodenStep;
 import org.bukkit.material.Wool;
 
-import com.google.common.collect.Maps;
-
-import org.bukkit.material.Banner;
-import org.bukkit.material.Observer;
-
-/**
- * An enum of all material IDs accepted by the official server and client
- */
 public enum Material {
     AIR(0, 0),
     STONE(1),
@@ -323,7 +327,6 @@ public enum Material {
     CONCRETE(251),
     CONCRETE_POWDER(252),
     STRUCTURE_BLOCK(255),
-    // ----- Item Separator -----
     IRON_SPADE(256, 1, 250),
     IRON_PICKAXE(257, 1, 250),
     IRON_AXE(258, 1, 250),
@@ -426,9 +429,6 @@ public enum Material {
     BED(355, 1),
     DIODE(356),
     COOKIE(357),
-    /**
-     * @see MapView
-     */
     MAP(358, MaterialData.class),
     SHEARS(359, 1, 238),
     MELON(360),
@@ -535,922 +535,850 @@ public enum Material {
     RECORD_9(2264, 1),
     RECORD_10(2265, 1),
     RECORD_11(2266, 1),
-    RECORD_12(2267, 1),
-    ;
-
+    RECORD_12(2267, 1);
+    
     private final int id;
     private final Constructor<? extends MaterialData> ctor;
-    private static Material[] byId = new Material[383];
-    private final static Map<String, Material> BY_NAME = Maps.newHashMap();
+    private static Material[] byId;
+    private static Material[] blockById;
+    private static final Map<String, Material> BY_NAME;
     private final int maxStack;
     private final short durability;
 
-    private Material(final int id) {
-        this(id, 64);
+    private Material(int id2) {
+        this(id2, 64);
     }
 
-    private Material(final int id, final int stack) {
-        this(id, stack, MaterialData.class);
+    private Material(int id2, int stack) {
+        this(id2, stack, MaterialData.class);
     }
 
-    private Material(final int id, final int stack, final int durability) {
-        this(id, stack, durability, MaterialData.class);
+    private Material(int id2, int stack, int durability) {
+        this(id2, stack, durability, MaterialData.class);
     }
 
-    private Material(final int id, final Class<? extends MaterialData> data) {
-        this(id, 64, data);
+    private Material(int id2, Class<? extends MaterialData> data) {
+        this(id2, 64, data);
     }
 
-    private Material(final int id, final int stack, final Class<? extends MaterialData> data) {
-        this(id, stack, 0, data);
+    private Material(int id2, int stack, Class<? extends MaterialData> data) {
+        this(id2, stack, 0, data);
     }
 
-    private Material(final int id, final int stack, final int durability, final Class<? extends MaterialData> data) {
-        this.id = id;
-        this.durability = (short) durability;
+    private Material(int id2, int stack, int durability, Class<? extends MaterialData> data) {
+        this.id = id2;
+        this.durability = (short)durability;
         this.maxStack = stack;
-        // try to cache the constructor for this material
         try {
-            this.ctor = data.getConstructor(int.class, byte.class);
-        } catch (NoSuchMethodException ex) {
-            throw new AssertionError(ex);
-        } catch (SecurityException ex) {
-            throw new AssertionError(ex);
+            this.ctor = data.getConstructor(Integer.TYPE, Byte.TYPE);
+        }
+        catch (NoSuchMethodException ex2) {
+            throw new AssertionError(ex2);
+        }
+        catch (SecurityException ex3) {
+            throw new AssertionError(ex3);
         }
     }
 
-    /**
-     * Gets the item ID or block ID of this Material
-     *
-     * @return ID of this material
-     * @deprecated Magic value
-     */
     @Deprecated
     public int getId() {
-        return id;
+        return this.id;
     }
 
-    /**
-     * Gets the maximum amount of this material that can be held in a stack
-     *
-     * @return Maximum stack size for this material
-     */
     public int getMaxStackSize() {
-        return maxStack;
+        return this.maxStack;
     }
 
-    /**
-     * Gets the maximum durability of this material
-     *
-     * @return Maximum durability for this material
-     */
     public short getMaxDurability() {
-        return durability;
+        return this.durability;
     }
 
-    /**
-     * Gets the MaterialData class associated with this Material
-     *
-     * @return MaterialData associated with this Material
-     */
     public Class<? extends MaterialData> getData() {
-        return ctor.getDeclaringClass();
+        return this.ctor.getDeclaringClass();
     }
 
-    /**
-     * Constructs a new MaterialData relevant for this Material, with the
-     * given initial data
-     *
-     * @param raw Initial data to construct the MaterialData with
-     * @return New MaterialData with the given data
-     * @deprecated Magic value
-     */
     @Deprecated
-    public MaterialData getNewData(final byte raw) {
+    public MaterialData getNewData(byte raw) {
         try {
-            return ctor.newInstance(id, raw);
-        } catch (InstantiationException ex) {
-            final Throwable t = ex.getCause();
-            if (t instanceof RuntimeException) {
-                throw (RuntimeException) t;
+            return this.ctor.newInstance(this.id, Byte.valueOf(raw));
+        }
+        catch (InstantiationException ex2) {
+            Throwable t2 = ex2.getCause();
+            if (t2 instanceof RuntimeException) {
+                throw (RuntimeException)t2;
             }
-            if (t instanceof Error) {
-                throw (Error) t;
+            if (t2 instanceof Error) {
+                throw (Error)t2;
             }
-            throw new AssertionError(t);
-        } catch (Throwable t) {
-            throw new AssertionError(t);
+            throw new AssertionError(t2);
+        }
+        catch (Throwable t3) {
+            throw new AssertionError(t3);
         }
     }
 
-    /**
-     * Checks if this Material is a placable block
-     *
-     * @return true if this material is a block
-     */
     public boolean isBlock() {
-        return id < 256;
+        for (Material material : blockById) {
+            if (this != material) continue;
+            return true;
+        }
+        return false;
     }
 
-    /**
-     * Checks if this Material is edible.
-     *
-     * @return true if this Material is edible.
-     */
     public boolean isEdible() {
         switch (this) {
-            case BREAD:
-            case CARROT_ITEM:
-            case BAKED_POTATO:
-            case POTATO_ITEM:
-            case POISONOUS_POTATO:
-            case GOLDEN_CARROT:
-            case PUMPKIN_PIE:
-            case COOKIE:
-            case MELON:
-            case MUSHROOM_SOUP:
-            case RAW_CHICKEN:
-            case COOKED_CHICKEN:
-            case RAW_BEEF:
-            case COOKED_BEEF:
-            case RAW_FISH:
-            case COOKED_FISH:
-            case PORK:
-            case GRILLED_PORK:
-            case APPLE:
-            case GOLDEN_APPLE:
-            case ROTTEN_FLESH:
-            case SPIDER_EYE:
-            case RABBIT:
-            case COOKED_RABBIT:
-            case RABBIT_STEW:
-            case MUTTON:
-            case COOKED_MUTTON:
-            case BEETROOT:
-            case CHORUS_FRUIT:
-            case BEETROOT_SOUP:
+            case BREAD: 
+            case CARROT_ITEM: 
+            case BAKED_POTATO: 
+            case POTATO_ITEM: 
+            case POISONOUS_POTATO: 
+            case GOLDEN_CARROT: 
+            case PUMPKIN_PIE: 
+            case COOKIE: 
+            case MELON: 
+            case MUSHROOM_SOUP: 
+            case RAW_CHICKEN: 
+            case COOKED_CHICKEN: 
+            case RAW_BEEF: 
+            case COOKED_BEEF: 
+            case RAW_FISH: 
+            case COOKED_FISH: 
+            case PORK: 
+            case GRILLED_PORK: 
+            case APPLE: 
+            case GOLDEN_APPLE: 
+            case ROTTEN_FLESH: 
+            case SPIDER_EYE: 
+            case RABBIT: 
+            case COOKED_RABBIT: 
+            case RABBIT_STEW: 
+            case MUTTON: 
+            case COOKED_MUTTON: 
+            case BEETROOT: 
+            case CHORUS_FRUIT: 
+            case BEETROOT_SOUP: {
                 return true;
-            default:
-                return false;
+            }
         }
+        return false;
     }
 
-    /**
-     * Attempts to get the Material with the given ID
-     *
-     * @param id ID of the material to get
-     * @return Material if found, or null
-     * @deprecated Magic value
-     */
     @Deprecated
-    public static Material getMaterial(final int id) {
-        if (byId.length > id && id >= 0) {
-            return byId[id];
-        } else {
-            return null;
+    public static Material getMaterial(int id2) {
+        if (byId.length > id2 && id2 >= 0) {
+            return byId[id2];
         }
+        return null;
     }
 
-    /**
-     * Attempts to get the Material with the given name.
-     * <p>
-     * This is a normal lookup, names must be the precise name they are given
-     * in the enum.
-     *
-     * @param name Name of the material to get
-     * @return Material if found, or null
-     */
-    public static Material getMaterial(final String name) {
+    public static Material getMaterial(String name) {
         return BY_NAME.get(name);
     }
 
-    /**
-     * Attempts to match the Material with the given name.
-     * <p>
-     * This is a match lookup; names will be converted to uppercase, then
-     * stripped of special characters in an attempt to format it like the
-     * enum.
-     * <p>
-     * Using this for match by ID is deprecated.
-     *
-     * @param name Name of the material to get
-     * @return Material if found, or null
-     */
-    public static Material matchMaterial(final String name) {
-        Validate.notNull(name, "Name cannot be null");
-
+    public static Material matchMaterial(String name) {
+        Validate.notNull((Object)name, (String)"Name cannot be null");
         Material result = null;
-
         try {
-            result = getMaterial(Integer.parseInt(name));
-        } catch (NumberFormatException ex) {}
-
+            result = Material.getMaterial(Integer.parseInt(name));
+        }
+        catch (NumberFormatException numberFormatException) {
+            // empty catch block
+        }
         if (result == null) {
-            String filtered = name.toUpperCase(java.util.Locale.ENGLISH);
-
+            String filtered = name.toUpperCase(Locale.ENGLISH);
             filtered = filtered.replaceAll("\\s+", "_").replaceAll("\\W", "");
             result = BY_NAME.get(filtered);
         }
-
         return result;
     }
 
+    public boolean isRecord() {
+        return this.id >= Material.GOLD_RECORD.id && this.id <= Material.RECORD_12.id;
+    }
+
+    public boolean isSolid() {
+        if (!this.isBlock() || this.id == 0) {
+            return false;
+        }
+        switch (this) {
+            case STONE: 
+            case GRASS: 
+            case DIRT: 
+            case COBBLESTONE: 
+            case WOOD: 
+            case BEDROCK: 
+            case SAND: 
+            case GRAVEL: 
+            case GOLD_ORE: 
+            case IRON_ORE: 
+            case COAL_ORE: 
+            case LOG: 
+            case LEAVES: 
+            case SPONGE: 
+            case GLASS: 
+            case LAPIS_ORE: 
+            case LAPIS_BLOCK: 
+            case DISPENSER: 
+            case SANDSTONE: 
+            case NOTE_BLOCK: 
+            case BED_BLOCK: 
+            case PISTON_STICKY_BASE: 
+            case PISTON_BASE: 
+            case PISTON_EXTENSION: 
+            case WOOL: 
+            case PISTON_MOVING_PIECE: 
+            case GOLD_BLOCK: 
+            case IRON_BLOCK: 
+            case DOUBLE_STEP: 
+            case STEP: 
+            case BRICK: 
+            case TNT: 
+            case BOOKSHELF: 
+            case MOSSY_COBBLESTONE: 
+            case OBSIDIAN: 
+            case MOB_SPAWNER: 
+            case WOOD_STAIRS: 
+            case CHEST: 
+            case DIAMOND_ORE: 
+            case DIAMOND_BLOCK: 
+            case WORKBENCH: 
+            case SOIL: 
+            case FURNACE: 
+            case BURNING_FURNACE: 
+            case SIGN_POST: 
+            case WOODEN_DOOR: 
+            case COBBLESTONE_STAIRS: 
+            case WALL_SIGN: 
+            case STONE_PLATE: 
+            case IRON_DOOR_BLOCK: 
+            case WOOD_PLATE: 
+            case REDSTONE_ORE: 
+            case GLOWING_REDSTONE_ORE: 
+            case ICE: 
+            case SNOW_BLOCK: 
+            case CACTUS: 
+            case CLAY: 
+            case JUKEBOX: 
+            case FENCE: 
+            case PUMPKIN: 
+            case NETHERRACK: 
+            case SOUL_SAND: 
+            case GLOWSTONE: 
+            case JACK_O_LANTERN: 
+            case CAKE_BLOCK: 
+            case STAINED_GLASS: 
+            case TRAP_DOOR: 
+            case MONSTER_EGGS: 
+            case SMOOTH_BRICK: 
+            case HUGE_MUSHROOM_1: 
+            case HUGE_MUSHROOM_2: 
+            case IRON_FENCE: 
+            case THIN_GLASS: 
+            case MELON_BLOCK: 
+            case FENCE_GATE: 
+            case BRICK_STAIRS: 
+            case SMOOTH_STAIRS: 
+            case MYCEL: 
+            case NETHER_BRICK: 
+            case NETHER_FENCE: 
+            case NETHER_BRICK_STAIRS: 
+            case ENCHANTMENT_TABLE: 
+            case BREWING_STAND: 
+            case CAULDRON: 
+            case ENDER_PORTAL_FRAME: 
+            case ENDER_STONE: 
+            case DRAGON_EGG: 
+            case REDSTONE_LAMP_OFF: 
+            case REDSTONE_LAMP_ON: 
+            case WOOD_DOUBLE_STEP: 
+            case WOOD_STEP: 
+            case SANDSTONE_STAIRS: 
+            case EMERALD_ORE: 
+            case ENDER_CHEST: 
+            case EMERALD_BLOCK: 
+            case SPRUCE_WOOD_STAIRS: 
+            case BIRCH_WOOD_STAIRS: 
+            case JUNGLE_WOOD_STAIRS: 
+            case COMMAND: 
+            case BEACON: 
+            case COBBLE_WALL: 
+            case ANVIL: 
+            case TRAPPED_CHEST: 
+            case GOLD_PLATE: 
+            case IRON_PLATE: 
+            case DAYLIGHT_DETECTOR: 
+            case REDSTONE_BLOCK: 
+            case QUARTZ_ORE: 
+            case HOPPER: 
+            case QUARTZ_BLOCK: 
+            case QUARTZ_STAIRS: 
+            case DROPPER: 
+            case STAINED_CLAY: 
+            case HAY_BLOCK: 
+            case HARD_CLAY: 
+            case COAL_BLOCK: 
+            case STAINED_GLASS_PANE: 
+            case LEAVES_2: 
+            case LOG_2: 
+            case ACACIA_STAIRS: 
+            case DARK_OAK_STAIRS: 
+            case PACKED_ICE: 
+            case RED_SANDSTONE: 
+            case SLIME_BLOCK: 
+            case BARRIER: 
+            case IRON_TRAPDOOR: 
+            case PRISMARINE: 
+            case SEA_LANTERN: 
+            case DOUBLE_STONE_SLAB2: 
+            case RED_SANDSTONE_STAIRS: 
+            case STONE_SLAB2: 
+            case SPRUCE_FENCE_GATE: 
+            case BIRCH_FENCE_GATE: 
+            case JUNGLE_FENCE_GATE: 
+            case DARK_OAK_FENCE_GATE: 
+            case ACACIA_FENCE_GATE: 
+            case SPRUCE_FENCE: 
+            case BIRCH_FENCE: 
+            case JUNGLE_FENCE: 
+            case DARK_OAK_FENCE: 
+            case ACACIA_FENCE: 
+            case STANDING_BANNER: 
+            case WALL_BANNER: 
+            case DAYLIGHT_DETECTOR_INVERTED: 
+            case SPRUCE_DOOR: 
+            case BIRCH_DOOR: 
+            case JUNGLE_DOOR: 
+            case ACACIA_DOOR: 
+            case DARK_OAK_DOOR: 
+            case PURPUR_BLOCK: 
+            case PURPUR_PILLAR: 
+            case PURPUR_STAIRS: 
+            case PURPUR_DOUBLE_SLAB: 
+            case PURPUR_SLAB: 
+            case END_BRICKS: 
+            case GRASS_PATH: 
+            case STRUCTURE_BLOCK: 
+            case COMMAND_REPEATING: 
+            case COMMAND_CHAIN: 
+            case FROSTED_ICE: 
+            case MAGMA: 
+            case NETHER_WART_BLOCK: 
+            case RED_NETHER_BRICK: 
+            case BONE_BLOCK: 
+            case OBSERVER: 
+            case WHITE_SHULKER_BOX: 
+            case ORANGE_SHULKER_BOX: 
+            case MAGENTA_SHULKER_BOX: 
+            case LIGHT_BLUE_SHULKER_BOX: 
+            case YELLOW_SHULKER_BOX: 
+            case LIME_SHULKER_BOX: 
+            case PINK_SHULKER_BOX: 
+            case GRAY_SHULKER_BOX: 
+            case SILVER_SHULKER_BOX: 
+            case CYAN_SHULKER_BOX: 
+            case PURPLE_SHULKER_BOX: 
+            case BLUE_SHULKER_BOX: 
+            case BROWN_SHULKER_BOX: 
+            case GREEN_SHULKER_BOX: 
+            case RED_SHULKER_BOX: 
+            case BLACK_SHULKER_BOX: 
+            case WHITE_GLAZED_TERRACOTTA: 
+            case ORANGE_GLAZED_TERRACOTTA: 
+            case MAGENTA_GLAZED_TERRACOTTA: 
+            case LIGHT_BLUE_GLAZED_TERRACOTTA: 
+            case YELLOW_GLAZED_TERRACOTTA: 
+            case LIME_GLAZED_TERRACOTTA: 
+            case PINK_GLAZED_TERRACOTTA: 
+            case GRAY_GLAZED_TERRACOTTA: 
+            case SILVER_GLAZED_TERRACOTTA: 
+            case CYAN_GLAZED_TERRACOTTA: 
+            case PURPLE_GLAZED_TERRACOTTA: 
+            case BLUE_GLAZED_TERRACOTTA: 
+            case BROWN_GLAZED_TERRACOTTA: 
+            case GREEN_GLAZED_TERRACOTTA: 
+            case RED_GLAZED_TERRACOTTA: 
+            case BLACK_GLAZED_TERRACOTTA: 
+            case CONCRETE: 
+            case CONCRETE_POWDER: {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isTransparent() {
+        if (!this.isBlock()) {
+            return false;
+        }
+        switch (this) {
+            case AIR: 
+            case SAPLING: 
+            case POWERED_RAIL: 
+            case DETECTOR_RAIL: 
+            case LONG_GRASS: 
+            case DEAD_BUSH: 
+            case YELLOW_FLOWER: 
+            case RED_ROSE: 
+            case BROWN_MUSHROOM: 
+            case RED_MUSHROOM: 
+            case TORCH: 
+            case FIRE: 
+            case REDSTONE_WIRE: 
+            case CROPS: 
+            case LADDER: 
+            case RAILS: 
+            case LEVER: 
+            case REDSTONE_TORCH_OFF: 
+            case REDSTONE_TORCH_ON: 
+            case STONE_BUTTON: 
+            case SNOW: 
+            case SUGAR_CANE_BLOCK: 
+            case PORTAL: 
+            case DIODE_BLOCK_OFF: 
+            case DIODE_BLOCK_ON: 
+            case PUMPKIN_STEM: 
+            case MELON_STEM: 
+            case VINE: 
+            case WATER_LILY: 
+            case NETHER_WARTS: 
+            case ENDER_PORTAL: 
+            case COCOA: 
+            case TRIPWIRE_HOOK: 
+            case TRIPWIRE: 
+            case FLOWER_POT: 
+            case CARROT: 
+            case POTATO: 
+            case WOOD_BUTTON: 
+            case SKULL: 
+            case REDSTONE_COMPARATOR_OFF: 
+            case REDSTONE_COMPARATOR_ON: 
+            case ACTIVATOR_RAIL: 
+            case CARPET: 
+            case DOUBLE_PLANT: 
+            case END_ROD: 
+            case CHORUS_PLANT: 
+            case CHORUS_FLOWER: 
+            case BEETROOT_BLOCK: 
+            case END_GATEWAY: 
+            case STRUCTURE_VOID: {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isFlammable() {
+        if (!this.isBlock()) {
+            return false;
+        }
+        switch (this) {
+            case WOOD: 
+            case LOG: 
+            case LEAVES: 
+            case NOTE_BLOCK: 
+            case BED_BLOCK: 
+            case WOOL: 
+            case TNT: 
+            case BOOKSHELF: 
+            case WOOD_STAIRS: 
+            case CHEST: 
+            case WORKBENCH: 
+            case SIGN_POST: 
+            case WOODEN_DOOR: 
+            case WALL_SIGN: 
+            case WOOD_PLATE: 
+            case JUKEBOX: 
+            case FENCE: 
+            case TRAP_DOOR: 
+            case HUGE_MUSHROOM_1: 
+            case HUGE_MUSHROOM_2: 
+            case FENCE_GATE: 
+            case WOOD_DOUBLE_STEP: 
+            case WOOD_STEP: 
+            case SPRUCE_WOOD_STAIRS: 
+            case BIRCH_WOOD_STAIRS: 
+            case JUNGLE_WOOD_STAIRS: 
+            case TRAPPED_CHEST: 
+            case DAYLIGHT_DETECTOR: 
+            case LEAVES_2: 
+            case LOG_2: 
+            case ACACIA_STAIRS: 
+            case DARK_OAK_STAIRS: 
+            case SPRUCE_FENCE_GATE: 
+            case BIRCH_FENCE_GATE: 
+            case JUNGLE_FENCE_GATE: 
+            case DARK_OAK_FENCE_GATE: 
+            case ACACIA_FENCE_GATE: 
+            case SPRUCE_FENCE: 
+            case BIRCH_FENCE: 
+            case JUNGLE_FENCE: 
+            case DARK_OAK_FENCE: 
+            case ACACIA_FENCE: 
+            case STANDING_BANNER: 
+            case WALL_BANNER: 
+            case DAYLIGHT_DETECTOR_INVERTED: 
+            case SPRUCE_DOOR: 
+            case BIRCH_DOOR: 
+            case JUNGLE_DOOR: 
+            case ACACIA_DOOR: 
+            case DARK_OAK_DOOR: 
+            case LONG_GRASS: 
+            case DEAD_BUSH: 
+            case VINE: 
+            case CARPET: 
+            case DOUBLE_PLANT: {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isBurnable() {
+        if (!this.isBlock()) {
+            return false;
+        }
+        switch (this) {
+            case WOOD: 
+            case LOG: 
+            case LEAVES: 
+            case WOOL: 
+            case TNT: 
+            case BOOKSHELF: 
+            case WOOD_STAIRS: 
+            case FENCE: 
+            case FENCE_GATE: 
+            case WOOD_DOUBLE_STEP: 
+            case WOOD_STEP: 
+            case SPRUCE_WOOD_STAIRS: 
+            case BIRCH_WOOD_STAIRS: 
+            case JUNGLE_WOOD_STAIRS: 
+            case HAY_BLOCK: 
+            case COAL_BLOCK: 
+            case LEAVES_2: 
+            case LOG_2: 
+            case ACACIA_STAIRS: 
+            case DARK_OAK_STAIRS: 
+            case SPRUCE_FENCE_GATE: 
+            case BIRCH_FENCE_GATE: 
+            case JUNGLE_FENCE_GATE: 
+            case DARK_OAK_FENCE_GATE: 
+            case ACACIA_FENCE_GATE: 
+            case SPRUCE_FENCE: 
+            case BIRCH_FENCE: 
+            case JUNGLE_FENCE: 
+            case DARK_OAK_FENCE: 
+            case ACACIA_FENCE: 
+            case LONG_GRASS: 
+            case DEAD_BUSH: 
+            case YELLOW_FLOWER: 
+            case RED_ROSE: 
+            case VINE: 
+            case CARPET: 
+            case DOUBLE_PLANT: {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isFuel() {
+        switch (this) {
+            case WOOD: 
+            case LOG: 
+            case NOTE_BLOCK: 
+            case WOOL: 
+            case BOOKSHELF: 
+            case WOOD_STAIRS: 
+            case CHEST: 
+            case WORKBENCH: 
+            case WOOD_PLATE: 
+            case JUKEBOX: 
+            case FENCE: 
+            case TRAP_DOOR: 
+            case HUGE_MUSHROOM_1: 
+            case HUGE_MUSHROOM_2: 
+            case FENCE_GATE: 
+            case WOOD_STEP: 
+            case SPRUCE_WOOD_STAIRS: 
+            case BIRCH_WOOD_STAIRS: 
+            case JUNGLE_WOOD_STAIRS: 
+            case TRAPPED_CHEST: 
+            case DAYLIGHT_DETECTOR: 
+            case COAL_BLOCK: 
+            case LOG_2: 
+            case ACACIA_STAIRS: 
+            case DARK_OAK_STAIRS: 
+            case SPRUCE_FENCE_GATE: 
+            case BIRCH_FENCE_GATE: 
+            case JUNGLE_FENCE_GATE: 
+            case DARK_OAK_FENCE_GATE: 
+            case ACACIA_FENCE_GATE: 
+            case SPRUCE_FENCE: 
+            case BIRCH_FENCE: 
+            case JUNGLE_FENCE: 
+            case DARK_OAK_FENCE: 
+            case ACACIA_FENCE: 
+            case SAPLING: 
+            case LADDER: 
+            case WOOD_BUTTON: 
+            case CARPET: 
+            case LAVA_BUCKET: 
+            case BLAZE_ROD: 
+            case COAL: 
+            case BOAT: 
+            case BOAT_ACACIA: 
+            case BOAT_BIRCH: 
+            case BOAT_DARK_OAK: 
+            case BOAT_JUNGLE: 
+            case BOAT_SPRUCE: 
+            case BANNER: 
+            case FISHING_ROD: 
+            case WOOD_SWORD: 
+            case WOOD_PICKAXE: 
+            case WOOD_AXE: 
+            case WOOD_SPADE: 
+            case WOOD_HOE: 
+            case BOW: 
+            case SIGN: 
+            case WOOD_DOOR: 
+            case ACACIA_DOOR_ITEM: 
+            case BIRCH_DOOR_ITEM: 
+            case DARK_OAK_DOOR_ITEM: 
+            case JUNGLE_DOOR_ITEM: 
+            case SPRUCE_DOOR_ITEM: 
+            case BOWL: 
+            case STICK: {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isOccluding() {
+        if (!this.isBlock()) {
+            return false;
+        }
+        switch (this) {
+            case STONE: 
+            case GRASS: 
+            case DIRT: 
+            case COBBLESTONE: 
+            case WOOD: 
+            case BEDROCK: 
+            case SAND: 
+            case GRAVEL: 
+            case GOLD_ORE: 
+            case IRON_ORE: 
+            case COAL_ORE: 
+            case LOG: 
+            case SPONGE: 
+            case LAPIS_ORE: 
+            case LAPIS_BLOCK: 
+            case DISPENSER: 
+            case SANDSTONE: 
+            case NOTE_BLOCK: 
+            case WOOL: 
+            case GOLD_BLOCK: 
+            case IRON_BLOCK: 
+            case DOUBLE_STEP: 
+            case BRICK: 
+            case BOOKSHELF: 
+            case MOSSY_COBBLESTONE: 
+            case OBSIDIAN: 
+            case MOB_SPAWNER: 
+            case DIAMOND_ORE: 
+            case DIAMOND_BLOCK: 
+            case WORKBENCH: 
+            case FURNACE: 
+            case BURNING_FURNACE: 
+            case REDSTONE_ORE: 
+            case GLOWING_REDSTONE_ORE: 
+            case SNOW_BLOCK: 
+            case CLAY: 
+            case JUKEBOX: 
+            case PUMPKIN: 
+            case NETHERRACK: 
+            case SOUL_SAND: 
+            case JACK_O_LANTERN: 
+            case MONSTER_EGGS: 
+            case SMOOTH_BRICK: 
+            case HUGE_MUSHROOM_1: 
+            case HUGE_MUSHROOM_2: 
+            case MELON_BLOCK: 
+            case MYCEL: 
+            case NETHER_BRICK: 
+            case ENDER_STONE: 
+            case REDSTONE_LAMP_OFF: 
+            case REDSTONE_LAMP_ON: 
+            case WOOD_DOUBLE_STEP: 
+            case EMERALD_ORE: 
+            case EMERALD_BLOCK: 
+            case COMMAND: 
+            case QUARTZ_ORE: 
+            case QUARTZ_BLOCK: 
+            case DROPPER: 
+            case STAINED_CLAY: 
+            case HAY_BLOCK: 
+            case HARD_CLAY: 
+            case COAL_BLOCK: 
+            case LOG_2: 
+            case PACKED_ICE: 
+            case RED_SANDSTONE: 
+            case SLIME_BLOCK: 
+            case BARRIER: 
+            case PRISMARINE: 
+            case DOUBLE_STONE_SLAB2: 
+            case PURPUR_BLOCK: 
+            case PURPUR_PILLAR: 
+            case PURPUR_DOUBLE_SLAB: 
+            case END_BRICKS: 
+            case STRUCTURE_BLOCK: 
+            case COMMAND_REPEATING: 
+            case COMMAND_CHAIN: 
+            case MAGMA: 
+            case NETHER_WART_BLOCK: 
+            case RED_NETHER_BRICK: 
+            case BONE_BLOCK: 
+            case WHITE_GLAZED_TERRACOTTA: 
+            case ORANGE_GLAZED_TERRACOTTA: 
+            case MAGENTA_GLAZED_TERRACOTTA: 
+            case LIGHT_BLUE_GLAZED_TERRACOTTA: 
+            case YELLOW_GLAZED_TERRACOTTA: 
+            case LIME_GLAZED_TERRACOTTA: 
+            case PINK_GLAZED_TERRACOTTA: 
+            case GRAY_GLAZED_TERRACOTTA: 
+            case SILVER_GLAZED_TERRACOTTA: 
+            case CYAN_GLAZED_TERRACOTTA: 
+            case PURPLE_GLAZED_TERRACOTTA: 
+            case BLUE_GLAZED_TERRACOTTA: 
+            case BROWN_GLAZED_TERRACOTTA: 
+            case GREEN_GLAZED_TERRACOTTA: 
+            case RED_GLAZED_TERRACOTTA: 
+            case BLACK_GLAZED_TERRACOTTA: 
+            case CONCRETE: 
+            case CONCRETE_POWDER: {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasGravity() {
+        if (!this.isBlock()) {
+            return false;
+        }
+        switch (this) {
+            case SAND: 
+            case GRAVEL: 
+            case ANVIL: 
+            case CONCRETE_POWDER: {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isItem() {
+        switch (this) {
+            case BED_BLOCK: 
+            case PISTON_EXTENSION: 
+            case PISTON_MOVING_PIECE: 
+            case DOUBLE_STEP: 
+            case BURNING_FURNACE: 
+            case SIGN_POST: 
+            case WOODEN_DOOR: 
+            case WALL_SIGN: 
+            case IRON_DOOR_BLOCK: 
+            case GLOWING_REDSTONE_ORE: 
+            case CAKE_BLOCK: 
+            case BREWING_STAND: 
+            case CAULDRON: 
+            case REDSTONE_LAMP_ON: 
+            case WOOD_DOUBLE_STEP: 
+            case DOUBLE_STONE_SLAB2: 
+            case STANDING_BANNER: 
+            case WALL_BANNER: 
+            case DAYLIGHT_DETECTOR_INVERTED: 
+            case SPRUCE_DOOR: 
+            case BIRCH_DOOR: 
+            case JUNGLE_DOOR: 
+            case ACACIA_DOOR: 
+            case DARK_OAK_DOOR: 
+            case PURPUR_DOUBLE_SLAB: 
+            case FROSTED_ICE: 
+            case FIRE: 
+            case REDSTONE_WIRE: 
+            case CROPS: 
+            case REDSTONE_TORCH_OFF: 
+            case SUGAR_CANE_BLOCK: 
+            case PORTAL: 
+            case DIODE_BLOCK_OFF: 
+            case DIODE_BLOCK_ON: 
+            case PUMPKIN_STEM: 
+            case MELON_STEM: 
+            case NETHER_WARTS: 
+            case ENDER_PORTAL: 
+            case COCOA: 
+            case TRIPWIRE: 
+            case FLOWER_POT: 
+            case CARROT: 
+            case POTATO: 
+            case SKULL: 
+            case REDSTONE_COMPARATOR_OFF: 
+            case REDSTONE_COMPARATOR_ON: 
+            case BEETROOT_BLOCK: 
+            case END_GATEWAY: 
+            case LAVA: 
+            case STATIONARY_LAVA: 
+            case STATIONARY_WATER: 
+            case WATER: {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Nullable
+    public static Material addMaterial(Material material) {
+        if (byId[material.id] == null) {
+            Material.byId[material.id] = material;
+            BY_NAME.put(material.name().toUpperCase().replaceAll("(:|\\s)", "_").replaceAll("\\W", ""), material);
+            BY_NAME.put("X" + String.valueOf(material.id), material);
+            return material;
+        }
+        return null;
+    }
+
+    @Nullable
+    public static Material addBlockMaterial(Material material) {
+        if (blockById[material.id] == null) {
+            Material.blockById[material.id] = material;
+            return material;
+        }
+        return null;
+    }
+
+    public static Material getBlockMaterial(int id2) {
+        if (blockById.length > id2 && id2 >= 0) {
+            return blockById[id2];
+        }
+        return null;
+    }
+
     static {
-        for (Material material : values()) {
+        byId = new Material[32000];
+        blockById = new Material[32000];
+        BY_NAME = Maps.newHashMap();
+        for (Material material : Material.values()) {
             if (byId.length > material.id) {
-                byId[material.id] = material;
+                Material.byId[material.id] = material;
             } else {
                 byId = Arrays.copyOfRange(byId, 0, material.id + 2);
-                byId[material.id] = material;
+                Material.byId[material.id] = material;
             }
             BY_NAME.put(material.name(), material);
         }
     }
 
-    /**
-     * @return True if this material represents a playable music disk.
-     */
-    public boolean isRecord() {
-        return id >= GOLD_RECORD.id && id <= RECORD_12.id;
-    }
-
-    /**
-     * Check if the material is a block and solid (can be built upon)
-     *
-     * @return True if this material is a block and solid
-     */
-    public boolean isSolid() {
-        if (!isBlock() || id == 0) {
-            return false;
-        }
-        switch (this) {
-            case STONE:
-            case GRASS:
-            case DIRT:
-            case COBBLESTONE:
-            case WOOD:
-            case BEDROCK:
-            case SAND:
-            case GRAVEL:
-            case GOLD_ORE:
-            case IRON_ORE:
-            case COAL_ORE:
-            case LOG:
-            case LEAVES:
-            case SPONGE:
-            case GLASS:
-            case LAPIS_ORE:
-            case LAPIS_BLOCK:
-            case DISPENSER:
-            case SANDSTONE:
-            case NOTE_BLOCK:
-            case BED_BLOCK:
-            case PISTON_STICKY_BASE:
-            case PISTON_BASE:
-            case PISTON_EXTENSION:
-            case WOOL:
-            case PISTON_MOVING_PIECE:
-            case GOLD_BLOCK:
-            case IRON_BLOCK:
-            case DOUBLE_STEP:
-            case STEP:
-            case BRICK:
-            case TNT:
-            case BOOKSHELF:
-            case MOSSY_COBBLESTONE:
-            case OBSIDIAN:
-            case MOB_SPAWNER:
-            case WOOD_STAIRS:
-            case CHEST:
-            case DIAMOND_ORE:
-            case DIAMOND_BLOCK:
-            case WORKBENCH:
-            case SOIL:
-            case FURNACE:
-            case BURNING_FURNACE:
-            case SIGN_POST:
-            case WOODEN_DOOR:
-            case COBBLESTONE_STAIRS:
-            case WALL_SIGN:
-            case STONE_PLATE:
-            case IRON_DOOR_BLOCK:
-            case WOOD_PLATE:
-            case REDSTONE_ORE:
-            case GLOWING_REDSTONE_ORE:
-            case ICE:
-            case SNOW_BLOCK:
-            case CACTUS:
-            case CLAY:
-            case JUKEBOX:
-            case FENCE:
-            case PUMPKIN:
-            case NETHERRACK:
-            case SOUL_SAND:
-            case GLOWSTONE:
-            case JACK_O_LANTERN:
-            case CAKE_BLOCK:
-            case STAINED_GLASS:
-            case TRAP_DOOR:
-            case MONSTER_EGGS:
-            case SMOOTH_BRICK:
-            case HUGE_MUSHROOM_1:
-            case HUGE_MUSHROOM_2:
-            case IRON_FENCE:
-            case THIN_GLASS:
-            case MELON_BLOCK:
-            case FENCE_GATE:
-            case BRICK_STAIRS:
-            case SMOOTH_STAIRS:
-            case MYCEL:
-            case NETHER_BRICK:
-            case NETHER_FENCE:
-            case NETHER_BRICK_STAIRS:
-            case ENCHANTMENT_TABLE:
-            case BREWING_STAND:
-            case CAULDRON:
-            case ENDER_PORTAL_FRAME:
-            case ENDER_STONE:
-            case DRAGON_EGG:
-            case REDSTONE_LAMP_OFF:
-            case REDSTONE_LAMP_ON:
-            case WOOD_DOUBLE_STEP:
-            case WOOD_STEP:
-            case SANDSTONE_STAIRS:
-            case EMERALD_ORE:
-            case ENDER_CHEST:
-            case EMERALD_BLOCK:
-            case SPRUCE_WOOD_STAIRS:
-            case BIRCH_WOOD_STAIRS:
-            case JUNGLE_WOOD_STAIRS:
-            case COMMAND:
-            case BEACON:
-            case COBBLE_WALL:
-            case ANVIL:
-            case TRAPPED_CHEST:
-            case GOLD_PLATE:
-            case IRON_PLATE:
-            case DAYLIGHT_DETECTOR:
-            case REDSTONE_BLOCK:
-            case QUARTZ_ORE:
-            case HOPPER:
-            case QUARTZ_BLOCK:
-            case QUARTZ_STAIRS:
-            case DROPPER:
-            case STAINED_CLAY:
-            case HAY_BLOCK:
-            case HARD_CLAY:
-            case COAL_BLOCK:
-            case STAINED_GLASS_PANE:
-            case LEAVES_2:
-            case LOG_2:
-            case ACACIA_STAIRS:
-            case DARK_OAK_STAIRS:
-            case PACKED_ICE:
-            case RED_SANDSTONE:
-            case SLIME_BLOCK:
-            case BARRIER:
-            case IRON_TRAPDOOR:
-            case PRISMARINE:
-            case SEA_LANTERN:
-            case DOUBLE_STONE_SLAB2:
-            case RED_SANDSTONE_STAIRS:
-            case STONE_SLAB2:
-            case SPRUCE_FENCE_GATE:
-            case BIRCH_FENCE_GATE:
-            case JUNGLE_FENCE_GATE:
-            case DARK_OAK_FENCE_GATE:
-            case ACACIA_FENCE_GATE:
-            case SPRUCE_FENCE:
-            case BIRCH_FENCE:
-            case JUNGLE_FENCE:
-            case DARK_OAK_FENCE:
-            case ACACIA_FENCE:
-            case STANDING_BANNER:
-            case WALL_BANNER:
-            case DAYLIGHT_DETECTOR_INVERTED:
-            case SPRUCE_DOOR:
-            case BIRCH_DOOR:
-            case JUNGLE_DOOR:
-            case ACACIA_DOOR:
-            case DARK_OAK_DOOR:
-            case PURPUR_BLOCK:
-            case PURPUR_PILLAR:
-            case PURPUR_STAIRS:
-            case PURPUR_DOUBLE_SLAB:
-            case PURPUR_SLAB:
-            case END_BRICKS:
-            case GRASS_PATH:
-            case STRUCTURE_BLOCK:
-            case COMMAND_REPEATING:
-            case COMMAND_CHAIN:
-            case FROSTED_ICE:
-            case MAGMA:
-            case NETHER_WART_BLOCK:
-            case RED_NETHER_BRICK:
-            case BONE_BLOCK:
-            case OBSERVER:
-            case WHITE_SHULKER_BOX:
-            case ORANGE_SHULKER_BOX:
-            case MAGENTA_SHULKER_BOX:
-            case LIGHT_BLUE_SHULKER_BOX:
-            case YELLOW_SHULKER_BOX:
-            case LIME_SHULKER_BOX:
-            case PINK_SHULKER_BOX:
-            case GRAY_SHULKER_BOX:
-            case SILVER_SHULKER_BOX:
-            case CYAN_SHULKER_BOX:
-            case PURPLE_SHULKER_BOX:
-            case BLUE_SHULKER_BOX:
-            case BROWN_SHULKER_BOX:
-            case GREEN_SHULKER_BOX:
-            case RED_SHULKER_BOX:
-            case BLACK_SHULKER_BOX:
-            case WHITE_GLAZED_TERRACOTTA:
-            case ORANGE_GLAZED_TERRACOTTA:
-            case MAGENTA_GLAZED_TERRACOTTA:
-            case LIGHT_BLUE_GLAZED_TERRACOTTA:
-            case YELLOW_GLAZED_TERRACOTTA:
-            case LIME_GLAZED_TERRACOTTA:
-            case PINK_GLAZED_TERRACOTTA:
-            case GRAY_GLAZED_TERRACOTTA:
-            case SILVER_GLAZED_TERRACOTTA:
-            case CYAN_GLAZED_TERRACOTTA:
-            case PURPLE_GLAZED_TERRACOTTA:
-            case BLUE_GLAZED_TERRACOTTA:
-            case BROWN_GLAZED_TERRACOTTA:
-            case GREEN_GLAZED_TERRACOTTA:
-            case RED_GLAZED_TERRACOTTA:
-            case BLACK_GLAZED_TERRACOTTA:
-            case CONCRETE:
-            case CONCRETE_POWDER:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Check if the material is a block and does not block any light
-     *
-     * @return True if this material is a block and does not block any light
-     */
-    public boolean isTransparent() {
-        if (!isBlock()) {
-            return false;
-        }
-        switch (this) {
-            case AIR:
-            case SAPLING:
-            case POWERED_RAIL:
-            case DETECTOR_RAIL:
-            case LONG_GRASS:
-            case DEAD_BUSH:
-            case YELLOW_FLOWER:
-            case RED_ROSE:
-            case BROWN_MUSHROOM:
-            case RED_MUSHROOM:
-            case TORCH:
-            case FIRE:
-            case REDSTONE_WIRE:
-            case CROPS:
-            case LADDER:
-            case RAILS:
-            case LEVER:
-            case REDSTONE_TORCH_OFF:
-            case REDSTONE_TORCH_ON:
-            case STONE_BUTTON:
-            case SNOW:
-            case SUGAR_CANE_BLOCK:
-            case PORTAL:
-            case DIODE_BLOCK_OFF:
-            case DIODE_BLOCK_ON:
-            case PUMPKIN_STEM:
-            case MELON_STEM:
-            case VINE:
-            case WATER_LILY:
-            case NETHER_WARTS:
-            case ENDER_PORTAL:
-            case COCOA:
-            case TRIPWIRE_HOOK:
-            case TRIPWIRE:
-            case FLOWER_POT:
-            case CARROT:
-            case POTATO:
-            case WOOD_BUTTON:
-            case SKULL:
-            case REDSTONE_COMPARATOR_OFF:
-            case REDSTONE_COMPARATOR_ON:
-            case ACTIVATOR_RAIL:
-            case CARPET:
-            case DOUBLE_PLANT:
-            case END_ROD:
-            case CHORUS_PLANT:
-            case CHORUS_FLOWER:
-            case BEETROOT_BLOCK:
-            case END_GATEWAY:
-            case STRUCTURE_VOID:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Check if the material is a block and can catch fire
-     *
-     * @return True if this material is a block and can catch fire
-     */
-    public boolean isFlammable() {
-        if (!isBlock()) {
-            return false;
-        }
-        switch (this) {
-            case WOOD:
-            case LOG:
-            case LEAVES:
-            case NOTE_BLOCK:
-            case BED_BLOCK:
-            case LONG_GRASS:
-            case DEAD_BUSH:
-            case WOOL:
-            case TNT:
-            case BOOKSHELF:
-            case WOOD_STAIRS:
-            case CHEST:
-            case WORKBENCH:
-            case SIGN_POST:
-            case WOODEN_DOOR:
-            case WALL_SIGN:
-            case WOOD_PLATE:
-            case JUKEBOX:
-            case FENCE:
-            case TRAP_DOOR:
-            case HUGE_MUSHROOM_1:
-            case HUGE_MUSHROOM_2:
-            case VINE:
-            case FENCE_GATE:
-            case WOOD_DOUBLE_STEP:
-            case WOOD_STEP:
-            case SPRUCE_WOOD_STAIRS:
-            case BIRCH_WOOD_STAIRS:
-            case JUNGLE_WOOD_STAIRS:
-            case TRAPPED_CHEST:
-            case DAYLIGHT_DETECTOR:
-            case CARPET:
-            case LEAVES_2:
-            case LOG_2:
-            case ACACIA_STAIRS:
-            case DARK_OAK_STAIRS:
-            case DOUBLE_PLANT:
-            case SPRUCE_FENCE_GATE:
-            case BIRCH_FENCE_GATE:
-            case JUNGLE_FENCE_GATE:
-            case DARK_OAK_FENCE_GATE:
-            case ACACIA_FENCE_GATE:
-            case SPRUCE_FENCE:
-            case BIRCH_FENCE:
-            case JUNGLE_FENCE:
-            case DARK_OAK_FENCE:
-            case ACACIA_FENCE:
-            case STANDING_BANNER:
-            case WALL_BANNER:
-            case DAYLIGHT_DETECTOR_INVERTED:
-            case SPRUCE_DOOR:
-            case BIRCH_DOOR:
-            case JUNGLE_DOOR:
-            case ACACIA_DOOR:
-            case DARK_OAK_DOOR:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Check if the material is a block and can burn away
-     *
-     * @return True if this material is a block and can burn away
-     */
-    public boolean isBurnable() {
-        if (!isBlock()) {
-            return false;
-        }
-        switch (this) {
-            case WOOD:
-            case LOG:
-            case LEAVES:
-            case LONG_GRASS:
-            case WOOL:
-            case YELLOW_FLOWER:
-            case RED_ROSE:
-            case TNT:
-            case BOOKSHELF:
-            case WOOD_STAIRS:
-            case FENCE:
-            case VINE:
-            case WOOD_DOUBLE_STEP:
-            case WOOD_STEP:
-            case SPRUCE_WOOD_STAIRS:
-            case BIRCH_WOOD_STAIRS:
-            case JUNGLE_WOOD_STAIRS:
-            case HAY_BLOCK:
-            case COAL_BLOCK:
-            case LEAVES_2:
-            case LOG_2:
-            case CARPET:
-            case DOUBLE_PLANT:
-            case DEAD_BUSH:
-            case FENCE_GATE:
-            case SPRUCE_FENCE_GATE:
-            case BIRCH_FENCE_GATE:
-            case JUNGLE_FENCE_GATE:
-            case DARK_OAK_FENCE_GATE:
-            case ACACIA_FENCE_GATE:
-            case SPRUCE_FENCE:
-            case BIRCH_FENCE:
-            case JUNGLE_FENCE:
-            case DARK_OAK_FENCE:
-            case ACACIA_FENCE:
-            case ACACIA_STAIRS:
-            case DARK_OAK_STAIRS:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Checks if this Material can be used as fuel in a Furnace
-     *
-     * @return true if this Material can be used as fuel.
-     */
-    public boolean isFuel() {
-        switch (this) {
-            case LAVA_BUCKET:
-            case COAL_BLOCK:
-            case BLAZE_ROD:
-            case COAL:
-            case BOAT:
-            case BOAT_ACACIA:
-            case BOAT_BIRCH:
-            case BOAT_DARK_OAK:
-            case BOAT_JUNGLE:
-            case BOAT_SPRUCE:
-            case LOG:
-            case LOG_2:
-            case WOOD:
-            case WOOD_PLATE:
-            case FENCE:
-            case ACACIA_FENCE:
-            case BIRCH_FENCE:
-            case DARK_OAK_FENCE:
-            case JUNGLE_FENCE:
-            case SPRUCE_FENCE:
-            case FENCE_GATE:
-            case ACACIA_FENCE_GATE:
-            case BIRCH_FENCE_GATE:
-            case DARK_OAK_FENCE_GATE:
-            case JUNGLE_FENCE_GATE:
-            case SPRUCE_FENCE_GATE:
-            case WOOD_STAIRS:
-            case ACACIA_STAIRS:
-            case BIRCH_WOOD_STAIRS:
-            case DARK_OAK_STAIRS:
-            case JUNGLE_WOOD_STAIRS:
-            case SPRUCE_WOOD_STAIRS:
-            case TRAP_DOOR:
-            case WORKBENCH:
-            case BOOKSHELF:
-            case CHEST:
-            case TRAPPED_CHEST:
-            case DAYLIGHT_DETECTOR:
-            case JUKEBOX:
-            case NOTE_BLOCK:
-            case HUGE_MUSHROOM_1:
-            case HUGE_MUSHROOM_2:
-            case BANNER:
-            case FISHING_ROD:
-            case LADDER:
-            case WOOD_SWORD:
-            case WOOD_PICKAXE:
-            case WOOD_AXE:
-            case WOOD_SPADE:
-            case WOOD_HOE:
-            case BOW:
-            case SIGN:
-            case WOOD_DOOR:
-            case ACACIA_DOOR_ITEM:
-            case BIRCH_DOOR_ITEM:
-            case DARK_OAK_DOOR_ITEM:
-            case JUNGLE_DOOR_ITEM:
-            case SPRUCE_DOOR_ITEM:
-            case WOOD_STEP:
-            case SAPLING:
-            case BOWL:
-            case STICK:
-            case WOOD_BUTTON:
-            case WOOL:
-            case CARPET:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Check if the material is a block and completely blocks vision
-     *
-     * @return True if this material is a block and completely blocks vision
-     */
-    public boolean isOccluding() {
-        if (!isBlock()) {
-            return false;
-        }
-        switch (this) {
-            case STONE:
-            case GRASS:
-            case DIRT:
-            case COBBLESTONE:
-            case WOOD:
-            case BEDROCK:
-            case SAND:
-            case GRAVEL:
-            case GOLD_ORE:
-            case IRON_ORE:
-            case COAL_ORE:
-            case LOG:
-            case SPONGE:
-            case LAPIS_ORE:
-            case LAPIS_BLOCK:
-            case DISPENSER:
-            case SANDSTONE:
-            case NOTE_BLOCK:
-            case WOOL:
-            case GOLD_BLOCK:
-            case IRON_BLOCK:
-            case DOUBLE_STEP:
-            case BRICK:
-            case BOOKSHELF:
-            case MOSSY_COBBLESTONE:
-            case OBSIDIAN:
-            case MOB_SPAWNER:
-            case DIAMOND_ORE:
-            case DIAMOND_BLOCK:
-            case WORKBENCH:
-            case FURNACE:
-            case BURNING_FURNACE:
-            case REDSTONE_ORE:
-            case GLOWING_REDSTONE_ORE:
-            case SNOW_BLOCK:
-            case CLAY:
-            case JUKEBOX:
-            case PUMPKIN:
-            case NETHERRACK:
-            case SOUL_SAND:
-            case JACK_O_LANTERN:
-            case MONSTER_EGGS:
-            case SMOOTH_BRICK:
-            case HUGE_MUSHROOM_1:
-            case HUGE_MUSHROOM_2:
-            case MELON_BLOCK:
-            case MYCEL:
-            case NETHER_BRICK:
-            case ENDER_STONE:
-            case REDSTONE_LAMP_OFF:
-            case REDSTONE_LAMP_ON:
-            case WOOD_DOUBLE_STEP:
-            case EMERALD_ORE:
-            case EMERALD_BLOCK:
-            case COMMAND:
-            case QUARTZ_ORE:
-            case QUARTZ_BLOCK:
-            case DROPPER:
-            case STAINED_CLAY:
-            case HAY_BLOCK:
-            case HARD_CLAY:
-            case COAL_BLOCK:
-            case LOG_2:
-            case PACKED_ICE:
-            case SLIME_BLOCK:
-            case BARRIER:
-            case PRISMARINE:
-            case RED_SANDSTONE:
-            case DOUBLE_STONE_SLAB2:
-            case PURPUR_BLOCK:
-            case PURPUR_PILLAR:
-            case PURPUR_DOUBLE_SLAB:
-            case END_BRICKS:
-            case STRUCTURE_BLOCK:
-            case COMMAND_REPEATING:
-            case COMMAND_CHAIN:
-            case MAGMA:
-            case NETHER_WART_BLOCK:
-            case RED_NETHER_BRICK:
-            case BONE_BLOCK:
-            case WHITE_GLAZED_TERRACOTTA:
-            case ORANGE_GLAZED_TERRACOTTA:
-            case MAGENTA_GLAZED_TERRACOTTA:
-            case LIGHT_BLUE_GLAZED_TERRACOTTA:
-            case YELLOW_GLAZED_TERRACOTTA:
-            case LIME_GLAZED_TERRACOTTA:
-            case PINK_GLAZED_TERRACOTTA:
-            case GRAY_GLAZED_TERRACOTTA:
-            case SILVER_GLAZED_TERRACOTTA:
-            case CYAN_GLAZED_TERRACOTTA:
-            case PURPLE_GLAZED_TERRACOTTA:
-            case BLUE_GLAZED_TERRACOTTA:
-            case BROWN_GLAZED_TERRACOTTA:
-            case GREEN_GLAZED_TERRACOTTA:
-            case RED_GLAZED_TERRACOTTA:
-            case BLACK_GLAZED_TERRACOTTA:
-            case CONCRETE:
-            case CONCRETE_POWDER:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * @return True if this material is affected by gravity.
-     */
-    public boolean hasGravity() {
-        if (!isBlock()) {
-            return false;
-        }
-        switch (this) {
-            case SAND:
-            case GRAVEL:
-            case ANVIL:
-            case CONCRETE_POWDER:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Checks if this Material is an obtainable item.
-     *
-     * @return true if this material is an item
-     */
-    public boolean isItem() {
-        switch (this) {
-            case ACACIA_DOOR:
-            case BED_BLOCK:
-            case BEETROOT_BLOCK:
-            case BIRCH_DOOR:
-            case BREWING_STAND:
-            case BURNING_FURNACE:
-            case CAKE_BLOCK:
-            case CARROT:
-            case CAULDRON:
-            case COCOA:
-            case CROPS:
-            case DARK_OAK_DOOR:
-            case DAYLIGHT_DETECTOR_INVERTED:
-            case DIODE_BLOCK_OFF:
-            case DIODE_BLOCK_ON:
-            case DOUBLE_STEP:
-            case DOUBLE_STONE_SLAB2:
-            case ENDER_PORTAL:
-            case END_GATEWAY:
-            case FIRE:
-            case FLOWER_POT:
-            case FROSTED_ICE:
-            case GLOWING_REDSTONE_ORE:
-            case IRON_DOOR_BLOCK:
-            case JUNGLE_DOOR:
-            case LAVA:
-            case MELON_STEM:
-            case NETHER_WARTS:
-            case PISTON_EXTENSION:
-            case PISTON_MOVING_PIECE:
-            case PORTAL:
-            case POTATO:
-            case PUMPKIN_STEM:
-            case PURPUR_DOUBLE_SLAB:
-            case REDSTONE_COMPARATOR_OFF:
-            case REDSTONE_COMPARATOR_ON:
-            case REDSTONE_LAMP_ON:
-            case REDSTONE_TORCH_OFF:
-            case REDSTONE_WIRE:
-            case SIGN_POST:
-            case SKULL:
-            case SPRUCE_DOOR:
-            case STANDING_BANNER:
-            case STATIONARY_LAVA:
-            case STATIONARY_WATER:
-            case SUGAR_CANE_BLOCK:
-            case TRIPWIRE:
-            case WALL_BANNER:
-            case WALL_SIGN:
-            case WATER:
-            case WOODEN_DOOR:
-            case WOOD_DOUBLE_STEP:
-                return false;
-            default:
-                return true;
-        }
-    }
 }
+

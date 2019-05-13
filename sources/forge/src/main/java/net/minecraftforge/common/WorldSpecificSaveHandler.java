@@ -21,6 +21,7 @@ package net.minecraftforge.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 
 import net.minecraft.world.gen.structure.template.TemplateManager;
 import org.apache.logging.log4j.Level;
@@ -106,4 +107,10 @@ public class WorldSpecificSaveHandler implements ISaveHandler
         return parent.getStructureTemplateManager();
     }
 
+    // Akarin start
+	@Override
+	public UUID getUUID() {
+		return this.parent.getUUID();
+	}
+	// Akarin end
 }

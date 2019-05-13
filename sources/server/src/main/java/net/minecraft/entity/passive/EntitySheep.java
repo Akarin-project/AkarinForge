@@ -4,6 +4,9 @@ import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.inventory.InventoryView;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityLiving;
@@ -55,6 +58,11 @@ public class EntitySheep extends EntityAnimal implements net.minecraftforge.comm
         {
             return false;
         }
+
+		@Override
+		public InventoryView getBukkitView() {
+			return null;
+		}
     }, 2, 1);
     private static final Map<EnumDyeColor, float[]> DYE_TO_RGB = Maps.newEnumMap(EnumDyeColor.class);
     private int sheepTimer;

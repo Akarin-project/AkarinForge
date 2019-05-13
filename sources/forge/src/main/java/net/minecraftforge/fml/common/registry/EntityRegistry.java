@@ -30,6 +30,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.FMLLog;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.network.internal.FMLMessage.EntitySpawnMessage;
 import net.minecraftforge.registries.GameData;
@@ -41,6 +42,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 
 import javax.annotation.Nullable;
 
@@ -147,6 +149,26 @@ public class EntityRegistry
     private final ListMultimap<ModContainer, EntityRegistration> entityRegistrations = ArrayListMultimap.create();
     private final BiMap<Class<? extends Entity>, EntityRegistration> entityClassRegistrations = HashBiMap.create();
     private final Map<Class<? extends Entity>, EntityEntry> entityClassEntries = GameData.getEntityClassMap();
+    public static Map<Class<? extends Entity>, String> entityTypeMap = Maps.newHashMap();
+    public static Map<String, Class<? extends Entity>> entityClassMap = Maps.newHashMap();
+    
+    private static void registerBukkitType(Class<? extends Entity> entityClass, String entityName) {
+        ModContainer activeModContainer = Loader.instance().activeModContainer();
+        String modId = "unknown";
+        if (entityName.contains(".") && entityName.indexOf(".") + 1 < entityName.length()) {
+            entityName = entityName.substring(entityName.indexOf(".") + 1, entityName.length());
+        }
+        if ((entityName = entityName.replace("entity", "")).startsWith("ent")) {
+            entityName = entityName.replace("ent", "");
+        }
+        entityName = entityName.replaceAll("[^A-Za-z0-9]", "");
+        if (activeModContainer != null) {
+            modId = activeModContainer.getModId();
+        }
+        entityName = modId + "-" + entityName;
+        entityTypeMap.put(entityClass, entityName);
+        entityClassMap.put(entityName, entityClass);
+    }
 
     public static EntityRegistry instance()
     {
@@ -171,6 +193,7 @@ public class EntityRegistry
     public static void registerModEntity(ResourceLocation registryName, Class<? extends Entity> entityClass, String entityName, int id, Object mod, int trackingRange, int updateFrequency, boolean sendsVelocityUpdates)
     {
         instance().doModEntityRegistration(registryName, entityClass, entityName, id, mod, trackingRange, updateFrequency, sendsVelocityUpdates);
+        EntityRegistry.registerBukkitType(entityClass, entityName);
     }
 
     /**
@@ -191,6 +214,7 @@ public class EntityRegistry
     {
         instance().doModEntityRegistration(registryName, entityClass, entityName, id, mod, trackingRange, updateFrequency, sendsVelocityUpdates);
         EntityRegistry.registerEgg(registryName, eggPrimary, eggSecondary);
+        EntityRegistry.registerBukkitType(entityClass, entityName);
     }
 
     private void doModEntityRegistration(ResourceLocation registryName, Class<? extends Entity> entityClass, String entityName, int id, Object mod, int trackingRange, int updateFrequency, boolean sendsVelocityUpdates)

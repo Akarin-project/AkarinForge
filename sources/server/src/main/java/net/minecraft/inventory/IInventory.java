@@ -44,6 +44,7 @@ public interface IInventory extends IWorldNameable
     int getFieldCount();
 
     void clear();
+
     // Akarin start
     public List<ItemStack> getContents();
 

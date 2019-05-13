@@ -6,7 +6,7 @@ import net.minecraft.util.math.MathHelper;
 public class RangedAttribute extends BaseAttribute
 {
     private final double minimumValue;
-    private final double maximumValue;
+    public double maximumValue;
     private String description;
 
     public RangedAttribute(@Nullable IAttribute parentIn, String unlocalizedNameIn, double defaultValue, double minimumValueIn, double maximumValueIn)

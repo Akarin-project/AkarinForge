@@ -1,74 +1,45 @@
+/*
+ * Akarin Forge
+ * 
+ * Could not load the following classes:
+ *  com.google.common.collect.Maps
+ */
 package org.bukkit;
 
+import com.google.common.collect.Maps;
+import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-
-/**
- * Represents the different species of trees regardless of size.
- */
 public enum TreeSpecies {
-
-    /**
-     * Represents the common tree species.
-     */
-    GENERIC(0x0),
-    /**
-     * Represents the darker barked/leaved tree species.
-     */
-    REDWOOD(0x1),
-    /**
-     * Represents birches.
-     */
-    BIRCH(0x2),
-    /**
-     * Represents jungle trees.
-     */
-    JUNGLE(0x3),
-    /**
-     * Represents acacia trees.
-     */
-    ACACIA(0x4),
-    /**
-     * Represents dark oak trees.
-     */
-    DARK_OAK(0x5),
-    ;
-
+    GENERIC(0),
+    REDWOOD(1),
+    BIRCH(2),
+    JUNGLE(3),
+    ACACIA(4),
+    DARK_OAK(5);
+    
     private final byte data;
-    private final static Map<Byte, TreeSpecies> BY_DATA = Maps.newHashMap();
+    private static final Map<Byte, TreeSpecies> BY_DATA;
 
-    private TreeSpecies(final int data) {
-        this.data = (byte) data;
+    private TreeSpecies(int data) {
+        this.data = (byte)data;
     }
 
-    /**
-     * Gets the associated data value representing this species
-     *
-     * @return A byte containing the data value of this tree species
-     * @deprecated Magic value
-     */
     @Deprecated
     public byte getData() {
-        return data;
+        return this.data;
     }
 
-    /**
-     * Gets the TreeSpecies with the given data value
-     *
-     * @param data Data value to fetch
-     * @return The {@link TreeSpecies} representing the given value, or null
-     *     if it doesn't exist
-     * @deprecated Magic value
-     */
     @Deprecated
-    public static TreeSpecies getByData(final byte data) {
-        return BY_DATA.get(data);
+    public static TreeSpecies getByData(byte data) {
+        return BY_DATA.get(Byte.valueOf(data));
     }
 
     static {
-        for (TreeSpecies species : values()) {
-            BY_DATA.put(species.data, species);
+        BY_DATA = Maps.newHashMap();
+        for (TreeSpecies species : TreeSpecies.values()) {
+            BY_DATA.put(Byte.valueOf(species.data), species);
         }
     }
 }
+

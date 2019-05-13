@@ -1,13 +1,8 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit;
 
-/**
- * An Enum of Sounds the server is able to send to players.
- * <p>
- * WARNING: At any time, sounds may be added/removed from this Enum or even
- * MineCraft itself! There is no guarantee the sounds will play. There is no
- * guarantee values will not be removed from this Enum. As such, you should not
- * depend on the ordinal values of this class.
- */
 public enum Sound {
     AMBIENT_CAVE,
     BLOCK_ANVIL_BREAK,
@@ -558,4 +553,9 @@ public enum Sound {
     UI_TOAST_OUT,
     WEATHER_RAIN,
     WEATHER_RAIN_ABOVE;
+    
+
+    private Sound() {
+    }
 }
+

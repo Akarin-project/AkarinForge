@@ -48,6 +48,15 @@ public class PlayerChunkMap
     private long previousTotalWorldTime;
     private boolean sortMissingChunks = true;
     private boolean sortSendToPlayers = true;
+    // CraftBukkit start - add method
+    public final boolean isChunkInUse(int x, int z) {
+        PlayerChunkMapEntry pi = getEntry(x, z);
+        if (pi != null) {
+            return (pi.players.size() > 0);
+        }
+        return false;
+    }
+    // CraftBukkit end
 
     public PlayerChunkMap(WorldServer serverWorld)
     {

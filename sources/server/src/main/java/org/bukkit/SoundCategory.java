@@ -1,10 +1,9 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit;
 
-/**
- * An Enum of categories for sounds.
- */
 public enum SoundCategory {
-
     MASTER,
     MUSIC,
     RECORDS,
@@ -15,4 +14,9 @@ public enum SoundCategory {
     PLAYERS,
     AMBIENT,
     VOICE;
+    
+
+    private SoundCategory() {
+    }
 }
+

@@ -1,3 +1,6 @@
+/*
+ * Akarin reference
+ */
 package net.minecraft.world;
 
 import com.google.common.collect.Lists;
@@ -8,17 +11,26 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import javax.annotation.Nullable;
+
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentProtection;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.entity.item.EntityTNTPrimed;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.projectile.EntityFireball;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -37,11 +49,14 @@ public class Explosion
     private final double x;
     private final double y;
     private final double z;
-    public final Entity exploder; // Akarin - private -> public
+    public final Entity exploder; // Akarin
     private final float size;
     private final List<BlockPos> affectedBlockPositions;
     private final Map<EntityPlayer, Vec3d> playerKnockbackMap;
     private final Vec3d position;
+    // Akarin start
+    public boolean wasCanceled = false;
+    // Akarin end
 
     @SideOnly(Side.CLIENT)
     public Explosion(World worldIn, Entity entityIn, double x, double y, double z, float size, List<BlockPos> affectedPositions)
@@ -63,7 +78,7 @@ public class Explosion
         this.playerKnockbackMap = Maps.<EntityPlayer, Vec3d>newHashMap();
         this.world = worldIn;
         this.exploder = entityIn;
-        this.size = size;
+        this.size = (float) Math.max(size, 0.0); // Akarin - clamp bad values
         this.x = x;
         this.y = y;
         this.z = z;
@@ -74,6 +89,11 @@ public class Explosion
 
     public void doExplosionA()
     {
+        // Akarin start
+        if (this.size < 0.1F) {
+            return;
+        }
+        // Akarin end
         Set<BlockPos> set = Sets.<BlockPos>newHashSet();
         int i = 16;
 
@@ -108,7 +128,7 @@ public class Explosion
                                 f -= (f2 + 0.3F) * 0.3F;
                             }
 
-                            if (f > 0.0F && (this.exploder == null || this.exploder.canExplosionDestroyBlock(this, this.world, blockpos, iblockstate, f)))
+                            if (f > 0.0F && (this.exploder == null || this.exploder.canExplosionDestroyBlock(this, this.world, blockpos, iblockstate, f)) && blockpos.getY() < 256 && blockpos.getY() >= 0) // Akarin - don't wrap explosions
                             {
                                 set.add(blockpos);
                             }
@@ -130,7 +150,14 @@ public class Explosion
         int i1 = MathHelper.floor(this.y + (double)f3 + 1.0D);
         int j2 = MathHelper.floor(this.z - (double)f3 - 1.0D);
         int j1 = MathHelper.floor(this.z + (double)f3 + 1.0D);
-        List<Entity> list = this.world.getEntitiesWithinAABBExcludingEntity(this.exploder, new AxisAlignedBB((double)k1, (double)i2, (double)j2, (double)l1, (double)i1, (double)j1));
+        // Akarin start - Fix lag from explosions processing dead entities
+        List<Entity> list = this.world.getEntitiesInAABBexcluding(this.exploder, new AxisAlignedBB((double)k1, (double)i2, (double)j2, (double)l1, (double)i1, (double)j1), new com.google.common.base.Predicate<Entity>() {
+            @Override
+            public boolean apply(Entity entity) {
+                return EntitySelectors.CAN_AI_TARGET.apply(entity) && !entity.isDead;
+            }
+        });
+        // Akarin end
         net.minecraftforge.event.ForgeEventFactory.onExplosionDetonate(this.world, this, list, f3);
         Vec3d vec3d = new Vec3d(this.x, this.y, this.z);
 
@@ -156,7 +183,15 @@ public class Explosion
                         d9 = d9 / d13;
                         double d14 = (double)this.world.getBlockDensity(vec3d, entity.getEntityBoundingBox());
                         double d10 = (1.0D - d12) * d14;
-                        entity.attackEntityFrom(DamageSource.causeExplosionDamage(this), (float)((int)((d10 * d10 + d10) / 2.0D * 7.0D * (double)f3 + 1.0D)));
+                        // CraftBukkit start
+                        CraftEventFactory.entityDamage = exploder;
+                        entity.forceExplosionKnockback = false;
+                        boolean wasDamaged = entity.attackEntityFrom(DamageSource.causeExplosionDamage(this), (float)((int)((d10 * d10 + d10) / 2.0D * 7.0D * (double)f3 + 1.0D)));
+                        CraftEventFactory.entityDamage = null;
+                        if (!wasDamaged && !(entity instanceof EntityTNTPrimed || entity instanceof EntityFallingBlock) && !entity.forceExplosionKnockback) {
+                            continue;
+                        }
+                        // CraftBukkit end
                         double d11 = d10;
 
                         if (entity instanceof EntityLivingBase)
@@ -198,6 +233,50 @@ public class Explosion
 
         if (this.damagesTerrain)
         {
+            // Akarin start
+            org.bukkit.World bworld = this.world.getWorld();
+            org.bukkit.entity.Entity explode = this.exploder == null ? null : this.exploder.getBukkitEntity();
+            Location location = new Location(bworld, this.x, this.y, this.z);
+
+            List<org.bukkit.block.Block> blockList = Lists.newArrayList();
+            for (int i1 = this.affectedBlockPositions.size() - 1; i1 >= 0; i1--) {
+                BlockPos cpos = (BlockPos) this.affectedBlockPositions.get(i1);
+                org.bukkit.block.Block bblock = bworld.getBlockAt(cpos.getX(), cpos.getY(), cpos.getZ());
+                if (bblock.getType() != org.bukkit.Material.AIR) {
+                    blockList.add(bblock);
+                }
+            }
+
+            boolean cancelled;
+            List<org.bukkit.block.Block> bukkitBlocks;
+            float yield;
+
+            if (explode != null) {
+                EntityExplodeEvent event = new EntityExplodeEvent(explode, location, blockList, 1.0F / this.size);
+                this.world.getServer().getPluginManager().callEvent(event);
+                cancelled = event.isCancelled();
+                bukkitBlocks = event.blockList();
+                yield = event.getYield();
+            } else {
+                BlockExplodeEvent event = new BlockExplodeEvent(location.getBlock(), blockList, 1.0F / this.size);
+                this.world.getServer().getPluginManager().callEvent(event);
+                cancelled = event.isCancelled();
+                bukkitBlocks = event.blockList();
+                yield = event.getYield();
+            }
+
+            this.affectedBlockPositions.clear();
+
+            for (org.bukkit.block.Block bblock : bukkitBlocks) {
+                BlockPos coords = new BlockPos(bblock.getX(), bblock.getY(), bblock.getZ());
+                affectedBlockPositions.add(coords);
+            }
+
+            if (cancelled) {
+                this.wasCanceled = true;
+                return;
+            }
+            // Akarin end
             for (BlockPos blockpos : this.affectedBlockPositions)
             {
                 IBlockState iblockstate = this.world.getBlockState(blockpos);
@@ -228,7 +307,7 @@ public class Explosion
                 {
                     if (block.canDropFromExplosion(this))
                     {
-                        block.dropBlockAsItemWithChance(this.world, blockpos, this.world.getBlockState(blockpos), 1.0F / this.size, 0);
+                        block.dropBlockAsItemWithChance(this.world, blockpos, this.world.getBlockState(blockpos), yield, 0); // Akarin - add yield
                     }
 
                     block.onBlockExploded(this.world, blockpos, this);
@@ -242,7 +321,11 @@ public class Explosion
             {
                 if (this.world.getBlockState(blockpos1).getMaterial() == Material.AIR && this.world.getBlockState(blockpos1.down()).isFullBlock() && this.random.nextInt(3) == 0)
                 {
-                    this.world.setBlockState(blockpos1, Blocks.FIRE.getDefaultState());
+                    // Akarin start - Ignition by explosion
+                    if (!CraftEventFactory.callBlockIgniteEvent(this.world, blockpos1.getX(), blockpos1.getY(), blockpos1.getZ(), this).isCancelled()) {
+                        this.world.setBlockState(blockpos1, Blocks.FIRE.getDefaultState());
+                    }
+                    // Akarin end
                 }
             }
         }
@@ -266,7 +349,7 @@ public class Explosion
         }
         else
         {
-            return this.exploder instanceof EntityLivingBase ? (EntityLivingBase)this.exploder : null;
+            return this.exploder instanceof EntityLivingBase ? (EntityLivingBase)this.exploder : (this.exploder instanceof EntityFireball ? ((EntityFireball) this.exploder).shootingEntity : null); // Akarin
         }
     }
 

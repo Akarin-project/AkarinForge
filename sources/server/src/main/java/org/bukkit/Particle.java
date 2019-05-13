@@ -1,3 +1,6 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit;
 
 import org.bukkit.inventory.ItemStack;
@@ -53,22 +56,19 @@ public enum Particle {
     FALLING_DUST(MaterialData.class),
     TOTEM,
     SPIT;
-
+    
     private final Class<?> dataType;
 
-    Particle() {
-        dataType = Void.class;
+    private Particle() {
+        this.dataType = Void.class;
     }
 
-    Particle(Class<?> data) {
-        dataType = data;
+    private Particle(Class<?> data) {
+        this.dataType = data;
     }
 
-    /**
-     * Returns the required data type for the particle
-     * @return the required data type
-     */
     public Class<?> getDataType() {
-        return dataType;
+        return this.dataType;
     }
 }
+

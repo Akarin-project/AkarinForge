@@ -10,5 +10,7 @@ public class ServerShutdownThread extends Thread {
     }
 
     @Override
-    public void run() {}
+    public void run() {
+    }
 }
+

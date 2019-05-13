@@ -16,7 +16,7 @@ public class UserListEntry<T>
         this.value = valueIn;
     }
 
-    T getValue()
+    public T getValue() // Akarin
     {
         return this.value;
     }

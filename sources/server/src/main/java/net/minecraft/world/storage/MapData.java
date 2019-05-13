@@ -4,7 +4,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_12_R1.map.CraftMapView;
+
 import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -26,12 +33,21 @@ public class MapData extends WorldSavedData
     public byte scale;
     public byte[] colors = new byte[16384];
     public List<MapData.MapInfo> playersArrayList = Lists.<MapData.MapInfo>newArrayList();
-    public final Map<EntityPlayer, MapData.MapInfo> playersHashMap = Maps.<EntityPlayer, MapData.MapInfo>newHashMap(); // Akarin - private -> public
+    public final Map<EntityPlayer, MapData.MapInfo> playersHashMap = Maps.<EntityPlayer, MapData.MapInfo>newHashMap(); // Akarin
     public Map<String, MapDecoration> mapDecorations = Maps.<String, MapDecoration>newLinkedHashMap();
+    // CraftBukkit start
+    public final CraftMapView mapView;
+    private CraftServer server;
+    private UUID uniqueId = null;
+    // CraftBukkit end
 
     public MapData(String mapname)
     {
         super(mapname);
+        // CraftBukkit start
+        mapView = new CraftMapView(this);
+        server = (CraftServer) org.bukkit.Bukkit.getServer();
+        // CraftBukkit end
     }
 
     public void calculateMapCenter(double x, double z, int mapScale)
@@ -45,7 +61,30 @@ public class MapData extends WorldSavedData
 
     public void readFromNBT(NBTTagCompound nbt)
     {
-        this.dimension = nbt.getInteger("dimension");
+        // CraftBukkit start
+        byte dimension = nbt.getByte("dimension");
+
+        if (dimension >= 10) {
+            long least = nbt.getLong("UUIDLeast");
+            long most = nbt.getLong("UUIDMost");
+
+            if (least != 0L && most != 0L) {
+                this.uniqueId = new UUID(most, least);
+
+                CraftWorld world = (CraftWorld) server.getWorld(this.uniqueId);
+                // Check if the stored world details are correct.
+                if (world == null) {
+                    /* All Maps which do not have their valid world loaded are set to a dimension which hopefully won't be reached.
+                       This is to prevent them being corrupted with the wrong map data. */
+                    dimension = 127;
+                } else {
+                    dimension = (byte) world.getHandle().dimension;
+                }
+            }
+        }
+
+        this.dimension = dimension;
+        // CraftBukkit end
         this.xCenter = nbt.getInteger("xCenter");
         this.zCenter = nbt.getInteger("zCenter");
         this.scale = nbt.getByte("scale");
@@ -97,7 +136,25 @@ public class MapData extends WorldSavedData
 
     public NBTTagCompound writeToNBT(NBTTagCompound compound)
     {
-        compound.setInteger("dimension", this.dimension);
+        // CraftBukkit start
+        if (this.dimension >= 10) {
+            if (this.uniqueId == null) {
+                for (org.bukkit.World world : server.getWorlds()) {
+                    CraftWorld cWorld = (CraftWorld) world;
+                    if (cWorld.getHandle().dimension == this.dimension) {
+                        this.uniqueId = cWorld.getUID();
+                        break;
+                    }
+                }
+            }
+            /* Perform a second check to see if a matching world was found, this is a necessary
+               change incase Maps are forcefully unlinked from a World and lack a UID.*/
+            if (this.uniqueId != null) {
+                compound.setLong("UUIDLeast", this.uniqueId.getLeastSignificantBits());
+                compound.setLong("UUIDMost", this.uniqueId.getMostSignificantBits());
+            }
+        }
+        // CraftBukkit end
         compound.setInteger("xCenter", this.xCenter);
         compound.setInteger("zCenter", this.zCenter);
         compound.setByte("scale", this.scale);
@@ -315,14 +372,27 @@ public class MapData extends WorldSavedData
         @Nullable
         public Packet<?> getPacket(ItemStack stack)
         {
+         // CraftBukkit start
+            if (!this.isDirty && this.tick % 5 != 0) { this.tick++; return null; }
+            org.bukkit.craftbukkit.v1_12_R1.map.RenderData render = MapData.this.mapView.render((org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer) this.player.getBukkitEntity());
+
+            java.util.Collection<MapDecoration> icons = new java.util.ArrayList<MapDecoration>();
+
+            for ( org.bukkit.map.MapCursor cursor : render.cursors) {
+
+                if (cursor.isVisible()) {
+                    icons.add(new MapDecoration(MapDecoration.Type.byIcon(cursor.getRawType()), cursor.getX(), cursor.getY(), cursor.getDirection()));
+                }
+            }
+            // Akarin end
             if (this.isDirty)
             {
                 this.isDirty = false;
-                return new SPacketMaps(stack.getMetadata(), MapData.this.scale, MapData.this.trackingPosition, MapData.this.mapDecorations.values(), MapData.this.colors, this.minX, this.minY, this.maxX + 1 - this.minX, this.maxY + 1 - this.minY);
+                return new SPacketMaps(stack.getMetadata(), MapData.this.scale, MapData.this.trackingPosition, icons, render.buffer, this.minX, this.minY, this.maxX + 1 - this.minX, this.maxY + 1 - this.minY); // Akarin
             }
             else
             {
-                return this.tick++ % 5 == 0 ? new SPacketMaps(stack.getMetadata(), MapData.this.scale, MapData.this.trackingPosition, MapData.this.mapDecorations.values(), MapData.this.colors, 0, 0, 0, 0) : null;
+                return this.tick++ % 5 == 0 ? new SPacketMaps(stack.getMetadata(), MapData.this.scale, MapData.this.trackingPosition, icons, render.buffer, 0, 0, 0, 0) : null; // Akarin
             }
         }
 

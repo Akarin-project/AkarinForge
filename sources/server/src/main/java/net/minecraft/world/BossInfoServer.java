@@ -14,7 +14,7 @@ public class BossInfoServer extends BossInfo
 {
     private final Set<EntityPlayerMP> players = Sets.<EntityPlayerMP>newHashSet();
     private final Set<EntityPlayerMP> readOnlyPlayers;
-    private boolean visible;
+    public boolean visible; // Akarin - public
 
     public BossInfoServer(ITextComponent nameIn, BossInfo.Color colorIn, BossInfo.Overlay overlayIn)
     {
@@ -92,7 +92,7 @@ public class BossInfoServer extends BossInfo
         }
     }
 
-    private void sendUpdate(SPacketUpdateBossInfo.Operation operationIn)
+    public void sendUpdate(SPacketUpdateBossInfo.Operation operationIn) // Akarin - public
     {
         if (this.visible)
         {

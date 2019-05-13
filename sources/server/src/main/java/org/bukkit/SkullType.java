@@ -1,8 +1,8 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit;
 
-/**
- * Represents the different types of skulls.
- */
 public enum SkullType {
     SKELETON,
     WITHER,
@@ -10,4 +10,9 @@ public enum SkullType {
     PLAYER,
     CREEPER,
     DRAGON;
+    
+
+    private SkullType() {
+    }
 }
+

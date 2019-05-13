@@ -44,7 +44,7 @@ public class EntityMagmaCube extends EntitySlime
         return this.world.checkNoEntityCollision(this.getEntityBoundingBox(), this) && this.world.getCollisionBoxes(this, this.getEntityBoundingBox()).isEmpty() && !this.world.containsAnyLiquid(this.getEntityBoundingBox());
     }
 
-    protected void setSlimeSize(int size, boolean resetHealth)
+    public void setSlimeSize(int size, boolean resetHealth)
     {
         super.setSlimeSize(size, resetHealth);
         this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue((double)(size * 3));

@@ -3,6 +3,13 @@ package net.minecraft.entity.item;
 import com.google.common.base.Predicate;
 import java.util.List;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
+import org.bukkit.inventory.EquipmentSlot;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.entity.Entity;
@@ -67,12 +74,18 @@ public class EntityArmorStand extends EntityLivingBase
     public long punchCooldown;
     private int disabledSlots;
     private boolean wasMarker;
-    private Rotations headRotation;
-    private Rotations bodyRotation;
-    private Rotations leftArmRotation;
-    private Rotations rightArmRotation;
-    private Rotations leftLegRotation;
-    private Rotations rightLegRotation;
+    public Rotations headRotation;
+    public Rotations bodyRotation;
+    public Rotations leftArmRotation;
+    public Rotations rightArmRotation;
+    public Rotations leftLegRotation;
+    public Rotations rightLegRotation;
+    // CraftBukkit start - SPIGOT-3607, SPIGOT-3637
+    @Override
+    public float getBukkitYaw() {
+        return this.rotationYaw;
+    }
+    // CraftBukkit end
 
     public EntityArmorStand(World worldIn)
     {
@@ -457,6 +470,21 @@ public class EntityArmorStand extends EntityLivingBase
         {
             if (!itemstack.isEmpty() || (this.disabledSlots & 1 << p_184795_2_.getSlotIndex() + 16) == 0)
             {
+                // CraftBukkit start
+                org.bukkit.inventory.ItemStack armorStandItem = CraftItemStack.asCraftMirror(itemstack);
+                org.bukkit.inventory.ItemStack playerHeldItem = CraftItemStack.asCraftMirror(p_184795_3_);
+
+                Player bplayer = (Player) player.getBukkitEntity();
+                ArmorStand self = (ArmorStand) this.getBukkitEntity();
+
+                EquipmentSlot slot = org.bukkit.craftbukkit.v1_12_R1.CraftEquipmentSlot.getSlot(p_184795_2_);
+                PlayerArmorStandManipulateEvent armorStandManipulateEvent = new PlayerArmorStandManipulateEvent(bplayer, self, playerHeldItem, armorStandItem, slot);
+                this.world.getServer().getPluginManager().callEvent(armorStandManipulateEvent);
+
+                if (armorStandManipulateEvent.isCancelled()) {
+                    return;
+                }
+                // CraftBukkit end
                 if (player.capabilities.isCreativeMode && itemstack.isEmpty() && !p_184795_3_.isEmpty())
                 {
                     ItemStack itemstack2 = p_184795_3_.copy();
@@ -484,11 +512,16 @@ public class EntityArmorStand extends EntityLivingBase
 
     public boolean attackEntityFrom(DamageSource source, float amount)
     {
+        // CraftBukkit start
+        if (org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.handleNonLivingEntityDamageEvent(this, source, amount)) {
+            return false;
+        }
+        // CraftBukkit end
         if (!this.world.isRemote && !this.isDead)
         {
             if (DamageSource.OUT_OF_WORLD.equals(source))
             {
-                this.setDead();
+                this.onKillCommand(); // CraftBukkit - this.die() -> this.killEntity()
                 return false;
             }
             else if (!this.isEntityInvulnerable(source) && !this.canInteract && !this.hasMarker())
@@ -496,7 +529,7 @@ public class EntityArmorStand extends EntityLivingBase
                 if (source.isExplosion())
                 {
                     this.dropContents();
-                    this.setDead();
+                    this.onKillCommand(); // CraftBukkit - this.die() -> this.killEntity()
                     return false;
                 }
                 else if (DamageSource.IN_FIRE.equals(source))
@@ -541,7 +574,7 @@ public class EntityArmorStand extends EntityLivingBase
                         {
                             this.playBrokenSound();
                             this.playParticles();
-                            this.setDead();
+                            this.onKillCommand(); // CraftBukkit - this.die() -> this.killEntity()
                             return false;
                         }
                         else
@@ -557,7 +590,7 @@ public class EntityArmorStand extends EntityLivingBase
                             {
                                 this.dropBlock();
                                 this.playParticles();
-                                this.setDead();
+                                this.onKillCommand(); // CraftBukkit - this.die() -> this.killEntity()
                             }
 
                             return false;
@@ -623,7 +656,7 @@ public class EntityArmorStand extends EntityLivingBase
         if (f <= 0.5F)
         {
             this.dropContents();
-            this.setDead();
+            this.onKillCommand(); // CraftBukkit - this.die() -> this.killEntity()
         }
         else
         {
@@ -633,7 +666,7 @@ public class EntityArmorStand extends EntityLivingBase
 
     private void dropBlock()
     {
-        Block.spawnAsEntity(this.world, new BlockPos(this), new ItemStack(Items.ARMOR_STAND));
+        drops.add(org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack.asBukkitCopy(new ItemStack(Items.ARMOR_STAND))); // CraftBukkit - add to drops
         this.dropContents();
     }
 
@@ -647,7 +680,7 @@ public class EntityArmorStand extends EntityLivingBase
 
             if (!itemstack.isEmpty())
             {
-                Block.spawnAsEntity(this.world, (new BlockPos(this)).up(), itemstack);
+                drops.add(org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack.asBukkitCopy(itemstack)); // CraftBukkit - add to drops
                 this.handItems.set(i, ItemStack.EMPTY);
             }
         }
@@ -658,7 +691,7 @@ public class EntityArmorStand extends EntityLivingBase
 
             if (!itemstack1.isEmpty())
             {
-                Block.spawnAsEntity(this.world, (new BlockPos(this)).up(), itemstack1);
+                drops.add(org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack.asBukkitCopy(itemstack1)); // CraftBukkit - add to drops
                 this.armorItems.set(j, ItemStack.EMPTY);
             }
         }
@@ -791,6 +824,7 @@ public class EntityArmorStand extends EntityLivingBase
 
     public void onKillCommand()
     {
+        org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callEntityDeathEvent(this, drops); // CraftBukkit - call event
         this.setDead();
     }
 
@@ -804,7 +838,7 @@ public class EntityArmorStand extends EntityLivingBase
         return this.hasMarker() ? EnumPushReaction.IGNORE : super.getPushReaction();
     }
 
-    private void setSmall(boolean small)
+    public void setSmall(boolean small)
     {
         this.dataManager.set(STATUS, Byte.valueOf(this.setBit(((Byte)this.dataManager.get(STATUS)).byteValue(), 1, small)));
         this.setSize(0.5F, 1.975F);
@@ -815,7 +849,7 @@ public class EntityArmorStand extends EntityLivingBase
         return (((Byte)this.dataManager.get(STATUS)).byteValue() & 1) != 0;
     }
 
-    private void setShowArms(boolean showArms)
+    public void setShowArms(boolean showArms)
     {
         this.dataManager.set(STATUS, Byte.valueOf(this.setBit(((Byte)this.dataManager.get(STATUS)).byteValue(), 4, showArms)));
     }
@@ -825,7 +859,7 @@ public class EntityArmorStand extends EntityLivingBase
         return (((Byte)this.dataManager.get(STATUS)).byteValue() & 4) != 0;
     }
 
-    private void setNoBasePlate(boolean noBasePlate)
+    public void setNoBasePlate(boolean noBasePlate)
     {
         this.dataManager.set(STATUS, Byte.valueOf(this.setBit(((Byte)this.dataManager.get(STATUS)).byteValue(), 8, noBasePlate)));
     }
@@ -835,7 +869,7 @@ public class EntityArmorStand extends EntityLivingBase
         return (((Byte)this.dataManager.get(STATUS)).byteValue() & 8) != 0;
     }
 
-    private void setMarker(boolean marker)
+    public void setMarker(boolean marker)
     {
         this.dataManager.set(STATUS, Byte.valueOf(this.setBit(((Byte)this.dataManager.get(STATUS)).byteValue(), 16, marker)));
         this.setSize(0.5F, 1.975F);

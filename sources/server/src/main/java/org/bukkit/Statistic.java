@@ -1,8 +1,8 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit;
 
-/**
- * Represents a countable statistic, which is tracked by the server.
- */
 public enum Statistic {
     DAMAGE_DEALT,
     DAMAGE_TAKEN,
@@ -61,7 +61,7 @@ public enum Statistic {
     CHEST_OPENED,
     SLEEP_IN_BED,
     SHULKER_BOX_OPENED;
-
+    
     private final Type type;
 
     private Statistic() {
@@ -72,65 +72,28 @@ public enum Statistic {
         this.type = type;
     }
 
-    /**
-     * Gets the type of this statistic.
-     *
-     * @return the type of this statistic
-     */
     public Type getType() {
-        return type;
+        return this.type;
     }
 
-    /**
-     * Checks if this is a substatistic.
-     * <p>
-     * A substatistic exists en masse for each block, item, or entitytype, depending on
-     * {@link #getType()}.
-     * <p>
-     * This is a redundant method and equivalent to checking
-     * <code>getType() != Type.UNTYPED</code>
-     *
-     * @return true if this is a substatistic
-     */
     public boolean isSubstatistic() {
-        return type != Type.UNTYPED;
+        return this.type != Type.UNTYPED;
     }
 
-    /**
-     * Checks if this is a substatistic dealing with blocks.
-     * <p>
-     * This is a redundant method and equivalent to checking
-     * <code>getType() == Type.BLOCK</code>
-     *
-     * @return true if this deals with blocks
-     */
     public boolean isBlock() {
-        return type == Type.BLOCK;
+        return this.type == Type.BLOCK;
     }
 
-    /**
-     * The type of statistic.
-     *
-     */
-    public enum Type {
-        /**
-         * Statistics of this type do not require a qualifier.
-         */
+    public static enum Type {
         UNTYPED,
-
-        /**
-         * Statistics of this type require an Item Material qualifier.
-         */
         ITEM,
-
-        /**
-         * Statistics of this type require a Block Material qualifier.
-         */
         BLOCK,
-
-        /**
-         * Statistics of this type require an EntityType qualifier.
-         */
         ENTITY;
+        
+
+        private Type() {
+        }
     }
+
 }
+

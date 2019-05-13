@@ -1,3 +1,6 @@
+/*
+ * Akarin reference
+ */
 package net.minecraft.entity.item;
 
 import java.util.List;
@@ -33,7 +36,7 @@ import net.minecraft.world.storage.loot.LootTable;
 
 public abstract class EntityMinecartContainer extends EntityMinecart implements ILockableContainer, ILootContainer
 {
-    private NonNullList<ItemStack> minecartContainerItems = NonNullList.<ItemStack>withSize(36, ItemStack.EMPTY);
+    private NonNullList<ItemStack> minecartContainerItems = NonNullList.<ItemStack>withSize(this.getSizeInventory(), ItemStack.EMPTY); // Akarin
     public boolean dropContentsWhenDead = true;
     private ResourceLocation lootTable;
     private long lootTableSeed;
@@ -176,7 +179,7 @@ public abstract class EntityMinecartContainer extends EntityMinecart implements 
 
     public int getInventoryStackLimit()
     {
-        return maxStack; // CraftBukkit
+        return maxStack;
     }
 
     @Nullable

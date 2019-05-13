@@ -246,7 +246,7 @@ public class EntityEnderman extends EntityMob
         super.updateAITasks();
     }
 
-    protected boolean teleportRandomly()
+    public boolean teleportRandomly()
     {
         double d0 = this.posX + (this.rand.nextDouble() - 0.5D) * 64.0D;
         double d1 = this.posY + (double)(this.rand.nextInt(64) - 32);

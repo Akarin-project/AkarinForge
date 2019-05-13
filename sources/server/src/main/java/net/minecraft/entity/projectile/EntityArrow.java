@@ -47,12 +47,12 @@ public abstract class EntityArrow extends Entity implements IProjectile
         }
     });
     private static final DataParameter<Byte> CRITICAL = EntityDataManager.<Byte>createKey(EntityArrow.class, DataSerializers.BYTE);
-    private int xTile;
-    private int yTile;
-    private int zTile;
+    public int xTile;
+    public int yTile;
+    public int zTile;
     private Block inTile;
     private int inData;
-    protected boolean inGround;
+    public boolean inGround; // Akarin
     protected int timeInGround;
     public EntityArrow.PickupStatus pickupStatus;
     public int arrowShake;
@@ -60,7 +60,7 @@ public abstract class EntityArrow extends Entity implements IProjectile
     private int ticksInGround;
     private int ticksInAir;
     private double damage;
-    private int knockbackStrength;
+    public int knockbackStrength;
 
     public EntityArrow(World worldIn)
     {

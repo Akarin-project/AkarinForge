@@ -1,8 +1,12 @@
 package net.minecraft.inventory;
 
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryView;
+import org.bukkit.inventory.InventoryView;
+
 import net.minecraft.entity.passive.AbstractChestHorse;
 import net.minecraft.entity.passive.AbstractHorse;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
@@ -12,9 +16,23 @@ public class ContainerHorseInventory extends Container
 {
     private final IInventory horseInventory;
     private final AbstractHorse horse;
+    // CraftBukkit start
+    org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryView bukkitEntity;
+    InventoryPlayer player;
+
+    @Override
+    public InventoryView getBukkitView() {
+        if (bukkitEntity != null) {
+            return bukkitEntity;
+        }
+
+        return bukkitEntity = new CraftInventoryView(player.player.getBukkitEntity(), horseInventory.getOwner().getInventory(), this);
+    }
 
     public ContainerHorseInventory(IInventory playerInventory, IInventory horseInventoryIn, final AbstractHorse horse, EntityPlayer player)
     {
+        this.player = (InventoryPlayer) playerInventory;
+        // CraftBukkit end
         this.horseInventory = horseInventoryIn;
         this.horse = horse;
         int i = 3;

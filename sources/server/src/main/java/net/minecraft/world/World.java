@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World.Environment;
+import org.bukkit.craftbukkit.v1_12_R1.CraftServer;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
 import org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers;
@@ -80,6 +81,7 @@ import net.minecraft.world.border.IBorderListener;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.MapData;
@@ -121,14 +123,14 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public float thunderingStrength;
     private int lastLightningBolt;
     public final Random rand = new Random();
-    public final WorldProvider provider;
+    public WorldProvider provider;
     protected PathWorldListener pathListener = new PathWorldListener();
     protected List<IWorldEventListener> eventListeners;
-    protected IChunkProvider chunkProvider;
+    public IChunkProvider chunkProvider; // Akarin - public
     protected final ISaveHandler saveHandler;
-    protected WorldInfo worldInfo;
+    public WorldInfo worldInfo; // Akarin - public
     protected boolean findingSpawnPoint;
-    protected MapStorage mapStorage;
+    public MapStorage mapStorage; // Akarin - public
     public VillageCollection villageCollection;
     protected LootTableManager lootTable;
     protected AdvancementManager advancementManager;
@@ -137,8 +139,8 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     private final Calendar calendar;
     protected Scoreboard worldScoreboard;
     public final boolean isRemote;
-    protected boolean spawnHostileMobs;
-    protected boolean spawnPeacefulMobs;
+    public boolean spawnHostileMobs;
+    public boolean spawnPeacefulMobs;
     private boolean processingLoadedTiles;
     private final WorldBorder worldBorder;
     int[] lightUpdateBlockList;
@@ -150,8 +152,11 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     private net.minecraftforge.common.util.WorldCapabilityData capabilityData;
     // Akarin start - add fields and params to constructor
     private final CraftWorld world;
+    public boolean pvpMode;
     public ChunkGenerator generator;
     public boolean populating;
+    public long ticksPerAnimalSpawns;
+    public long ticksPerMonsterSpawns;
     public boolean captureTreeGeneration = false;
     
     // physics crash stuffs
@@ -161,11 +166,27 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public CraftWorld getWorld() {
         return this.world;
     }
+    
+
+    public Chunk getChunkIfLoaded(BlockPos blockposition) {
+        return ((ChunkProviderServer) this.chunkProvider).getChunkIfLoaded(blockposition.getX() >> 4, blockposition.getZ() >> 4);
+    }
+    
+    public Chunk getChunkIfLoaded(int x, int z) {
+        return ((ChunkProviderServer) this.chunkProvider).getChunkIfLoaded(x, z);
+    }
+    
+    @Deprecated
+	public CraftServer getServer() {
+		return MinecraftServer.instance().server;
+	}
 
     protected World(ISaveHandler saveHandlerIn, WorldInfo info, WorldProvider providerIn, Profiler profilerIn, boolean client, ChunkGenerator gen, Environment env)
     {
         this.generator = gen;
         this.world = new CraftWorld((WorldServer) this, gen, env);
+        this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns(); // CraftBukkit
+        this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns(); // CraftBukkit
     	// Akarin end
         this.eventListeners = Lists.newArrayList(this.pathListener);
         this.calendar = Calendar.getInstance();
@@ -370,7 +391,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         }
     }
 
-    protected abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty);
+    public abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty); // Akarin - public
 
     public Chunk getChunkFromBlockCoords(BlockPos pos)
     {

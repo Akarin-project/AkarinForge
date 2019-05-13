@@ -1,9 +1,14 @@
 package net.minecraft.world.storage;
 
 import com.google.common.collect.Maps;
+
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
+
+import org.bukkit.Bukkit;
+import org.bukkit.event.weather.ThunderChangeEvent;
+
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.nbt.NBTTagCompound;
@@ -17,6 +22,7 @@ import net.minecraft.world.DimensionType;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.GameType;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.fml.relauncher.Side;
@@ -39,7 +45,7 @@ public class WorldInfo
     private long lastTimePlayed;
     private long sizeOnDisk;
     private NBTTagCompound playerTag;
-    public int dimension; // Akarin
+    public int dimension;
     private String levelName;
     private int saveVersion;
     private int cleanWeatherTime;
@@ -66,6 +72,15 @@ public class WorldInfo
     private final Map<Integer, NBTTagCompound> dimensionData = Maps.newHashMap();
     private GameRules gameRules = new GameRules();
     private java.util.Map<String, net.minecraft.nbt.NBTBase> additionalProperties;
+    // Akarin start
+    public void setDimension(int dim) {
+        this.dimension = dim;
+    }
+
+    public int getDimension() {
+        return this.dimension;
+    }
+    // Akarin end
 
     protected WorldInfo()
     {
@@ -511,6 +526,16 @@ public class WorldInfo
 
     public void setThundering(boolean thunderingIn)
     {
+        // CraftBukkit start
+        org.bukkit.World world = Bukkit.getWorld(getWorldName());
+        if (world != null) {
+            ThunderChangeEvent thunder = new ThunderChangeEvent(world, thunderingIn);
+            Bukkit.getServer().getPluginManager().callEvent(thunder);
+            if (thunder.isCancelled()) {
+                return;
+            }
+        }
+        // CraftBukkit end
         this.thundering = thunderingIn;
     }
 

@@ -115,7 +115,7 @@ public class WorldClient extends World
         return this.clientChunkProvider;
     }
 
-    protected boolean isChunkLoaded(int x, int z, boolean allowEmpty)
+    public boolean isChunkLoaded(int x, int z, boolean allowEmpty)
     {
         return allowEmpty || !this.getChunkProvider().provideChunk(x, z).isEmpty();
     }

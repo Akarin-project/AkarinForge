@@ -50,7 +50,7 @@ public class InventoryCrafting implements IInventory
     }
 
     public org.bukkit.inventory.InventoryHolder getOwner() {
-        return (owner == null) ? null : (org.bukkit.inventory.InventoryHolder) owner.getBukkitEntity();
+        return (owner == null) ? null : owner.getBukkitEntity();
     }
 
     public void setMaxStackSize(int size) {

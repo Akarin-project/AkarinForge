@@ -1,14 +1,11 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit;
 
-/**
- * Represents an object which has a {@link NamespacedKey} attached to it.
- */
-public interface Keyed {
+import org.bukkit.NamespacedKey;
 
-    /**
-     * Return the namespaced identifier for this object.
-     *
-     * @return this object's key
-     */
-    NamespacedKey getKey();
+public interface Keyed {
+    public NamespacedKey getKey();
 }
+

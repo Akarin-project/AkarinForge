@@ -6,6 +6,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.ai.EntityAITasks;
@@ -19,6 +27,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityGhast;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
@@ -37,6 +46,7 @@ import net.minecraft.network.play.server.SPacketEntityAttach;
 import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.pathfinding.PathNodeType;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
@@ -68,14 +78,14 @@ public abstract class EntityLiving extends EntityLivingBase
     protected EntityJumpHelper jumpHelper;
     private final EntityBodyHelper bodyHelper;
     protected PathNavigate navigator;
-    public final EntityAITasks tasks;
-    public final EntityAITasks targetTasks;
+    public EntityAITasks tasks; // Akarin - remove final
+    public EntityAITasks targetTasks; // Akarin - remove final
     private EntityLivingBase attackTarget;
     private final EntitySenses senses;
     private final NonNullList<ItemStack> inventoryHands = NonNullList.<ItemStack>withSize(2, ItemStack.EMPTY);
-    protected float[] inventoryHandsDropChances = new float[2];
+    public float[] inventoryHandsDropChances = new float[2];
     private final NonNullList<ItemStack> inventoryArmor = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
-    protected float[] inventoryArmorDropChances = new float[4];
+    public float[] inventoryArmorDropChances = new float[4];
     private boolean canPickUpLoot;
     public boolean persistenceRequired; // Akarin - private -> public
     private final Map<PathNodeType, Float> mapPathPriority = Maps.newEnumMap(PathNodeType.class);
@@ -103,6 +113,7 @@ public abstract class EntityLiving extends EntityLivingBase
         {
             this.initEntityAI();
         }
+        this.persistenceRequired = !canDespawn(); // Akarin
     }
 
     protected void initEntityAI()
@@ -169,8 +180,39 @@ public abstract class EntityLiving extends EntityLivingBase
 
     public void setAttackTarget(@Nullable EntityLivingBase entitylivingbaseIn)
     {
-        this.attackTarget = entitylivingbaseIn;
-        net.minecraftforge.common.ForgeHooks.onLivingSetAttackTarget(this, entitylivingbaseIn);
+    	// CraftBukkit start - fire event
+        setGoalTarget(entitylivingbaseIn, EntityTargetEvent.TargetReason.UNKNOWN, true);
+    }
+
+    public boolean setGoalTarget(EntityLivingBase entityliving, EntityTargetEvent.TargetReason reason, boolean fireEvent) {
+        if (getAttackTarget() == entityliving) return false;
+        if (fireEvent) {
+            if (reason == EntityTargetEvent.TargetReason.UNKNOWN && getAttackTarget() != null && entityliving == null) {
+                reason = getAttackTarget().isEntityAlive() ? EntityTargetEvent.TargetReason.FORGOT_TARGET : EntityTargetEvent.TargetReason.TARGET_DIED;
+            }
+            if (reason == EntityTargetEvent.TargetReason.UNKNOWN) {
+                MinecraftServer.LOGGER.warn("Unknown target reason, please report on the issue tracker", new Exception());
+            }
+            CraftLivingEntity ctarget = null;
+            if (entityliving != null) {
+                ctarget = (CraftLivingEntity) entityliving.getBukkitEntity();
+            }
+            EntityTargetLivingEntityEvent event = new EntityTargetLivingEntityEvent(this.getBukkitEntity(), ctarget, reason);
+            MinecraftServer.instance().server.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return false;
+            }
+
+            if (event.getTarget() != null) {
+                entityliving = ((CraftLivingEntity) event.getTarget()).getHandle();
+            } else {
+                entityliving = null;
+            }
+        }
+        this.attackTarget = entityliving;
+        net.minecraftforge.common.ForgeHooks.onLivingSetAttackTarget(this, entityliving);
+        return true;
+        // CraftBukkit end
     }
 
     public boolean canAttackClass(Class <? extends EntityLivingBase > cls)
@@ -447,6 +489,19 @@ public abstract class EntityLiving extends EntityLivingBase
     {
         super.readEntityFromNBT(compound);
 
+        // CraftBukkit start - If looting or persistence is false only use it if it was set after we started using it
+        if (compound.hasKey("CanPickUpLoot", 1)) {
+            boolean data = compound.getBoolean("CanPickUpLoot");
+            if (isLevelAtLeast(compound, 1) || data) {
+                this.setCanPickUpLoot(data);
+            }
+        }
+
+        boolean data = compound.getBoolean("PersistenceRequired");
+        if (isLevelAtLeast(compound, 1) || data) {
+            this.persistenceRequired = data;
+        }
+        // CraftBukkit end
         if (compound.hasKey("CanPickUpLoot", 1))
         {
             this.setCanPickUpLoot(compound.getBoolean("CanPickUpLoot"));
@@ -653,7 +708,15 @@ public abstract class EntityLiving extends EntityLivingBase
             }
         }
 
-        if (flag && this.canEquipItem(itemstack))
+        // CraftBukkit start
+        boolean canPickup = flag && this.canEquipItem(itemstack);
+
+        EntityPickupItemEvent entityEvent = new EntityPickupItemEvent((LivingEntity) getBukkitEntity(), (org.bukkit.entity.Item) itemEntity.getBukkitEntity(), 0);
+        entityEvent.setCancelled(!canPickup);
+        MinecraftServer.instance().server.getPluginManager().callEvent(entityEvent);
+        canPickup = !entityEvent.isCancelled();
+        if (canPickup)
+        // CraftBukkit end
         {
             double d0;
 
@@ -671,7 +734,9 @@ public abstract class EntityLiving extends EntityLivingBase
 
             if (!itemstack1.isEmpty() && (double)(this.rand.nextFloat() - 0.1F) < d0)
             {
+            	//this.forceDrops = true; // CraftBukkit AWS
                 this.entityDropItem(itemstack1, 0.0F);
+                //this.forceDrops = false; // CraftBukkit AWS
             }
 
             this.setItemStackToSlot(entityequipmentslot, itemstack);
@@ -1218,6 +1283,12 @@ public abstract class EntityLiving extends EntityLivingBase
 
             if (itemstack.getItem() == Items.LEAD && this.canBeLeashedTo(player))
             {
+                // CraftBukkit start - fire PlayerLeashEntityEvent
+                if (CraftEventFactory.callPlayerLeashEntityEvent(this, player, player).isCancelled()) {
+                    ((EntityPlayerMP) player).connection.sendPacket(new SPacketEntityAttach(this, this.getLeashHolder()));
+                    return false;
+                }
+                // CraftBukkit end
                 this.setLeashHolder(player, true);
                 itemstack.shrink(1);
                 return true;
@@ -1264,7 +1335,9 @@ public abstract class EntityLiving extends EntityLivingBase
 
             if (!this.world.isRemote && dropLead)
             {
+            	//this.forceDrops = true; // CraftBukkit AWS
                 this.dropItem(Items.LEAD, 1);
+                //this.forceDrops = false; // CraftBukkit AWS
             }
 
             if (!this.world.isRemote && sendPacket && this.world instanceof WorldServer)

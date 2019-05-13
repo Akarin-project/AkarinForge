@@ -133,7 +133,7 @@ public class AdvancementList
             }
         }
 
-        LOGGER.info("Loaded " + this.advancements.size() + " advancements");
+        LOGGER.debug("Loaded " + this.advancements.size() + " advancements"); // Akarin - down to debug
     }
 
     public void clear()

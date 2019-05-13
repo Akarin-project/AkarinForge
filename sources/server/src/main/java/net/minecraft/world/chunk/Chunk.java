@@ -3,6 +3,11 @@ package net.minecraft.world.chunk;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
+
+import gnu.trove.map.hash.TObjectIntHashMap;
+import io.akarin.forge.server.AkarinHooks;
+import io.akarin.forge.utils.MCUtil;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +45,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bukkit.Server;
 
 public class Chunk implements net.minecraftforge.common.capabilities.ICapabilityProvider
 {
@@ -50,13 +56,13 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
     private final int[] precipitationHeightMap;
     private final boolean[] updateSkylightColumns;
     private boolean loaded;
-    public final World world; // Akarin - private -> public
-    public final int[] heightMap; // Akarin - private -> public
+    public final World world; // Akarin
+    public final int[] heightMap; // Akarin
     public final int x;
     public final int z;
     private boolean isGapLightingUpdated;
-    public final Map<BlockPos, TileEntity> tileEntities; // Akarin - private -> public
-    public final ClassInheritanceMultiMap<Entity>[] entityLists; // Akarin - private -> public
+    public final Map<BlockPos, TileEntity> tileEntities;
+    public final ClassInheritanceMultiMap<Entity>[] entityLists; // Akarin
     private boolean isTerrainPopulated;
     private boolean isLightPopulated;
     private boolean ticked;
@@ -68,6 +74,39 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
     private int queuedLightChecks;
     private final ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
     public boolean unloadQueued;
+    // Akarin start
+    protected int neighbors = 0x1 << 12;
+    public long chunkKey;
+    public org.bukkit.Chunk bukkitChunk;
+    public boolean mustSave;
+    public TObjectIntHashMap<Class> entityCount = new TObjectIntHashMap<>();
+    private final int[] itemCounts = new int[16];
+    private final int[] inventoryEntityCounts = new int[16];
+    
+    public boolean areNeighborsLoaded(final int radius) {
+        switch (radius) {
+            case 2:
+                return this.neighbors == Integer.MAX_VALUE >> 6;
+            case 1:
+                final int mask =
+                        //       x        z   offset          x        z   offset          x         z   offset
+                        (0x1 << (1 * 5 +  1 + 12)) | (0x1 << (0 * 5 +  1 + 12)) | (0x1 << (-1 * 5 +  1 + 12)) |
+                        (0x1 << (1 * 5 +  0 + 12)) | (0x1 << (0 * 5 +  0 + 12)) | (0x1 << (-1 * 5 +  0 + 12)) |
+                        (0x1 << (1 * 5 + -1 + 12)) | (0x1 << (0 * 5 + -1 + 12)) | (0x1 << (-1 * 5 + -1 + 12));
+                return (this.neighbors & mask) == mask;
+            default:
+                throw new UnsupportedOperationException(String.valueOf(radius));
+        }
+    }
+
+    public void setNeighborLoaded(final int x, final int z) {
+        this.neighbors |= 0x1 << (x * 5 + 12 + z);
+    }
+
+    public void setNeighborUnloaded(final int x, final int z) {
+        this.neighbors &= ~(0x1 << (x * 5 + 12 + z));
+    }
+    // Akarin end
 
     public Chunk(World worldIn, int x, int z)
     {
@@ -92,6 +131,10 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
         Arrays.fill(this.precipitationHeightMap, -999);
         Arrays.fill(this.blockBiomeArray, (byte) - 1);
         capabilities = net.minecraftforge.event.ForgeEventFactory.gatherCapabilities(this);
+        // Akarin start
+        this.bukkitChunk = new org.bukkit.craftbukkit.v1_12_R1.CraftChunk(this);
+        this.chunkKey = ChunkPos.asLong(this.x, this.z);
+        // Akarin end
     }
 
     public Chunk(World worldIn, ChunkPrimer primer, int x, int z)
@@ -1016,12 +1059,70 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
         else
         {
             this.checkLight();
+            // Akarin start
+            AkarinHooks.populateChunk(this, generator);
+            
+            /*
             generator.populate(this.x, this.z);
             net.minecraftforge.fml.common.registry.GameRegistry.generateWorld(this.x, this.z, this.world, generator, this.world.getChunkProvider());
+            */
+            // Akarin end
             this.markDirty();
         }
         populating = prev;
     }
+    // Akarin start
+    public void loadNearby(IChunkProvider ichunkprovider, IChunkGenerator chunkgenerator, boolean newChunk) {
+        Server server = world.getServer();
+        if (server != null) {
+            /*
+             * If it's a new world, the first few chunks are generated inside
+             * the World constructor. We can't reliably alter that, so we have
+             * no way of creating a CraftWorld/CraftServer at that point.
+             */
+            server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkLoadEvent(bukkitChunk, newChunk));
+        }
+
+        // Update neighbor counts
+        for (int x = -2; x < 3; x++) {
+            for (int z = -2; z < 3; z++) {
+                if (x == 0 && z == 0) {
+                    continue;
+                }
+
+                Chunk neighbor = getWorld().getChunkIfLoaded(x + x, z + z);
+                if (neighbor != null) {
+                    neighbor.setNeighborLoaded(-x, -z);
+                    setNeighborLoaded(x, z);
+                }
+            }
+        }
+        Chunk chunk = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.x, this.z - 1); // Paper
+        Chunk chunk1 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.x + 1, this.z); // Paper
+        Chunk chunk2 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.x, this.z + 1); // Paper
+        Chunk chunk3 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.x - 1, this.z); // Paper
+
+        if (chunk1 != null && chunk2 != null && MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.x + 1, this.z + 1) != null) { // Paper
+            this.populate(chunkgenerator);
+        }
+
+        if (chunk3 != null && chunk2 != null && MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.x - 1, this.z + 1) != null) { // Paper
+            chunk3.populate(chunkgenerator);
+        }
+
+        if (chunk != null && chunk1 != null && MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.x + 1, this.z - 1) != null) { // Paper
+            chunk.populate(chunkgenerator);
+        }
+
+        if (chunk != null && chunk3 != null) {
+            Chunk chunk4 = MCUtil.getLoadedChunkWithoutMarkingActive(ichunkprovider,this.x - 1, this.z - 1); // Paper
+
+            if (chunk4 != null) {
+                chunk4.populate(chunkgenerator);
+            }
+        }
+    }
+    // Akarin end
 
     public BlockPos getPrecipitationHeight(BlockPos pos)
     {

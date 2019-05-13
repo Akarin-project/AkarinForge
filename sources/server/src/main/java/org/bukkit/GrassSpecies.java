@@ -1,61 +1,42 @@
+/*
+ * Akarin Forge
+ * 
+ * Could not load the following classes:
+ *  com.google.common.collect.Maps
+ */
 package org.bukkit;
 
+import com.google.common.collect.Maps;
+import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-
-/**
- * Represents the different types of grass.
- */
 public enum GrassSpecies {
-
-    /**
-     * Represents the dead looking grass.
-     */
-    DEAD(0x0),
-    /**
-     * Represents the normal grass species.
-     */
-    NORMAL(0x1),
-    /**
-     * Represents the fern-looking grass species.
-     */
-    FERN_LIKE(0x2);
-
+    DEAD(0),
+    NORMAL(1),
+    FERN_LIKE(2);
+    
     private final byte data;
-    private final static Map<Byte, GrassSpecies> BY_DATA = Maps.newHashMap();
+    private static final Map<Byte, GrassSpecies> BY_DATA;
 
-    private GrassSpecies(final int data) {
-        this.data = (byte) data;
+    private GrassSpecies(int data) {
+        this.data = (byte)data;
     }
 
-    /**
-     * Gets the associated data value representing this species
-     *
-     * @return A byte containing the data value of this grass species
-     * @deprecated Magic value
-     */
     @Deprecated
     public byte getData() {
-        return data;
+        return this.data;
     }
 
-    /**
-     * Gets the GrassSpecies with the given data value
-     *
-     * @param data Data value to fetch
-     * @return The {@link GrassSpecies} representing the given value, or null
-     *     if it doesn't exist
-     * @deprecated Magic value
-     */
     @Deprecated
-    public static GrassSpecies getByData(final byte data) {
-        return BY_DATA.get(data);
+    public static GrassSpecies getByData(byte data) {
+        return BY_DATA.get(Byte.valueOf(data));
     }
 
     static {
-        for (GrassSpecies grassSpecies : values()) {
-            BY_DATA.put(grassSpecies.getData(), grassSpecies);
+        BY_DATA = Maps.newHashMap();
+        for (GrassSpecies grassSpecies : GrassSpecies.values()) {
+            BY_DATA.put(Byte.valueOf(grassSpecies.getData()), grassSpecies);
         }
     }
 }
+
