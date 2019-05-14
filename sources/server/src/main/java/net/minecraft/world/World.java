@@ -2107,24 +2107,16 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
                 if (!tileentity1.isInvalid())
                 {
-                	/* // Akarin
                     if (!this.loadedTileEntityList.contains(tileentity1))
                     {
                         this.addTileEntity(tileentity1);
                     }
-                    */ // Akarin
 
                     if (this.isBlockLoaded(tileentity1.getPos()))
                     {
                         Chunk chunk = this.getChunkFromBlockCoords(tileentity1.getPos());
                         IBlockState iblockstate = chunk.getBlockState(tileentity1.getPos());
-                        chunk.addTileEntity(tileentity1.getPos(), tileentity1);
                         this.notifyBlockUpdate(tileentity1.getPos(), iblockstate, iblockstate, 3);
-                        // Akarin start
-                        if (!this.loadedTileEntityList.contains(tileentity1)) {
-                            this.addTileEntity(tileentity1);
-                        }
-                        // Akarin end
                     }
                 }
             }
