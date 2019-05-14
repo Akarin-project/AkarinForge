@@ -226,7 +226,7 @@ implements BukkitScheduler {
         this.handle(task, 0);
         for (Object taskPending = this.head.getNext(); taskPending != null && taskPending != task; taskPending = ((CraftTask) taskPending).getNext()) {
             if (((CraftTask) taskPending).getTaskId() == -1 || !((CraftTask) taskPending).getOwner().equals(plugin)) continue;
-            ((CraftAsyncTask) taskPending).cancel0();
+            ((CraftTask) taskPending).cancel0();
         }
         for (CraftTask runner : this.runners.values()) {
             if (!runner.getOwner().equals(plugin)) continue;
