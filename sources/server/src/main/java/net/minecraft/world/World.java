@@ -158,7 +158,6 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public long ticksPerAnimalSpawns;
     public long ticksPerMonsterSpawns;
     public boolean captureTreeGeneration = false;
-    public boolean keepSpawnInMemory = true;
     
     // physics crash stuffs
     public static boolean haveWeSilencedAPhysicsCrash;
@@ -2199,6 +2198,13 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                 return;
             }
         }
+        // Akarin start
+        if (forceUpdate) {
+            entityIn.ticksExisted++;
+            entityIn.inactiveTick();
+            return;
+        }
+        // Akarin end
 
         entityIn.lastTickPosX = entityIn.posX;
         entityIn.lastTickPosY = entityIn.posY;
@@ -3081,10 +3087,8 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
     public boolean checkLightFor(EnumSkyBlock lightType, BlockPos pos)
     {
-        // CraftBukkit start - Use neighbor cache instead of looking up
-        Chunk chunk = this.getChunkIfLoaded(pos.getX() >> 4, pos.getZ() >> 4);
-        if (chunk == null || !chunk.areNeighborsLoaded(1) /*!this.areChunksLoaded(blockposition, 17, false)*/) {
-            // CraftBukkit end
+        if (!this.isAreaLoaded(pos, 16, false))
+        {
             return false;
         }
         else
@@ -4130,7 +4134,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         int j2 = x * 16 + 8 - blockpos1.getX();
         int k2 = z * 16 + 8 - blockpos1.getZ();
         int l2 = 128;
-        return j2 >= -128 && j2 <= 128 && k2 >= -128 && k2 <= 128 && this.keepSpawnInMemory; // Akarin
+        return j2 >= -128 && j2 <= 128 && k2 >= -128 && k2 <= 128;
     }
 
     /* ======================================== FORGE START =====================================*/

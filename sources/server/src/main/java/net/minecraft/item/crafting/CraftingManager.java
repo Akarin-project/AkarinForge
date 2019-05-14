@@ -42,6 +42,7 @@ public class CraftingManager
     {
         try
         {
+            CraftingManager.nextAvailableId = 0; // Reset recipe ID count
             register("armordye", new RecipesArmorDyes());
             register("bookcloning", new RecipeBookCloning());
             register("mapcloning", new RecipesMapCloning());
@@ -188,6 +189,7 @@ public class CraftingManager
         }
         else
         {
+            recipe.setKey(name); // CraftBukkit
             REGISTRY.register(nextAvailableId++, name, recipe);
         }
     }
@@ -198,10 +200,12 @@ public class CraftingManager
         {
             if (irecipe.matches(craftMatrix, worldIn))
             {
+                craftMatrix.currentRecipe = irecipe; // CraftBukkit
                 return irecipe.getCraftingResult(craftMatrix);
             }
         }
 
+        craftMatrix.currentRecipe = null; // CraftBukkit - Clear recipe when no recipe is found
         return ItemStack.EMPTY;
     }
 
@@ -212,10 +216,12 @@ public class CraftingManager
         {
             if (irecipe.matches(craftMatrix, worldIn))
             {
+                craftMatrix.currentRecipe = irecipe; // CraftBukkit
                 return irecipe;
             }
         }
 
+        craftMatrix.currentRecipe = null; // CraftBukkit - Clear recipe when no recipe is found
         return null;
     }
 
