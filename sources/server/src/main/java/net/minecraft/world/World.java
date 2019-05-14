@@ -2198,13 +2198,6 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                 return;
             }
         }
-        // Akarin start
-        if (forceUpdate) {
-            entityIn.ticksExisted++;
-            entityIn.inactiveTick();
-            return;
-        }
-        // Akarin end
 
         entityIn.lastTickPosX = entityIn.posX;
         entityIn.lastTickPosY = entityIn.posY;
