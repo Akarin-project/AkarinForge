@@ -3,6 +3,9 @@ package net.minecraft.entity;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import io.akarin.forge.misc.EntityRegistryWrapper;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,6 +110,7 @@ public class EntityList
     public static final ResourceLocation LIGHTNING_BOLT = new ResourceLocation("lightning_bolt");
     private static final ResourceLocation PLAYER = new ResourceLocation("player");
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final RegistryNamespaced<ResourceLocation, Class<? extends Entity>> REGISTRY = EntityRegistryWrapper.create(); // Akarin
     public static final Map<ResourceLocation, EntityList.EntityEggInfo> ENTITY_EGGS = Maps.<ResourceLocation, EntityList.EntityEggInfo>newLinkedHashMap();
     private static final Set<ResourceLocation> EXTRA_NAMES = Sets.newHashSet();
 

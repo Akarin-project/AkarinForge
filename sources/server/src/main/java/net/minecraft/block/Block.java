@@ -81,6 +81,11 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
     protected final BlockStateContainer blockState;
     private IBlockState defaultBlockState;
     private String unlocalizedName;
+    // CraftBukkit start
+    public int getExpDrop(World world, IBlockState data, int enchantmentLevel) {
+        return 0;
+    }
+    // CraftBukkit end
 
     public static int getIdFromBlock(Block blockIn)
     {
@@ -573,7 +578,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
 
             for (ItemStack drop : drops)
             {
-                if (worldIn.rand.nextFloat() <= chance)
+                if (worldIn.rand.nextFloat() < chance) // CraftBukkit - <= to < to allow for plugins to completely disable block drops from explosions
                 {
                     spawnAsEntity(worldIn, pos, drop);
                 }
