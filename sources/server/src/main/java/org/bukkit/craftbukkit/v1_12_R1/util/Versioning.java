@@ -1,6 +1,3 @@
-/*
- * Akarin Forge
- */
 package org.bukkit.craftbukkit.v1_12_R1.util;
 
 import java.io.IOException;
@@ -12,7 +9,7 @@ import org.bukkit.Bukkit;
 
 public final class Versioning {
     public static String getBukkitVersion() {
-        String result = "Unknown-Version";
+        String result = "1.12.2-R0.1";
         InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/org.bukkit/bukkit/pom.properties");
         Properties properties = new Properties();
         if (stream != null) {

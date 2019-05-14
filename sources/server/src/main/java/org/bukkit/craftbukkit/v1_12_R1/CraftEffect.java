@@ -1,9 +1,3 @@
-/*
- * Akarin Forge
- * 
- * Could not load the following classes:
- *  org.apache.commons.lang3.Validate
- */
 package org.bukkit.craftbukkit.v1_12_R1;
 
 import org.apache.commons.lang3.Validate;
