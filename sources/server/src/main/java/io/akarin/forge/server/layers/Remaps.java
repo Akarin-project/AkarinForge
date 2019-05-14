@@ -11,8 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.md_5.specialsource.JarRemapper;
 import org.objectweb.asm.Type;
 
+import com.google.common.collect.Maps;
+
 public class Remaps {
-    private static final Map<String, Boolean> REMAP_REQUIREMENT_CACHE = new ConcurrentHashMap<String, Boolean>();
+    private static final Map<String, Boolean> REMAP_REQUIREMENT_CACHE = Maps.newConcurrentMap();
     
     public static String reverseMapClassNameExternally(Class<?> name) {
         return Remaps.reverseMapClassName(name).replace('$', '.').replace('/', '.');

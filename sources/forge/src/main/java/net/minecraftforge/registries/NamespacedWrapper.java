@@ -48,7 +48,7 @@ class NamespacedWrapper<V extends IForgeRegistryEntry<V>> extends RegistryNamesp
     @Override
     public void register(int id, ResourceLocation key, V value)
     {
-        if (locked)
+        if (false && locked) // Akarin
             throw new IllegalStateException("Can not register to a locked registry. Modder should use Forge Register methods.");
 
         Validate.notNull(value);

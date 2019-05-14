@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.provider.InheritanceProvider;
 import net.md_5.specialsource.provider.JointProvider;
@@ -36,7 +38,7 @@ public class ReflectionTransformer {
     
     public static JarMapping jarMapping;
     public static SneakyRemapper remapper;
-    public static final HashMap<String, String>  REVERSE_CLASS_MAPPING     = Maps.newHashMap();
+    public static final Map<String, String>      REVERSE_CLASS_MAPPING     = Maps.newHashMap();
     public static final Multimap<String, String> REVERSE_METHOD_MAPPING    = HashMultimap.create();
     public static final Multimap<String, String> REVERSE_FIELD_MAPPING     = HashMultimap.create();
     public static final Multimap<String, String> SIMPLE_CLASS_NAME_MAPPING = HashMultimap.create();

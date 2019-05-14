@@ -175,7 +175,7 @@ public final class CraftItemStack extends ItemStack {
 
     @Override
     public void addUnsafeEnchantment(Enchantment ench, int level) {
-        Validate.notNull(ench, "Cannot add null enchantment");
+        // Validate.notNull(ench, "Cannot add null enchantment"); // Akarin
 
         // Paper start - Replace whole method
         final ItemMeta itemMeta = getItemMeta();

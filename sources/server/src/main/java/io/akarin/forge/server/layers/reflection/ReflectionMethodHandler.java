@@ -9,6 +9,7 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.google.common.collect.Maps;
 
@@ -17,7 +18,7 @@ import io.akarin.forge.server.layers.Remaps;
 import io.akarin.forge.server.layers.misc.Constants;
 
 public class ReflectionMethodHandler {
-    private static final HashMap<String, String> METHOD_DESC_MAPPING = Maps.newHashMap();
+    private static final Map<String, String> METHOD_DESC_MAPPING = Maps.newConcurrentMap();
 
     public static MethodHandle findSpecial(MethodHandles.Lookup lookup, Class<?> refc, String name, MethodType type, Class<?> specialCaller) throws NoSuchMethodException, IllegalAccessException {
         if (refc.getName().startsWith(Constants.MINECRAFT_DOMAIN)) {

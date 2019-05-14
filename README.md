@@ -10,7 +10,7 @@ Introduction
 ---
 > AkarinForge is a next-generation Forge server software with the Bukkit API from the 'new dimension'.
 
-As based on [MinecraftForge](https://github.com/MinecraftForge/MinecraftForge), it should provide high compatibility with mods. In other words, support plugins but not break mods are the main goal of the project.
+As a fork of [MinecraftForge](https://github.com/MinecraftForge/MinecraftForge), it should provide high compatibility with mods. In other words, support plugins but not break mods are the main goal of the project.
 
 Get Akarin
 ---

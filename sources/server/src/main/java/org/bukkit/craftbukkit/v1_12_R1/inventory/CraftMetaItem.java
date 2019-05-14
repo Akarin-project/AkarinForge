@@ -708,7 +708,7 @@ class CraftMetaItem implements ItemMeta, Repairable {
     }
 
     public boolean addEnchant(Enchantment ench, int level, boolean ignoreRestrictions) {
-        Validate.notNull(ench, "Enchantment cannot be null");
+    	if (ench == null) return false; // Akarin
         if (enchantments == null) {
             enchantments = new EnchantmentMap(); // Paper
         }

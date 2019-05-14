@@ -34,7 +34,7 @@ public class ShapelessRecipes extends net.minecraftforge.registries.IForgeRegist
         CraftItemStack result = CraftItemStack.asCraftMirror(this.recipeOutput);
         CraftShapelessRecipe recipe = new CraftShapelessRecipe(result, this);
         for (Ingredient list : this.recipeItems) {
-            if (list != null) {
+            if (list != null && list.matchingStacks.length > 0) {
                 net.minecraft.item.ItemStack stack = list.matchingStacks[0];
                 recipe.addIngredient(org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers.getMaterial(stack.getItem()), (list.matchingStacks.length) > 1 ? 32767 : stack.getMetadata());
             }
