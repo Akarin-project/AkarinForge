@@ -139,25 +139,22 @@ public abstract class AkarinHooks {
             if (dim != 0 && (dim == -1 && !server.getAllowNether() || dim == 1 && !server.server.getAllowEnd()))
                 continue;
             
-            Environment environment = Environment.getEnvironment(dim);
+            Environment environment = lookupEnvironment(dim);
             // Register dimension to forge
             if (!DimensionManager.isDimensionRegistered(dim))
                 DimensionManager.registerDimension(dim, DimensionType.getById(environment.getId()));
             
             // Make up world name by dimension
-            String worldName = dim == 0 ? saveName : "DIM" + dim;
+            String worldName = dim == 0 ? saveName : (dim == 1 ? "world_the_end" : (dim == -1 ? "world_nether" : "DIM" + dim));
             ChunkGenerator generator = server.server.getGenerator(worldName);
             
-            ISaveHandler saver = new AnvilSaveHandler(server.server.getWorldContainer(), worldName, true, server.dataFixer);
+            ISaveHandler saver = new AnvilSaveHandler(new File("."), worldName, true, server.dataFixer);
             server.setResourcePackFromWorld(server.getFolderName(), saver);
             
         	WorldInfo info = saver.loadWorldInfo();
             if (info == null)
             	// Workaround: This can be null when manually delete etc,.
             	info = new WorldInfo(overworldSettings, worldName);
-            
-            // Sync dimension data
-            info.dimension = dim;
             
             WorldServer world;
             if (dim == 0) {
@@ -168,6 +165,11 @@ public abstract class AkarinHooks {
             } else {
                 world = (WorldServer) new WorldServerMulti(server, saver, dim, server.worlds[0], server.profiler, info, environment, generator).init();
             }
+            
+            // Sync data after create world instance
+            world.worldInfo.dimension = dim;
+            world.worldInfo.levelName = worldName;
+            MinecraftServer.instance().server.addWorld(world.getWorld()); // Akarin
             
             // Put world into vanilla worlds
             server.worlds[index] = (WorldServer) world;
@@ -466,11 +468,10 @@ public abstract class AkarinHooks {
         }
         
         WorldSettings overworldSettings = new WorldSettings(overworld.getWorldInfo());
-        
-        Environment environment = Environment.getEnvironment(dim);
+        Environment environment = lookupEnvironment(dim);
         
         // Make up world name by dimension
-        String worldName = "DIM" + dim;
+        String worldName = dim == 0 ? overworld.worldInfo.levelName : (dim == 1 ? "world_the_end" : (dim == -1 ? "world_nether" : "DIM" + dim));
         
         return initalizeWorld(dim, worldName, environment, overworldSettings);
 	}
@@ -523,12 +524,17 @@ public abstract class AkarinHooks {
         if (!DimensionManager.isDimensionRegistered(dim))
             DimensionManager.registerDimension(dim, DimensionType.getById(environment.getId()));
         
-        ISaveHandler saver = new AnvilSaveHandler(server.server.getWorldContainer(), worldName, true, server.dataFixer);
+        ISaveHandler saver = new AnvilSaveHandler(new File("."), worldName, true, server.dataFixer);
         ChunkGenerator generator = server.server.getGenerator(worldName);
         worldSettings.setGeneratorOptions(((DedicatedServer) server).getStringProperty("generator-settings", ""));
         
         WorldInfo worldInfo = new WorldInfo(worldSettings, worldName);
         WorldServer world = (WorldServer) new WorldServerMulti(server, saver, dim, overworld, server.profiler, worldInfo, environment, generator).init();
+        
+        // Sync data after create world instance
+        world.worldInfo.dimension = dim;
+        world.worldInfo.levelName = worldName;
+        MinecraftServer.instance().server.addWorld(world.getWorld()); // Akarin
         
         // Put vanilla worlds
         List<WorldServer> worldServers = Lists.newArrayList(server.worlds);

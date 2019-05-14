@@ -15,7 +15,7 @@ public class CPacketCloseWindow implements Packet<INetHandlerPlayServer>
     {
     }
 
-    @SideOnly(Side.CLIENT)
+    // @SideOnly(Side.CLIENT) // Akarin
     public CPacketCloseWindow(int windowIdIn)
     {
         this.windowId = windowIdIn;

@@ -135,9 +135,8 @@ public class WorldServer extends World implements IThreadListener
         this.entityTracker = new EntityTracker(this);
         this.playerChunkMap = new PlayerChunkMap(this);
         // Guarantee the dimension ID was not reset by the provider
-        int providerDim = this.provider.getDimension();
         this.provider.setWorld(this);
-        this.provider.setDimension(providerDim);
+        this.provider.setDimension(dimensionId); // Akarin
         this.chunkProvider = this.createChunkProvider();
         perWorldStorage = new MapStorage(new net.minecraftforge.common.WorldSpecificSaveHandler((WorldServer)this, saveHandlerIn));
         this.worldTeleporter = new CraftTravelAgent(this); // Akarin

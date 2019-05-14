@@ -1,15 +1,17 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit.event.inventory;
 
 import org.bukkit.event.HandlerList;
+import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.inventory.AnvilInventory;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
-/**
- * Called when an item is put in a slot for repair by an anvil.
- */
-public class PrepareAnvilEvent extends InventoryEvent {
-
+public class PrepareAnvilEvent
+extends InventoryEvent {
     private static final HandlerList handlers = new HandlerList();
     private ItemStack result;
 
@@ -20,16 +22,11 @@ public class PrepareAnvilEvent extends InventoryEvent {
 
     @Override
     public AnvilInventory getInventory() {
-        return (AnvilInventory) super.getInventory();
+        return (AnvilInventory)super.getInventory();
     }
 
-    /**
-     * Get result item, may be null.
-     *
-     * @return result item
-     */
     public ItemStack getResult() {
-        return result;
+        return this.result;
     }
 
     public void setResult(ItemStack result) {
@@ -45,3 +42,4 @@ public class PrepareAnvilEvent extends InventoryEvent {
         return handlers;
     }
 }
+

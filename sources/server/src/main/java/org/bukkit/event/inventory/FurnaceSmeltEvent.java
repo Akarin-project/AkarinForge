@@ -1,3 +1,6 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit.event.inventory;
 
 import org.bukkit.block.Block;
@@ -6,53 +9,39 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.block.BlockEvent;
 import org.bukkit.inventory.ItemStack;
 
-/**
- * Called when an ItemStack is successfully smelted in a furnace.
- */
-public class FurnaceSmeltEvent extends BlockEvent implements Cancellable {
+public class FurnaceSmeltEvent
+extends BlockEvent
+implements Cancellable {
     private static final HandlerList handlers = new HandlerList();
     private final ItemStack source;
     private ItemStack result;
     private boolean cancelled;
 
-    public FurnaceSmeltEvent(final Block furnace, final ItemStack source, final ItemStack result) {
+    public FurnaceSmeltEvent(Block furnace, ItemStack source, ItemStack result) {
         super(furnace);
         this.source = source;
         this.result = result;
         this.cancelled = false;
     }
 
-    /**
-     * Gets the smelted ItemStack for this event
-     *
-     * @return smelting source ItemStack
-     */
     public ItemStack getSource() {
-        return source;
+        return this.source;
     }
 
-    /**
-     * Gets the resultant ItemStack for this event
-     *
-     * @return smelting result ItemStack
-     */
     public ItemStack getResult() {
-        return result;
+        return this.result;
     }
 
-    /**
-     * Sets the resultant ItemStack for this event
-     *
-     * @param result new result ItemStack
-     */
     public void setResult(ItemStack result) {
         this.result = result;
     }
 
+    @Override
     public boolean isCancelled() {
-        return cancelled;
+        return this.cancelled;
     }
 
+    @Override
     public void setCancelled(boolean cancel) {
         this.cancelled = cancel;
     }
@@ -66,3 +55,4 @@ public class FurnaceSmeltEvent extends BlockEvent implements Cancellable {
         return handlers;
     }
 }
+

@@ -258,6 +258,7 @@ import net.minecraft.network.play.server.SPacketCustomSound;
 import net.minecraft.network.play.server.SPacketEffect;
 import net.minecraft.network.play.server.SPacketParticles;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -282,13 +283,13 @@ import net.minecraft.world.gen.feature.WorldGenTaiga1;
 import net.minecraft.world.gen.feature.WorldGenTaiga2;
 import net.minecraft.world.gen.feature.WorldGenTrees;
 import net.minecraft.world.storage.SaveHandler;
+import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 
-public class CraftWorld
-implements World {
+public class CraftWorld implements World {
     public static final int CUSTOM_DIMENSION_OFFSET = 10;
-    private final WorldServer world;
+    final WorldServer world;
     private WorldBorder worldBorder;
     private World.Environment environment;
     private final CraftServer server = (CraftServer)Bukkit.getServer();

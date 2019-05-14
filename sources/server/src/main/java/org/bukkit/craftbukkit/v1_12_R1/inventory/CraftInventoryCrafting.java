@@ -117,6 +117,10 @@ public class CraftInventoryCrafting extends CraftInventory implements CraftingIn
 
     public Recipe getRecipe() {
         IRecipe recipe = ((InventoryCrafting) getInventory()).currentRecipe;
-        return recipe == null ? null : recipe.toBukkitRecipe();
+        try {
+        	return recipe == null ? null : recipe.toBukkitRecipe();
+        } catch (AbstractMethodError error) {
+        	return null;
+		}
     }
 }

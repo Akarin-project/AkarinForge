@@ -46,7 +46,7 @@ public class WorldInfo
     private long sizeOnDisk;
     private NBTTagCompound playerTag;
     public int dimension;
-    private String levelName;
+    public String levelName; // Akarin
     private int saveVersion;
     private int cleanWeatherTime;
     private boolean raining;

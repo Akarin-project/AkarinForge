@@ -24,8 +24,6 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.IChunkLoader;
-import net.minecraftforge.common.ForgeChunkManager;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.event.world.ChunkUnloadEvent;
@@ -33,15 +31,15 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 public class ChunkProviderServer implements IChunkProvider
 {
     private static final Logger LOGGER = LogManager.getLogger();
-    public final Set<Long> droppedChunksSet = Sets.<Long>newHashSet(); // Akarin
+    public final Set<Long> droppedChunksSet = Sets.<Long>newHashSet(); // Akarin - private -> public
     public final IChunkGenerator chunkGenerator;
     public final IChunkLoader chunkLoader;
     public final Long2ObjectMap<Chunk> id2ChunkMap = new Long2ObjectOpenHashMap<Chunk>(8192);
     public final WorldServer world;
     private final Set<Long> loadingChunks = com.google.common.collect.Sets.newHashSet();
-    // Akarin start
-    public Chunk getChunkIfLoaded(int x2, int z2) {
-        return this.id2ChunkMap.get(ChunkPos.asLong(x2, z2));
+    // Akarin start - add methods
+    public boolean isChunkGenerated(int x, int z) {
+        return this.id2ChunkMap.containsKey(ChunkPos.asLong(x, z)) || this.chunkLoader.isChunkGeneratedAt(x, z);
     }
     
     public boolean unloadChunk(Chunk chunk, boolean save) {
@@ -68,13 +66,18 @@ public class ChunkProviderServer implements IChunkProvider
         }
         
         chunk.onUnload();
-        ForgeChunkManager.putDormantChunk(ChunkPos.asLong(chunk.x, chunk.z), chunk);
+        
         if (save) {
             this.saveChunkData(chunk);
             this.saveChunkExtraData(chunk);
         }
+        
         this.id2ChunkMap.remove(chunk.chunkKey);
         return true;
+    }
+    
+    public Chunk getChunkIfLoaded(int x, int z) {
+        return id2ChunkMap.get(ChunkPos.asLong(x, z));
     }
     // Akarin end
 
@@ -94,8 +97,8 @@ public class ChunkProviderServer implements IChunkProvider
     {
         if (this.world.provider.canDropChunk(chunkIn.x, chunkIn.z))
         {
-            this.droppedChunksSet.add(Long.valueOf(ChunkPos.asLong(chunkIn.x, chunkIn.z)));
-            chunkIn.unloadQueued = true;
+            //this.droppedChunksSet.add(Long.valueOf(ChunkPos.asLong(chunkIn.x, chunkIn.z)));
+            //chunkIn.unloadQueued = true;
         }
     }
 
@@ -195,7 +198,7 @@ public class ChunkProviderServer implements IChunkProvider
 
             this.id2ChunkMap.put(i, chunk);
             chunk.onLoad();
-            chunk.loadNearby(this, this.chunkGenerator, true); // Akarin
+            chunk.loadNearby(this, this.chunkGenerator, true); // CraftBukkit
         }
 
         return chunk;
@@ -307,15 +310,20 @@ public class ChunkProviderServer implements IChunkProvider
 
                     if (chunk != null && chunk.unloadQueued)
                     {
-                    	if (this.unloadChunk(chunk, true)) { // Akarin
-                        this.id2ChunkMap.remove(olong);
+                        // chunk.onUnload(); // Akarin
+                    	if (this.unloadChunk(chunk, true)) // Akarin
+                        net.minecraftforge.common.ForgeChunkManager.putDormantChunk(ChunkPos.asLong(chunk.x, chunk.z), chunk);
+                    	// Akarin start
+                        // this.saveChunkData(chunk);
+                        // this.saveChunkExtraData(chunk);
+                        // this.id2ChunkMap.remove(olong);
+                    	// Akarin end
                         ++i;
-                    	} // Akarin
                     }
                 }
             }
 
-            if (this.id2ChunkMap.isEmpty()) net.minecraftforge.common.DimensionManager.unloadWorld(this.world.provider.getDimension());
+            // if (this.id2ChunkMap.isEmpty()) net.minecraftforge.common.DimensionManager.unloadWorld(this.world.provider.getDimension()); // Akarin
 
             this.chunkLoader.chunkTick();
         }

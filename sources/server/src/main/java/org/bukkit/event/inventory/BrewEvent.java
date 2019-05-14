@@ -1,3 +1,6 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit.event.inventory;
 
 import org.bukkit.block.Block;
@@ -6,11 +9,9 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.block.BlockEvent;
 import org.bukkit.inventory.BrewerInventory;
 
-/**
- * Called when the brewing of the contents inside the Brewing Stand is
- * complete.
- */
-public class BrewEvent extends BlockEvent implements Cancellable {
+public class BrewEvent
+extends BlockEvent
+implements Cancellable {
     private static final HandlerList handlers = new HandlerList();
     private BrewerInventory contents;
     private int fuelLevel;
@@ -22,30 +23,22 @@ public class BrewEvent extends BlockEvent implements Cancellable {
         this.fuelLevel = fuelLevel;
     }
 
-    /**
-     * Gets the contents of the Brewing Stand.
-     *
-     * @return the contents
-     */
     public BrewerInventory getContents() {
-        return contents;
+        return this.contents;
     }
 
-    /**
-     * Gets the remaining fuel level.
-     *
-     * @return the remaining fuel
-     */
     public int getFuelLevel() {
-        return fuelLevel;
+        return this.fuelLevel;
     }
 
+    @Override
     public boolean isCancelled() {
-        return cancelled;
+        return this.cancelled;
     }
 
+    @Override
     public void setCancelled(boolean cancel) {
-        cancelled = cancel;
+        this.cancelled = cancel;
     }
 
     @Override
@@ -57,3 +50,4 @@ public class BrewEvent extends BlockEvent implements Cancellable {
         return handlers;
     }
 }
+

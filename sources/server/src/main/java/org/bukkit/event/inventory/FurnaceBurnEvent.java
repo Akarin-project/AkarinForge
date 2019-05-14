@@ -1,3 +1,6 @@
+/*
+ * Akarin Forge
+ */
 package org.bukkit.event.inventory;
 
 import org.bukkit.block.Block;
@@ -6,17 +9,16 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.block.BlockEvent;
 import org.bukkit.inventory.ItemStack;
 
-/**
- * Called when an ItemStack is successfully burned as fuel in a furnace.
- */
-public class FurnaceBurnEvent extends BlockEvent implements Cancellable {
+public class FurnaceBurnEvent
+extends BlockEvent
+implements Cancellable {
     private static final HandlerList handlers = new HandlerList();
     private final ItemStack fuel;
     private int burnTime;
     private boolean cancelled;
     private boolean burning;
 
-    public FurnaceBurnEvent(final Block furnace, final ItemStack fuel, final int burnTime) {
+    public FurnaceBurnEvent(Block furnace, ItemStack fuel, int burnTime) {
         super(furnace);
         this.fuel = fuel;
         this.burnTime = burnTime;
@@ -24,55 +26,32 @@ public class FurnaceBurnEvent extends BlockEvent implements Cancellable {
         this.burning = true;
     }
 
-    /**
-     * Gets the fuel ItemStack for this event
-     *
-     * @return the fuel ItemStack
-     */
     public ItemStack getFuel() {
-        return fuel;
+        return this.fuel;
     }
 
-    /**
-     * Gets the burn time for this fuel
-     *
-     * @return the burn time for this fuel
-     */
     public int getBurnTime() {
-        return burnTime;
+        return this.burnTime;
     }
 
-    /**
-     * Sets the burn time for this fuel
-     *
-     * @param burnTime the burn time for this fuel
-     */
     public void setBurnTime(int burnTime) {
         this.burnTime = burnTime;
     }
 
-    /**
-     * Gets whether the furnace's fuel is burning or not.
-     *
-     * @return whether the furnace's fuel is burning or not.
-     */
     public boolean isBurning() {
         return this.burning;
     }
 
-    /**
-     * Sets whether the furnace's fuel is burning or not.
-     *
-     * @param burning true if the furnace's fuel is burning
-     */
     public void setBurning(boolean burning) {
         this.burning = burning;
     }
 
+    @Override
     public boolean isCancelled() {
-        return cancelled;
+        return this.cancelled;
     }
 
+    @Override
     public void setCancelled(boolean cancel) {
         this.cancelled = cancel;
     }
@@ -86,3 +65,4 @@ public class FurnaceBurnEvent extends BlockEvent implements Cancellable {
         return handlers;
     }
 }
+

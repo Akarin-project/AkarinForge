@@ -166,7 +166,6 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public CraftWorld getWorld() {
         return this.world;
     }
-    
 
     public Chunk getChunkIfLoaded(BlockPos blockposition) {
         return ((ChunkProviderServer) this.chunkProvider).getChunkIfLoaded(blockposition.getX() >> 4, blockposition.getZ() >> 4);
@@ -237,7 +236,6 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
             public void onDamageBufferChanged(WorldBorder worldborder, double d0) {}
         });
-        MinecraftServer.instance().server.addWorld(this.world);
         // Akarin end
     }
 

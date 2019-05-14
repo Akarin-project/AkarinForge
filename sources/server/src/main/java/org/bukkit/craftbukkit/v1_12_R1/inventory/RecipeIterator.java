@@ -27,21 +27,25 @@ public class RecipeIterator implements Iterator<Recipe> {
     public Recipe next() {
         if (recipes.hasNext()) {
             removeFrom = recipes;
-            return recipes.next().toBukkitRecipe();
-        } else {
-            net.minecraft.item.ItemStack item;
-            if (smeltingCustom.hasNext()) {
-                removeFrom = smeltingCustom;
-                item = smeltingCustom.next();
-            } else {
-                removeFrom = smeltingVanilla;
-                item = smeltingVanilla.next();
-            }
-
-            CraftItemStack stack = CraftItemStack.asCraftMirror(FurnaceRecipes.instance().getSmeltingResult(item));
-
-            return new CraftFurnaceRecipe(stack, CraftItemStack.asCraftMirror(item));
+            try {
+            	return recipes.next().toBukkitRecipe();
+            } catch (AbstractMethodError error) {
+				;
+			}
         }
+        
+        net.minecraft.item.ItemStack item;
+        if (smeltingCustom.hasNext()) {
+            removeFrom = smeltingCustom;
+            item = smeltingCustom.next();
+        } else {
+            removeFrom = smeltingVanilla;
+            item = smeltingVanilla.next();
+        }
+
+        CraftItemStack stack = CraftItemStack.asCraftMirror(FurnaceRecipes.instance().getSmeltingResult(item));
+
+        return new CraftFurnaceRecipe(stack, CraftItemStack.asCraftMirror(item));
     }
 
     public void remove() {

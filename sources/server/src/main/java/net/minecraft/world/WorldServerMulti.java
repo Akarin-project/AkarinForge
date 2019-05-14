@@ -8,7 +8,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.village.VillageCollection;
 import net.minecraft.world.border.IBorderListener;
 import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.storage.DerivedWorldInfo;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 
@@ -19,7 +18,7 @@ public class WorldServerMulti extends WorldServer
 
     public WorldServerMulti(MinecraftServer server, ISaveHandler saveHandlerIn, int dimensionId, WorldServer delegate, Profiler profilerIn, WorldInfo info, Environment environment, ChunkGenerator generator)
     {
-        super(server, saveHandlerIn, new DerivedWorldInfo(delegate.getWorldInfo()), dimensionId, profilerIn, environment, generator);
+        super(server, saveHandlerIn, new WorldInfo(delegate.getWorldInfo()), dimensionId, profilerIn, environment, generator); // Akarin
         this.delegate = delegate;
         this.borderListener = new IBorderListener()
         {
