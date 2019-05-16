@@ -1179,8 +1179,8 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
         }
     }
 
-    public void processChatMessage(CPacketChatMessage packetIn)
-    {
+    public void processChatMessage(CPacketChatMessage packetIn) {
+        // PacketThreadUtil.checkThreadAndEnqueue(packetIn, this, this.player.getServerWorld());
         // CraftBukkit start - async chat
         // SPIGOT-3638
         if (this.serverController.isServerStopped()) {
@@ -1192,23 +1192,21 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
             PacketThreadUtil.checkThreadAndEnqueue(packetIn, this, this.player.getServerWorld());
         }
         // CraftBukkit end
+
         if (this.player.isDead || this.player.getChatVisibility() == EntityPlayer.EnumChatVisibility.HIDDEN) // CraftBukkit - dead men tell no tales
         {
             TextComponentTranslation textcomponenttranslation = new TextComponentTranslation("chat.cannotSend", new Object[0]);
             textcomponenttranslation.getStyle().setColor(TextFormatting.RED);
             this.sendPacket(new SPacketChat(textcomponenttranslation));
-        }
-        else
-        {
+        } else {
             this.player.markPlayerActive();
             String s = packetIn.getMessage();
             s = StringUtils.normalizeSpace(s);
 
-            for (int i = 0; i < s.length(); ++i)
-            {
-                if (!ChatAllowedCharacters.isAllowedCharacter(s.charAt(i)))
-                {
-                	// CraftBukkit start - threadsafety
+            for (int i = 0; i < s.length(); ++i) {
+                if (!ChatAllowedCharacters.isAllowedCharacter(s.charAt(i))) {
+                    // this.disconnect(new TextComponentTranslation("multiplayer.disconnect.illegal_characters", new Object[0]));
+                    // CraftBukkit start - threadsafety
                     if (!isSync) {
                         Waitable waitable = new Waitable() {
                             @Override
@@ -1246,16 +1244,7 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
             } else if (s.isEmpty()) {
                 LOGGER.warn(this.player.getName() + " tried to send an empty message");
             } else if (getPlayer().isConversing()) {
-                final String message = s;
-                this.serverController.processQueue.add( new Waitable()
-                {
-                    @Override
-                    protected Object evaluate()
-                    {
-                        getPlayer().acceptConversationInput( message );
-                        return null;
-                    }
-                } );
+                getPlayer().acceptConversationInput(s);
             } else if (this.player.getChatVisibility() == EntityPlayer.EnumChatVisibility.SYSTEM) { // Re-add "Command Only" flag check
                 TextComponentTranslation chatmessage = new TextComponentTranslation("chat.cannotSend", new Object[0]);
 
@@ -1264,24 +1253,42 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
             } else if (true) {
                 this.chat(s, true);
                 // CraftBukkit end - the below is for reference. :)
-            }
-            else
-            {
+            } else {
                 ITextComponent itextcomponent = new TextComponentTranslation("chat.type.text", this.player.getDisplayName(), net.minecraftforge.common.ForgeHooks.newChatWithLinks(s));
                 itextcomponent = net.minecraftforge.common.ForgeHooks.onServerChatEvent(this, s, itextcomponent);
                 if (itextcomponent == null) return;
                 this.serverController.getPlayerList().sendMessage(itextcomponent, false);
             }
 
-            this.chatSpamThresholdCount += 20;
+            // CraftBukkit start - replaced with thread safe throttle
+            // this.chatThrottle += 20;
+            if ((chatSpamThresholdCount += 20) > 200 && !this.serverController.getPlayerList().canSendCommands(this.player.getGameProfile())) {
+                if (!isSync) {
+                    Waitable waitable = new Waitable() {
+                        @Override
+                        protected Object evaluate() {
+                            NetHandlerPlayServer.this.disconnect(new TextComponentTranslation("disconnect.spam", new Object[0]));
+                            return null;
+                        }
+                    };
 
-            if (this.chatSpamThresholdCount > 200 && !this.serverController.getPlayerList().canSendCommands(this.player.getGameProfile()))
-            {
-                this.disconnect(new TextComponentTranslation("disconnect.spam", new Object[0]));
+                    this.serverController.processQueue.add(waitable);
+
+                    try {
+                        waitable.get();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    this.disconnect(new TextComponentTranslation("disconnect.spam", new Object[0]));
+                }
+                // CraftBukkit end
             }
         }
     }
-    
+
     public void chat(String s, boolean async) {
         if (s.isEmpty() || this.player.getChatVisibility() == EntityPlayer.EnumChatVisibility.HIDDEN) {
             return;
@@ -1312,7 +1319,7 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
                         String message = String.format(queueEvent.getFormat(), queueEvent.getPlayer().getDisplayName(), queueEvent.getMessage());
                         NetHandlerPlayServer.this.serverController.console.sendMessage(message);
                         if (((LazyPlayerSet) queueEvent.getRecipients()).isLazy()) {
-                            for (Object player : NetHandlerPlayServer.this.serverController.getPlayerList().playerEntityList) {
+                            for (Object player : NetHandlerPlayServer.this.serverController.getPlayerList().getPlayers()) {
                                 ((EntityPlayerMP) player).sendMessage(CraftChatMessage.fromString(message));
                             }
                         } else {
@@ -1321,7 +1328,8 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
                             }
                         }
                         return null;
-                    }};
+                    }
+                };
                 if (async) {
                     serverController.processQueue.add(waitable);
                 } else {
@@ -1339,9 +1347,10 @@ public class NetHandlerPlayServer implements INetHandlerPlayServer, ITickable
                     return;
                 }
 
+                s = String.format(event.getFormat(), event.getPlayer().getDisplayName(), event.getMessage());
                 serverController.console.sendMessage(s);
                 if (((LazyPlayerSet) event.getRecipients()).isLazy()) {
-                    for (Object recipient : serverController.getPlayerList().playerEntityList) {
+                    for (Object recipient : serverController.getPlayerList().getPlayers()) {
                         ((EntityPlayerMP) recipient).sendMessage(CraftChatMessage.fromString(s));
                     }
                 } else {

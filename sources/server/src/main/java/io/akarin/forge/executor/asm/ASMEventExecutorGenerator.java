@@ -61,7 +61,7 @@ public class ASMEventExecutorGenerator {
 
     public static String generateName() {
         int id2 = NEXT_ID.getAndIncrement();
-        return "io.akarin.forge.executor.asm.generated.GeneratedEventExecutor" + id2;
+        return "io.akarin.server.forge.executor.asm.generated.GeneratedEventExecutor" + id2;
     }
 
     static {
