@@ -15,9 +15,9 @@ import net.minecraft.item.ItemStack;
 public class FurnaceRecipes
 {
     private static final FurnaceRecipes SMELTING_BASE = new FurnaceRecipes();
-    public Map<ItemStack, ItemStack> smeltingList = Maps.<ItemStack, ItemStack>newHashMap(); // Akarin
+    public Map<ItemStack, ItemStack> smeltingList = Maps.<ItemStack, ItemStack>newConcurrentMap(); // Akarin
     private final Map<ItemStack, Float> experienceList = Maps.<ItemStack, Float>newHashMap();
-    public Map<ItemStack,ItemStack> customRecipes = Maps.newHashMap(); // CraftBukkit - add field
+    public Map<ItemStack,ItemStack> customRecipes = Maps.newConcurrentMap(); // CraftBukkit - add field // Akarin
     public Map<ItemStack,Float> customExperience = Maps.newHashMap(); // CraftBukkit - add field
     // CraftBukkit start - add method
     public void registerRecipe(ItemStack itemstack, ItemStack itemstack1, float f) {

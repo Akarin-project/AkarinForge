@@ -691,7 +691,16 @@ public final class CraftServer implements Server {
     }
 
     public boolean dispatchVanillaCommand(CommandSender sender, String commandLine) {
-        sender.sendMessage("unknown");
+        if (commandMap.dispatch(sender, commandLine)) {
+            return true;
+        }
+
+        if (sender instanceof Player) {
+            sender.sendMessage("Unknown command. Type \"/help\" for help.");
+        } else {
+            sender.sendMessage("Unknown command. Type \"help\" for help.");
+        }
+
         return false;
     }
 

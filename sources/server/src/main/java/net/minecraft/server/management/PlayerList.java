@@ -594,7 +594,7 @@ public abstract class PlayerList
             if (!gameprofilebanentry.hasBanExpired())
                 event.disallow(PlayerLoginEvent.Result.KICK_BANNED, s); // Spigot
         } else if (!this.canJoin(gameprofile)) { // Paper
-            event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, "whitelist");
+            event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, "You are not white-listed on this server!");
         } else if (getBannedIPs().isBanned(socketaddress) && !getBannedIPs().getBanEntry(socketaddress).hasBanExpired()) {
             UserListIPBansEntry ipbanentry = this.bannedIPs.getBanEntry(socketaddress);
 
@@ -606,7 +606,7 @@ public abstract class PlayerList
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, s);
         } else {
             if (this.playerEntityList.size() >= this.maxPlayers && !this.bypassesPlayerLimit(gameprofile)) {
-                event.disallow(PlayerLoginEvent.Result.KICK_FULL, "full"); // Spigot
+                event.disallow(PlayerLoginEvent.Result.KICK_FULL, "The server is full!");
             }
         }
 
