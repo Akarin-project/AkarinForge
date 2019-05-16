@@ -22,7 +22,7 @@ public class ContainerBeacon extends Container
 
     public ContainerBeacon(IInventory playerInventory, IInventory tileBeaconIn)
     {
-        player = (InventoryPlayer) playerInventory; // CraftBukkit
+        player = (InventoryPlayer) playerInventory; // CraftBukkit - TODO: check this
         this.tileBeacon = tileBeaconIn;
         this.beaconSlot = new ContainerBeacon.BeaconSlot(tileBeaconIn, 0, 136, 110);
         this.addSlotToContainer(this.beaconSlot);
@@ -160,7 +160,6 @@ public class ContainerBeacon extends Container
             return 1;
         }
     }
-    
     // CraftBukkit start
     @Override
     public CraftInventoryView getBukkitView() {
@@ -168,7 +167,7 @@ public class ContainerBeacon extends Container
             return bukkitEntity;
         }
 
-        org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventory inventory = new org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryBeacon((TileEntityBeacon) this.tileBeacon);
+        org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventory inventory = new org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryBeacon((TileEntityBeacon) this.tileBeacon); // TODO - check this
         bukkitEntity = new CraftInventoryView(this.player.player.getBukkitEntity(), inventory, this);
         return bukkitEntity;
     }

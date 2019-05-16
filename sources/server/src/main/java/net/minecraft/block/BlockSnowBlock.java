@@ -4,6 +4,7 @@ import java.util.Random;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
@@ -33,6 +34,11 @@ public class BlockSnowBlock extends Block
     {
         if (worldIn.getLightFor(EnumSkyBlock.BLOCK, pos) > 11)
         {
+            // CraftBukkit start
+            if (org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callBlockFadeEvent(worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()), Blocks.AIR).isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
             this.dropBlockAsItem(worldIn, pos, worldIn.getBlockState(pos), 0);
             worldIn.setBlockToAir(pos);
         }

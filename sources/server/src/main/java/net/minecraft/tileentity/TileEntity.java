@@ -9,7 +9,6 @@ import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
@@ -25,31 +24,22 @@ import org.bukkit.inventory.InventoryHolder;
 
 public abstract class TileEntity implements net.minecraftforge.common.capabilities.ICapabilitySerializable<NBTTagCompound>
 {
-	// Akarin start - add implementation
-    public InventoryHolder getOwner() {
-        if (world == null)
-        	return null;
-        
-        org.bukkit.block.Block block = world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
-        if (block == null) {
-            MinecraftServer.LOGGER.warn("No block for owner at %s %d %d %d", world.getWorld(), pos.getX(), pos.getY(), pos.getZ());
-            return null;
-        }
-        
-        org.bukkit.block.BlockState state = block.getState();
-        if (state instanceof InventoryHolder)
-        	return (InventoryHolder) state;
-        
-        return null;
-    }
-    // Akarin end
     private static final Logger LOGGER = LogManager.getLogger();
     private static final RegistryNamespaced < ResourceLocation, Class <? extends TileEntity >> REGISTRY = new RegistryNamespaced < ResourceLocation, Class <? extends TileEntity >> ();
     protected World world;
-    public BlockPos pos = BlockPos.ORIGIN;
+    public BlockPos pos = BlockPos.ORIGIN; // Akarin - protected -> public
     protected boolean tileEntityInvalid;
     private int blockMetadata = -1;
     protected Block blockType;
+    // CraftBukkit start - add method
+    public InventoryHolder getOwner() {
+        if (world == null) return null;
+        org.bukkit.block.Block block = world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+        org.bukkit.block.BlockState state = world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()).getState();
+        if (state instanceof InventoryHolder) return (InventoryHolder) state;
+        return null;
+    }
+    // CraftBukkit end
 
     public static void register(String id, Class <? extends TileEntity > clazz)
     {

@@ -1,6 +1,9 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.event.block.BlockFromToEvent;
+
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockFaceShape;
@@ -97,6 +100,18 @@ public class BlockDragonEgg extends Block
 
                 if (worldIn.isAirBlock(blockpos))
                 {
+                    // CraftBukkit start
+                    org.bukkit.block.Block from = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+                    org.bukkit.block.Block to = worldIn.getWorld().getBlockAt(blockpos.getX(), blockpos.getY(), blockpos.getZ());
+                    BlockFromToEvent event = new BlockFromToEvent(from, to);
+                    org.bukkit.Bukkit.getPluginManager().callEvent(event);
+
+                    if (event.isCancelled()) {
+                        return;
+                    }
+
+                    blockpos = new BlockPos(event.getToBlock().getX(), event.getToBlock().getY(), event.getToBlock().getZ());
+                    // CraftBukkit end
                     if (worldIn.isRemote)
                     {
                         for (int j = 0; j < 128; ++j)

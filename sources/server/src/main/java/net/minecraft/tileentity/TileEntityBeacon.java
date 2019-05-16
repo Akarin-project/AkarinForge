@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -32,6 +33,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.potion.PotionUtils;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -49,38 +51,33 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
     @SideOnly(Side.CLIENT)
     private float beamRenderScale;
     private boolean isComplete;
-    public int levels = -1; // Akarin - private -> public
+    public int levels = -1;
     @Nullable
-	public Potion primaryEffect; // Akarin - private -> public
+	public Potion primaryEffect;
     @Nullable
-	public Potion secondaryEffect; // Akarin - private -> public
+	public Potion secondaryEffect;
     private ItemStack payment = ItemStack.EMPTY;
     private String customName;
-    // Akarin start - add fields and methods
+    // CraftBukkit start - add fields and methods
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     private int maxStack = 64;
 
-    @Override
     public List<ItemStack> getContents() {
         return Arrays.asList(this.payment);
     }
 
-    @Override
     public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
 
-    @Override
     public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
-    @Override
     public List<HumanEntity> getViewers() {
         return transaction;
     }
 
-    @Override
     public void setMaxStackSize(int size) {
         maxStack = size;
     }
@@ -93,12 +90,13 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
         return (hasSecondaryEffect()) ? CraftPotionUtil.toBukkit(new PotionEffect(this.secondaryEffect, getLevel(), getAmplification(), true, true)) : null;
     }
     
-    // AWS done this properly
     private byte getAmplification() {
         byte b0 = 0;
+
         if (this.levels >= 4 && this.primaryEffect == this.secondaryEffect) {
             b0 = 1;
         }
+
         return b0;
     }
 
@@ -107,16 +105,30 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
         return i;
     }
 
-    public List<EntityPlayer> getHumansInRange() {
+    public List getHumansInRange() {
         double d0 = (double) (this.levels * 10 + 10);
 
         int j = this.pos.getX();
         int k = this.pos.getY();
         int l = this.pos.getZ();
         AxisAlignedBB axisalignedbb = (new AxisAlignedBB((double) j, (double) k, (double) l, (double) (j + 1), (double) (k + 1), (double) (l + 1))).grow(d0).expand(0.0D, (double) this.world.getHeight(), 0.0D);
-        List<EntityPlayer> list = this.world.getEntitiesWithinAABB(EntityPlayer.class, axisalignedbb);
+        List list = this.world.getEntitiesWithinAABB(EntityPlayer.class, axisalignedbb);
 
         return list;
+    }
+
+    private void applyEffect(List list, Potion effects, int i, int b0) {
+        applyEffect(list, effects, i, b0, true);
+    }
+
+    private void applyEffect(List list, Potion effects, int i, int b0, boolean isPrimary) {
+        Iterator iterator = list.iterator();
+
+        EntityPlayer entityhuman;
+        while (iterator.hasNext()) {
+            entityhuman = (EntityPlayer) iterator.next();
+            entityhuman.addPotionEffect(new PotionEffect(effects, i, b0, true, true));
+        }
     }
 
     private boolean hasSecondaryEffect() {
@@ -125,7 +137,7 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
         }
         return false;
     }
-    // Akarin end
+    // CraftBukkit end
 
     public void update()
     {

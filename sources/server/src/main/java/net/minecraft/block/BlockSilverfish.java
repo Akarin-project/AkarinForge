@@ -1,6 +1,9 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyEnum;
@@ -63,7 +66,7 @@ public class BlockSilverfish extends Block
         {
             EntitySilverfish entitysilverfish = new EntitySilverfish(worldIn);
             entitysilverfish.setLocationAndAngles((double)pos.getX() + 0.5D, (double)pos.getY(), (double)pos.getZ() + 0.5D, 0.0F, 0.0F);
-            worldIn.spawnEntity(entitysilverfish);
+            worldIn.addEntity(entitysilverfish, SpawnReason.SILVERFISH_BLOCK); // CraftBukkit - add SpawnReason
             entitysilverfish.spawnExplosionParticle();
         }
     }

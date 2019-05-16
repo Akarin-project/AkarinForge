@@ -3,6 +3,9 @@ package net.minecraft.block;
 import com.google.common.base.MoreObjects;
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.event.block.BlockRedstoneEvent;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
@@ -197,6 +200,16 @@ public class BlockTripWireHook extends Block
             this.playSound(worldIn, blockpos1, flag2, flag3, flag, flag1);
         }
 
+        // CraftBukkit start
+        org.bukkit.block.Block block = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+
+        BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, 15, 0);
+        worldIn.getServer().getPluginManager().callEvent(eventRedstone);
+
+        if (eventRedstone.getNewCurrent() > 0) {
+            return;
+        }
+        // CraftBukkit end
         this.playSound(worldIn, pos, flag2, flag3, flag, flag1);
 
         if (!p_176260_4_)

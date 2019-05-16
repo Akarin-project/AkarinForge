@@ -1,5 +1,9 @@
 package net.minecraft.entity.ai;
 
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
+import org.bukkit.event.entity.EntityTeleportEvent;
+
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -114,7 +118,18 @@ public class EntityAIFollowOwner extends EntityAIBase
                                 {
                                     if ((l < 1 || i1 < 1 || l > 3 || i1 > 3) && this.isTeleportFriendlyBlock(i, j, k, l, i1))
                                     {
-                                        this.tameable.setLocationAndAngles((double)((float)(i + l) + 0.5F), (double)k, (double)((float)(j + i1) + 0.5F), this.tameable.rotationYaw, this.tameable.rotationPitch);
+                                        // CraftBukkit start
+                                        CraftEntity entity = this.tameable.getBukkitEntity();
+                                        Location to = new Location(entity.getWorld(), (double) ((float) (i + l) + 0.5F), (double) k, (double) ((float) (j + i1) + 0.5F), this.tameable.rotationYaw, this.tameable.rotationPitch);
+                                        EntityTeleportEvent event = new EntityTeleportEvent(entity, entity.getLocation(), to);
+                                        this.tameable.world.getServer().getPluginManager().callEvent(event);
+                                        if (event.isCancelled()) {
+                                            return;
+                                        }
+                                        to = event.getTo();
+
+                                        this.tameable.setLocationAndAngles(to.getX(), to.getY(), to.getZ(), to.getYaw(), to.getPitch());
+                                        // CraftBukkit end
                                         this.petPathfinder.clearPath();
                                         return;
                                     }

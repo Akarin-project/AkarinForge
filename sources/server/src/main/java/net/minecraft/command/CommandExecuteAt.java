@@ -3,10 +3,14 @@ package net.minecraft.command;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.command.ProxiedNativeCommandSender;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.CommandBlockBaseLogic;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -78,7 +82,10 @@ public class CommandExecuteAt extends CommandBase
 
             try
             {
-                int j = icommandmanager.executeCommand(icommandsender, s);
+                // CraftBukkit start
+                org.bukkit.command.CommandSender bsender = CommandBlockBaseLogic.unwrapSender(sender);
+                int j = CommandBlockBaseLogic.executeCommand(icommandsender, new ProxiedNativeCommandSender(icommandsender, bsender, entity.getBukkitEntity()), s); 
+                // CraftBukkit end
 
                 if (j < 1)
                 {
@@ -87,6 +94,11 @@ public class CommandExecuteAt extends CommandBase
             }
             catch (Throwable var23)
             {
+                // CraftBukkit start
+                if (var23 instanceof CommandException) {
+                    throw (CommandException) var23;
+                }
+                // CraftBukkit end
                 throw new CommandException("commands.execute.failed", new Object[] {s, entity.getName()});
             }
         }

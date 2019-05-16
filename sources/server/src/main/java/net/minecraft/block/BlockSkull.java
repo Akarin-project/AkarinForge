@@ -3,6 +3,10 @@ package net.minecraft.block;
 import com.google.common.base.Predicate;
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.util.BlockStateListPopulator;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -128,6 +132,29 @@ public class BlockSkull extends BlockContainer
         return new ItemStack(Items.SKULL, 1, i);
     }
 
+    // CraftBukkit start - Special case dropping so we can get info from the tile entity
+    @Override
+    public void dropBlockAsItemWithChance(World world, BlockPos blockposition, IBlockState iblockdata, float f, int i) {
+        if (world.rand.nextFloat() < f) {
+            TileEntity tileentity = world.getTileEntity(blockposition);
+
+            if (tileentity instanceof TileEntitySkull) {
+                TileEntitySkull tileentityskull = (TileEntitySkull) tileentity;
+                ItemStack itemstack = this.getItem(world, blockposition, iblockdata);
+
+                if (tileentityskull.getSkullType() == 3 && tileentityskull.getPlayerProfile() != null) {
+                    itemstack.setTagCompound(new NBTTagCompound());
+                    NBTTagCompound nbttagcompound = new NBTTagCompound();
+
+                    NBTUtil.writeGameProfile(nbttagcompound, tileentityskull.getPlayerProfile());
+                    itemstack.getTagCompound().setTag("SkullOwner", nbttagcompound);
+                }
+
+                spawnAsEntity(world, blockposition, itemstack);
+            }
+        }
+    }
+    // CraftBukkit end
     public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player)
     {
         if (player.capabilities.isCreativeMode)
@@ -147,7 +174,7 @@ public class BlockSkull extends BlockContainer
     public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops, IBlockAccess worldIn, BlockPos pos, IBlockState state, int fortune)
     {
         {
-            if (!((Boolean)state.getValue(NODROP)).booleanValue())
+            if (false && !((Boolean)state.getValue(NODROP)).booleanValue()) // CraftBukkit - Drop item in code above, not here
             {
                 TileEntity tileentity = worldIn.getTileEntity(pos);
 
@@ -196,10 +223,16 @@ public class BlockSkull extends BlockContainer
 
             if (blockpattern$patternhelper != null)
             {
+                BlockStateListPopulator blockList = new BlockStateListPopulator(worldIn.getWorld()); // CraftBukkit- Use BlockStateListPopulator
                 for (int i = 0; i < 3; ++i)
                 {
                     BlockWorldState blockworldstate = blockpattern$patternhelper.translateOffset(i, 0, 0);
-                    worldIn.setBlockState(blockworldstate.getPos(), blockworldstate.getBlockState().withProperty(NODROP, Boolean.valueOf(true)), 2);
+                    // CraftBukkit start
+                    // worldIn.setBlockState(blockworldstate.getPos(), blockworldstate.getBlockState().withProperty(NODROP, Boolean.valueOf(true)), 2);
+                    BlockPos blockpos = blockworldstate.getPos();
+                    IBlockState data = blockworldstate.getBlockState().withProperty(BlockSkull.NODROP, Boolean.valueOf(true));
+                    blockList.setTypeAndData(blockpos.getX(), blockpos.getY(), blockpos.getZ(), data.getBlock(), data.getBlock().getMetaFromState(data), 2);
+                    // CraftBukkit end
                 }
 
                 for (int j = 0; j < blockpattern.getPalmLength(); ++j)
@@ -207,7 +240,11 @@ public class BlockSkull extends BlockContainer
                     for (int k = 0; k < blockpattern.getThumbLength(); ++k)
                     {
                         BlockWorldState blockworldstate1 = blockpattern$patternhelper.translateOffset(j, k, 0);
-                        worldIn.setBlockState(blockworldstate1.getPos(), Blocks.AIR.getDefaultState(), 2);
+                        // CraftBukkit start
+                        // worldIn.setBlockState(blockworldstate1.getPos(), Blocks.AIR.getDefaultState(), 2);
+                        BlockPos blockpos = blockworldstate1.getPos();
+                        blockList.setTypeAndData(blockpos.getX(), blockpos.getY(), blockpos.getZ(), Blocks.AIR, 0, 2);
+                        // CraftBukkit end
                     }
                 }
 
@@ -218,6 +255,9 @@ public class BlockSkull extends BlockContainer
                 entitywither.renderYawOffset = blockpattern$patternhelper.getForwards().getAxis() == EnumFacing.Axis.X ? 0.0F : 90.0F;
                 entitywither.ignite();
 
+                // CraftBukkit start
+                if (worldIn.addEntity(entitywither, SpawnReason.BUILD_WITHER)) {
+                    blockList.updateList();
                 for (EntityPlayerMP entityplayermp : worldIn.getEntitiesWithinAABB(EntityPlayerMP.class, entitywither.getEntityBoundingBox().grow(50.0D)))
                 {
                     CriteriaTriggers.SUMMONED_ENTITY.trigger(entityplayermp, entitywither);
@@ -238,6 +278,7 @@ public class BlockSkull extends BlockContainer
                         worldIn.notifyNeighborsRespectDebug(blockworldstate2.getPos(), Blocks.AIR, false);
                     }
                 }
+                } // CraftBukkit end
             }
         }
     }

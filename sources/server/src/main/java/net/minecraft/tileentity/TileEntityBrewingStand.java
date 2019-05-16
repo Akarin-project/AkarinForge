@@ -49,27 +49,22 @@ public class TileEntityBrewingStand extends TileEntityLockable implements ITicka
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     private int maxStack = 64;
 
-    @Override
     public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
 
-    @Override
     public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
-    @Override
     public List<HumanEntity> getViewers() {
         return transaction;
     }
 
-    @Override
     public List<ItemStack> getContents() {
         return this.brewingItemStacks;
     }
 
-    @Override
     public void setMaxStackSize(int size) {
         maxStack = size;
     }
@@ -114,9 +109,9 @@ public class TileEntityBrewingStand extends TileEntityLockable implements ITicka
 
         if (this.fuel <= 0 && itemstack.getItem() == Items.BLAZE_POWDER)
         {
-        	// Akarin start - fire event
+            // CraftBukkit start
             BrewingStandFuelEvent event = new BrewingStandFuelEvent(world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()), CraftItemStack.asCraftMirror(itemstack), 20);
-            MinecraftServer.instance().server.getPluginManager().callEvent(event);
+            this.world.getServer().getPluginManager().callEvent(event);
 
             if (event.isCancelled()) {
                 return;
@@ -127,30 +122,21 @@ public class TileEntityBrewingStand extends TileEntityLockable implements ITicka
                 itemstack.shrink(1);
             }
             // CraftBukkit end
-        	
-            // this.fuel = 20;
-            // itemstack.shrink(1);
-        	// Akarin end
             this.markDirty();
         }
 
         boolean flag = this.canBrew();
         boolean flag1 = this.brewTime > 0;
         ItemStack itemstack1 = this.brewingItemStacks.get(3);
-
-        // Akarin start - wall clock time
+        // CraftBukkit start - Use wall time instead of ticks for brewing
         int elapsedTicks = MinecraftServer.currentTick - this.lastTick;
         this.lastTick = MinecraftServer.currentTick;
-        // Akarin end
+
         if (flag1)
         {
-        	// Akarin start - wall clock time
             this.brewTime -= elapsedTicks;
             boolean flag2 = this.brewTime <= 0; // == -> <=
-        	
-            // --this.brewTime;
-            // boolean flag2 = this.brewTime == 0;
-            // Akarin end
+            // CraftBukkit end
 
             if (flag2 && flag)
             {
@@ -246,6 +232,8 @@ public class TileEntityBrewingStand extends TileEntityLockable implements ITicka
 
     private void brewPotions()
     {
+        if (net.minecraftforge.event.ForgeEventFactory.onPotionAttemptBrew(brewingItemStacks)) return;
+        ItemStack itemstack = this.brewingItemStacks.get(3);
         // CraftBukkit start
         InventoryHolder owner = this.getOwner();
         if (owner != null) {
@@ -256,8 +244,6 @@ public class TileEntityBrewingStand extends TileEntityLockable implements ITicka
             }
         }
         // CraftBukkit end
-        if (net.minecraftforge.event.ForgeEventFactory.onPotionAttemptBrew(brewingItemStacks)) return;
-        ItemStack itemstack = this.brewingItemStacks.get(3);
 
         net.minecraftforge.common.brewing.BrewingRecipeRegistry.brewPotions(brewingItemStacks, brewingItemStacks.get(3), OUTPUT_SLOTS);
 

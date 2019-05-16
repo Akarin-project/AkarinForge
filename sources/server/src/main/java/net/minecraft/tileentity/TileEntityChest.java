@@ -5,7 +5,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
 import org.bukkit.entity.HumanEntity;
 
 import net.minecraft.block.Block;
@@ -48,27 +47,22 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     private int maxStack = 64;
 
-    @Override
     public List<ItemStack> getContents() {
         return this.chestContents;
     }
 
-    @Override
     public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
 
-    @Override
     public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
-    @Override
     public List<HumanEntity> getViewers() {
         return transaction;
     }
 
-    @Override
     public void setMaxStackSize(int size) {
         maxStack = size;
     }
@@ -151,7 +145,7 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
 
     public int getInventoryStackLimit()
     {
-        return 64;
+        return maxStack; // CraftBukkit
     }
 
     public void updateContainingBlockInfo()
@@ -371,14 +365,15 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
             ++this.numPlayersUsing;
             if (this.world == null) return; // CraftBukkit
             this.world.addBlockEvent(this.pos, this.getBlockType(), 1, this.numPlayersUsing);
-            // Akarin start - fire event
-            if (this.getBlockType() instanceof BlockChest && ((BlockChest) this.getBlockType()).chestType == BlockChest.Type.TRAP) {
+            // CraftBukkit start - Call redstone event
+            if (this.getBlockType() == Blocks.TRAPPED_CHEST) {
                 int newPower = Math.max(0, Math.min(15, this.numPlayersUsing));
 
-                if (oldPower != newPower)
-                    CraftEventFactory.callRedstoneChange(world, pos.getX(), pos.getY(), pos.getZ(), oldPower, newPower);
+                if (oldPower != newPower) {
+                    org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callRedstoneChange(world, pos.getX(), pos.getY(), pos.getZ(), oldPower, newPower);
+                }
             }
-            // Akarin end
+            // CraftBukkit end
             this.world.notifyNeighborsOfStateChange(this.pos, this.getBlockType(), false);
 
             if (this.getChestType() == BlockChest.Type.TRAP)
@@ -399,12 +394,13 @@ public class TileEntityChest extends TileEntityLockableLoot implements ITickable
 
             if (this.getChestType() == BlockChest.Type.TRAP)
             {
-            	// Akarin start - fire event
+                // CraftBukkit start - Call redstone event
                 int newPower = Math.max(0, Math.min(15, this.numPlayersUsing));
 
-                if (oldPower != newPower)
-                    CraftEventFactory.callRedstoneChange(world, pos.getX(), pos.getY(), pos.getZ(), oldPower, newPower);
-                // Akarin end
+                if (oldPower != newPower) {
+                    org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callRedstoneChange(world, pos.getX(), pos.getY(), pos.getZ(), oldPower, newPower);
+                }
+                // CraftBukkit end
                 this.world.notifyNeighborsOfStateChange(this.pos.down(), this.getBlockType(), false);
             }
         }

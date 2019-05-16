@@ -41,7 +41,7 @@ public class EntityAIOwnerHurtByTarget extends EntityAITarget
 
     public void startExecuting()
     {
-        this.taskOwner.setAttackTarget(this.attacker);
+        this.taskOwner.setGoalTarget(this.attacker, org.bukkit.event.entity.EntityTargetEvent.TargetReason.TARGET_ATTACKED_OWNER, true); // CraftBukkit - reason
         EntityLivingBase entitylivingbase = this.tameable.getOwner();
 
         if (entitylivingbase != null)

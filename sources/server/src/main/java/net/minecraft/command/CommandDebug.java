@@ -13,6 +13,8 @@ import javax.annotation.Nullable;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,6 +42,14 @@ public class CommandDebug extends CommandBase
 
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
+        // CraftBukkit start - only allow use when enabled (so that no blank profile results occur)
+        if (!server.profiler.profilingEnabled) {
+            sender.sendMessage(new TextComponentString("Vanilla debug profiling is disabled."));
+            sender.sendMessage(new TextComponentString("To enable, restart the server with `-DenableDebugMethodProfiler=true' before `-jar'."));
+            sender.sendMessage(new TextComponentString("Use `/timings' for plugin timings."));
+            return;
+        }
+        // CraftBukkit end
         if (args.length < 1)
         {
             throw new WrongUsageException("commands.debug.usage", new Object[0]);

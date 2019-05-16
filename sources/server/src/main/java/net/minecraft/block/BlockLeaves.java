@@ -1,6 +1,9 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.event.block.LeavesDecayEvent;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.IBlockState;
@@ -178,6 +181,14 @@ public abstract class BlockLeaves extends Block implements net.minecraftforge.co
 
     private void destroy(World worldIn, BlockPos pos)
     {
+        // CraftBukkit start
+        LeavesDecayEvent event = new LeavesDecayEvent(worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()));
+        worldIn.getServer().getPluginManager().callEvent(event);
+
+        if (event.isCancelled() || worldIn.getBlockState(pos).getBlock() != this) {
+            return;
+        }
+        // CraftBukkit end
         this.dropBlockAsItem(worldIn, pos, worldIn.getBlockState(pos), 0);
         worldIn.setBlockToAir(pos);
     }

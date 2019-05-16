@@ -1,6 +1,12 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.block.BlockState;
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.event.block.BlockFadeEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
@@ -41,7 +47,19 @@ public class BlockGrass extends Block implements IGrowable
             if (!worldIn.isAreaLoaded(pos, 3)) return; // Forge: prevent loading unloaded chunks when checking neighbor's light and spreading
             if (worldIn.getLightFromNeighbors(pos.up()) < 4 && worldIn.getBlockState(pos.up()).getLightOpacity(worldIn, pos.up()) > 2)
             {
-                worldIn.setBlockState(pos, Blocks.DIRT.getDefaultState());
+                // CraftBukkit start
+                // worldIn.setBlockState(pos, Blocks.DIRT.getDefaultState());
+                org.bukkit.World bworld = worldIn.getWorld();
+                BlockState blockState = bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ()).getState();
+                blockState.setType(org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers.getMaterial(Blocks.DIRT));
+
+                BlockFadeEvent event = new BlockFadeEvent(blockState.getBlock(), blockState);
+                worldIn.getServer().getPluginManager().callEvent(event);
+
+                if (!event.isCancelled()) {
+                    blockState.update(true);
+                }
+                // CraftBukkit end
             }
             else
             {
@@ -61,7 +79,19 @@ public class BlockGrass extends Block implements IGrowable
 
                         if (iblockstate1.getBlock() == Blocks.DIRT && iblockstate1.getValue(BlockDirt.VARIANT) == BlockDirt.DirtType.DIRT && worldIn.getLightFromNeighbors(blockpos.up()) >= 4 && iblockstate.getLightOpacity(worldIn, pos.up()) <= 2)
                         {
-                            worldIn.setBlockState(blockpos, Blocks.GRASS.getDefaultState());
+                            // CraftBukkit start
+                            // worldIn.setBlockState(blockpos, Blocks.GRASS.getDefaultState());
+                            org.bukkit.World bworld = worldIn.getWorld();
+                            BlockState blockState = bworld.getBlockAt(blockpos.getX(), blockpos.getY(), blockpos.getZ()).getState();
+                            blockState.setType(org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers.getMaterial(Blocks.GRASS));
+
+                            BlockSpreadEvent event = new BlockSpreadEvent(blockState.getBlock(), bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ()), blockState);
+                            worldIn.getServer().getPluginManager().callEvent(event);
+
+                            if (!event.isCancelled()) {
+                                blockState.update(true);
+                            }
+                            // CraftBukkit end
                         }
                     }
                 }
@@ -109,7 +139,8 @@ public class BlockGrass extends Block implements IGrowable
 
                             if (Blocks.TALLGRASS.canBlockStay(worldIn, blockpos1, iblockstate1))
                             {
-                                worldIn.setBlockState(blockpos1, iblockstate1, 3);
+                                // worldIn.setBlockState(blockpos1, iblockstate1, 3); // CraftBukkit
+                                CraftEventFactory.handleBlockGrowEvent(worldIn, blockpos1.getX(), blockpos1.getY(), blockpos1.getZ(), iblockstate1.getBlock(), iblockstate1.getBlock().getMetaFromState(iblockstate1)); // CraftBukkit
                             }
                         }
                     }

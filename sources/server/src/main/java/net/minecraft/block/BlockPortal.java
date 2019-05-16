@@ -3,6 +3,10 @@ package net.minecraft.block;
 import com.google.common.cache.LoadingCache;
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.event.entity.EntityPortalEnterEvent;
+import org.bukkit.event.world.PortalCreateEvent;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyEnum;
@@ -74,7 +78,7 @@ public class BlockPortal extends BlockBreakable
 
             if (i > 0 && !worldIn.getBlockState(blockpos.up()).isNormalCube())
             {
-                Entity entity = ItemMonsterPlacer.spawnCreature(worldIn, EntityList.getKey(EntityPigZombie.class), (double)blockpos.getX() + 0.5D, (double)blockpos.getY() + 1.1D, (double)blockpos.getZ() + 0.5D);
+                Entity entity = ItemMonsterPlacer.spawnCreature(worldIn, EntityList.getKey(EntityPigZombie.class), (double)blockpos.getX() + 0.5D, (double)blockpos.getY() + 1.1D, (double)blockpos.getZ() + 0.5D); // CraftBukkit - set spawn reason to NETHER_PORTAL
 
                 if (entity != null)
                 {
@@ -113,8 +117,9 @@ public class BlockPortal extends BlockBreakable
 
         if (blockportal$size.isValid() && blockportal$size.portalBlockCount == 0 && !net.minecraftforge.event.ForgeEventFactory.onTrySpawnPortal(worldIn, pos, blockportal$size))
         {
-            blockportal$size.placePortalBlocks();
-            return true;
+            // CraftBukkit start - return portalcreator
+            return blockportal$size.createPortal();
+            // return true;
         }
         else
         {
@@ -122,8 +127,9 @@ public class BlockPortal extends BlockBreakable
 
             if (blockportal$size1.isValid() && blockportal$size1.portalBlockCount == 0 && !net.minecraftforge.event.ForgeEventFactory.onTrySpawnPortal(worldIn, pos, blockportal$size1))
             {
-                blockportal$size1.placePortalBlocks();
-                return true;
+                return blockportal$size1.createPortal();
+                // return true;
+                // CraftBukkit end
             }
             else
             {
@@ -216,6 +222,10 @@ public class BlockPortal extends BlockBreakable
     {
         if (!entityIn.isRiding() && !entityIn.isBeingRidden() && entityIn.isNonBoss())
         {
+            // CraftBukkit start - Entity in portal
+            EntityPortalEnterEvent event = new EntityPortalEnterEvent(entityIn.getBukkitEntity(), new org.bukkit.Location(worldIn.getWorld(), pos.getX(), pos.getY(), pos.getZ()));
+            worldIn.getServer().getPluginManager().callEvent(event);
+            // CraftBukkit end
             entityIn.setPortal(pos);
         }
     }
@@ -370,6 +380,7 @@ public class BlockPortal extends BlockBreakable
             private BlockPos bottomLeft;
             private int height;
             private int width;
+            java.util.Collection<org.bukkit.block.Block> blocks = new java.util.HashSet<org.bukkit.block.Block>(); // CraftBukkit - add field
 
             public Size(World worldIn, BlockPos p_i45694_2_, EnumFacing.Axis p_i45694_3_)
             {
@@ -442,6 +453,10 @@ public class BlockPortal extends BlockBreakable
 
             protected int calculatePortalHeight()
             {
+                // CraftBukkit start
+                this.blocks.clear();
+                org.bukkit.World bworld = this.world.getWorld();
+                // CraftBukkit end
                 label56:
 
                 for (this.height = 0; this.height < 21; ++this.height)
@@ -468,6 +483,11 @@ public class BlockPortal extends BlockBreakable
                             if (block != Blocks.OBSIDIAN)
                             {
                                 break label56;
+                                // CraftBukkit start - add the block to our list
+                            } else {
+                                BlockPos pos = blockpos.offset(this.leftDir);
+                                blocks.add(bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ()));
+                                // CraftBukkit end
                             }
                         }
                         else if (i == this.width - 1)
@@ -477,6 +497,11 @@ public class BlockPortal extends BlockBreakable
                             if (block != Blocks.OBSIDIAN)
                             {
                                 break label56;
+                                // CraftBukkit start - add the block to our list
+                            } else {
+                                BlockPos pos = blockpos.offset(this.rightDir);
+                                blocks.add(bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ()));
+                                // CraftBukkit end
                             }
                         }
                     }
@@ -488,6 +513,11 @@ public class BlockPortal extends BlockBreakable
                     {
                         this.height = 0;
                         break;
+                        // CraftBukkit start - add the block to our list
+                    } else {
+                        BlockPos pos = this.bottomLeft.offset(this.rightDir, j).up(this.height);
+                        blocks.add(bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ()));
+                        // CraftBukkit end
                     }
                 }
 
@@ -516,6 +546,7 @@ public class BlockPortal extends BlockBreakable
 
             public void placePortalBlocks()
             {
+            	
                 for (int i = 0; i < this.width; ++i)
                 {
                     BlockPos blockpos = this.bottomLeft.offset(this.rightDir, i);
@@ -526,5 +557,36 @@ public class BlockPortal extends BlockBreakable
                     }
                 }
             }
+            // CraftBukkit start - return boolean
+            public boolean createPortal() {
+                org.bukkit.World bworld = this.world.getWorld();
+
+                // Copy below for loop
+                for (int i = 0; i < this.width; ++i) {
+                    BlockPos blockposition = this.bottomLeft.offset(this.rightDir, i);
+
+                    for (int j = 0; j < this.height; ++j) {
+                        BlockPos pos = blockposition.up(j);
+                        blocks.add(bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ()));
+                    }
+                }
+
+                PortalCreateEvent event = new PortalCreateEvent(blocks, bworld, PortalCreateEvent.CreateReason.FIRE);
+                this.world.getServer().getPluginManager().callEvent(event);
+
+                if (event.isCancelled()) {
+                    return false;
+                }
+                for (int i = 0; i < this.width; ++i) {
+                    BlockPos blockposition = this.bottomLeft.offset(this.rightDir, i);
+
+                    for (int j = 0; j < this.height; ++j) {
+                        this.world.setBlockState(blockposition.up(j), Blocks.PORTAL.getDefaultState().withProperty(BlockPortal.AXIS, this.axis), 2);
+                    }
+                }
+
+                return true;
+            }
+            // CraftBukkit end
         }
 }

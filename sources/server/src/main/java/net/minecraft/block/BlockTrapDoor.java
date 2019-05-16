@@ -1,6 +1,9 @@
 package net.minecraft.block;
 
 import javax.annotation.Nullable;
+
+import org.bukkit.event.block.BlockRedstoneEvent;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
@@ -130,6 +133,19 @@ public class BlockTrapDoor extends Block
 
             if (flag || blockIn.getDefaultState().canProvidePower())
             {
+                // CraftBukkit start
+                org.bukkit.World bworld = worldIn.getWorld();
+                org.bukkit.block.Block bblock = bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+
+                int power = bblock.getBlockPower();
+                int oldPower = (Boolean) state.getValue(OPEN) ? 15 : 0;
+
+                if (oldPower == 0 ^ power == 0 || blockIn.getDefaultState().hasComparatorInputOverride()) {
+                    BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bblock, oldPower, power);
+                    worldIn.getServer().getPluginManager().callEvent(eventRedstone);
+                    flag = eventRedstone.getNewCurrent() > 0;
+                }
+                // CraftBukkit end
                 boolean flag1 = ((Boolean)state.getValue(OPEN)).booleanValue();
 
                 if (flag1 != flag)

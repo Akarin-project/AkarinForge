@@ -5,6 +5,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -73,6 +74,12 @@ public class EntityAIPanic extends EntityAIBase
 
     public boolean shouldContinueExecuting()
     {
+        // CraftBukkit start - introduce a temporary timeout hack until this is fixed properly
+        if ((this.creature.ticksExisted - this.creature.revengeTimer) > 100) {
+            this.creature.onKillEntity((EntityLivingBase) null);
+            return false;
+        }
+        // CraftBukkit end
         return !this.creature.getNavigator().noPath();
     }
 

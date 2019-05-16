@@ -1,5 +1,8 @@
 package net.minecraft.entity.ai;
 
+import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import net.minecraft.block.Block;
@@ -80,6 +83,7 @@ public class EntityAIEatGrass extends EntityAIBase
             {
                 if (net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.entityWorld, this.grassEaterEntity))
                 {
+                	if (!CraftEventFactory.callEntityChangeBlockEvent(this.grassEaterEntity, this.grassEaterEntity.world.getWorld().getBlockAt(blockpos.getX(), blockpos.getY(), blockpos.getZ()), Material.AIR, !this.entityWorld.getGameRules().getBoolean("mobGriefing")).isCancelled()) // CraftBukkit
                     this.entityWorld.destroyBlock(blockpos, false);
                 }
 
@@ -91,7 +95,7 @@ public class EntityAIEatGrass extends EntityAIBase
 
                 if (this.entityWorld.getBlockState(blockpos1).getBlock() == Blocks.GRASS)
                 {
-                    if (net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.entityWorld, this.grassEaterEntity))
+                    if (net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.entityWorld, this.grassEaterEntity) && !CraftEventFactory.callEntityChangeBlockEvent(this.grassEaterEntity, this.grassEaterEntity.world.getWorld().getBlockAt(blockpos.getX(), blockpos.getY(), blockpos.getZ()), Material.AIR, !this.entityWorld.getGameRules().getBoolean("mobGriefing")).isCancelled()) // CraftBukkit
                     {
                         this.entityWorld.playEvent(2001, blockpos1, Block.getIdFromBlock(Blocks.GRASS));
                         this.entityWorld.setBlockState(blockpos1, Blocks.DIRT.getDefaultState(), 2);

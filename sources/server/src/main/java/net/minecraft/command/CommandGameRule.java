@@ -29,7 +29,7 @@ public class CommandGameRule extends CommandBase
 
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
     {
-        GameRules gamerules = this.getOverWorldGameRules(server);
+    	GameRules gamerules = sender.getEntityWorld().getGameRules(); // CraftBukkit - Use current world
         String s = args.length > 0 ? args[0] : "";
         String s1 = args.length > 1 ? buildString(args, 1) : "";
 

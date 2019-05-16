@@ -3,6 +3,9 @@ package net.minecraft.block;
 import java.util.List;
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.event.entity.EntityPortalEnterEvent;
+
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockFaceShape;
@@ -69,6 +72,10 @@ public class BlockEndPortal extends BlockContainer
     {
         if (!worldIn.isRemote && !entityIn.isRiding() && !entityIn.isBeingRidden() && entityIn.isNonBoss() && entityIn.getEntityBoundingBox().intersects(state.getBoundingBox(worldIn, pos).offset(pos)))
         {
+            // CraftBukkit start - Entity in portal
+            EntityPortalEnterEvent event = new EntityPortalEnterEvent(entityIn.getBukkitEntity(), new org.bukkit.Location(worldIn.getWorld(), pos.getX(), pos.getY(), pos.getZ()));
+            worldIn.getServer().getPluginManager().callEvent(event);
+            // CraftBukkit end
             entityIn.changeDimension(1);
         }
     }

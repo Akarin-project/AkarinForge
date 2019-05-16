@@ -1,6 +1,9 @@
 package net.minecraft.entity.ai;
 
 import javax.annotation.Nullable;
+
+import org.bukkit.event.entity.EntityTargetEvent;
+
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -92,7 +95,7 @@ public abstract class EntityAITarget extends EntityAIBase
                     }
                     else
                     {
-                        this.taskOwner.setAttackTarget(entitylivingbase);
+                        this.taskOwner.setGoalTarget(entitylivingbase, EntityTargetEvent.TargetReason.CLOSEST_ENTITY, true); // CraftBukkit
                         return true;
                     }
                 }
@@ -115,7 +118,7 @@ public abstract class EntityAITarget extends EntityAIBase
 
     public void resetTask()
     {
-        this.taskOwner.setAttackTarget((EntityLivingBase)null);
+        this.taskOwner.setGoalTarget((EntityLivingBase) null, EntityTargetEvent.TargetReason.FORGOT_TARGET, true); // CraftBukkit
         this.target = null;
     }
 

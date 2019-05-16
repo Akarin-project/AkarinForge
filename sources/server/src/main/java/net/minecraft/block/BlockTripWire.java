@@ -3,6 +3,9 @@ package net.minecraft.block;
 import java.util.List;
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.event.entity.EntityInteractEvent;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
@@ -180,6 +183,39 @@ public class BlockTripWire extends Block
                 }
             }
         }
+        // CraftBukkit start - Call interact even when triggering connected tripwire
+        if (flag != flag1 && flag1 && (Boolean) iblockstate.getValue(ATTACHED)) {
+            org.bukkit.World bworld = worldIn.getWorld();
+            org.bukkit.plugin.PluginManager manager = worldIn.getServer().getPluginManager();
+            org.bukkit.block.Block block = bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+            boolean allowed = false;
+
+            // If all of the events are cancelled block the tripwire trigger, else allow
+            for (Entity entity : list) {
+                if (entity != null) {
+                    org.bukkit.event.Cancellable cancellable;
+
+                    if (entity instanceof EntityPlayer) {
+                        cancellable = org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callPlayerInteractEvent((EntityPlayer) entity, org.bukkit.event.block.Action.PHYSICAL, pos, null, null, null);
+                    } else if (entity instanceof Entity) {
+                        cancellable = new EntityInteractEvent(entity.getBukkitEntity(), block);
+                        manager.callEvent((EntityInteractEvent) cancellable);
+                    } else {
+                        continue;
+                    }
+
+                    if (!cancellable.isCancelled()) {
+                        allowed = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!allowed) {
+                return;
+            }
+        }
+        // CraftBukkit end
 
         if (flag1 != flag)
         {

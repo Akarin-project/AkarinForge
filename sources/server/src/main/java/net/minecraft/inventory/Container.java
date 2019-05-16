@@ -44,11 +44,9 @@ public abstract class Container
     private final Set<EntityPlayer> playerList = Sets.<EntityPlayer>newHashSet();
     // CraftBukkit start
     public boolean checkReachable = true;
-    
     public abstract InventoryView getBukkitView();
     public void transferTo(Container other, org.bukkit.craftbukkit.v1_12_R1.entity.CraftHumanEntity player) {
         InventoryView source = this.getBukkitView(), destination = other.getBukkitView();
-        
         ((CraftInventory) source.getTopInventory()).getInventory().onClose(player);
         ((CraftInventory) source.getBottomInventory()).getInventory().onClose(player);
         ((CraftInventory) destination.getTopInventory()).getInventory().onOpen(player);
@@ -217,6 +215,7 @@ public abstract class Container
                             }
 
                             k1 -= itemstack14.getCount() - j3;
+                            // slot8.putStack(itemstack14);
                             draggedSlots.put(slot8.slotNumber, itemstack14); // CraftBukkit - Put in map instead of setting
                         }
                     }
@@ -247,11 +246,11 @@ public abstract class Container
                         // The only time the carried item will be set to null is if the inventory is closed by the server.
                         // If the inventory is closed by the server, then the cursor items are dropped.  This is why we change the cursor early.
                         if (inventoryplayer.getItemStack() != null) {
-                            inventoryplayer.setItemStack(CraftItemStack.asNMSCopy(event.getCursor()));
+                        	inventoryplayer.setItemStack(CraftItemStack.asNMSCopy(event.getCursor()));
                             needsUpdate = true;
                         }
                     } else {
-                        inventoryplayer.setItemStack(oldCursor);
+                    	inventoryplayer.setItemStack(oldCursor);
                     }
 
                     if (needsUpdate && player instanceof EntityPlayerMP) {

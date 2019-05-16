@@ -4,6 +4,9 @@ import com.google.common.base.Predicate;
 import java.util.List;
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.event.block.BlockRedstoneEvent;
+
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyEnum;
@@ -101,6 +104,16 @@ public class BlockRailDetector extends BlockRailBase
         {
             flag1 = true;
         }
+        // CraftBukkit start
+        if (flag != flag1) {
+            org.bukkit.block.Block block = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+
+            BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, flag ? 15 : 0, flag1 ? 15 : 0);
+            worldIn.getServer().getPluginManager().callEvent(eventRedstone);
+
+            flag1 = eventRedstone.getNewCurrent() > 0;
+        }
+        // CraftBukkit end
 
         if (flag1 && !flag)
         {

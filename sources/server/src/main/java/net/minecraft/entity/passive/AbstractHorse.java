@@ -295,7 +295,7 @@ public abstract class AbstractHorse extends EntityAnimal implements IInventoryCh
     public void initHorseChest()
     {
         ContainerHorseChest containerhorsechest = this.horseChest;
-        this.horseChest = new ContainerHorseChest("HorseChest", this.getInventorySize(), this); // CraftBukkit
+        this.horseChest = new ContainerHorseChest("HorseChest", this.getInventorySize()); // CraftBukkit
         this.horseChest.setCustomName(this.getName());
 
         if (containerhorsechest != null)

@@ -18,7 +18,7 @@ public class EntityAISit extends EntityAIBase
     {
         if (!this.tameable.isTamed())
         {
-            return false;
+            return this.isSitting && this.tameable.getAttackTarget() == null; // CraftBukkit - Allow sitting for wild animals
         }
         else if (this.tameable.isInWater())
         {

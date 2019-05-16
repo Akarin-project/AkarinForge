@@ -2,6 +2,10 @@ package net.minecraft.block;
 
 import com.google.common.base.Predicate;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.util.BlockStateListPopulator;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
@@ -63,18 +67,25 @@ public class BlockPumpkin extends BlockHorizontal
     {
         BlockPattern.PatternHelper blockpattern$patternhelper = this.getSnowmanPattern().match(worldIn, pos);
 
+        BlockStateListPopulator blockList = new BlockStateListPopulator(worldIn.getWorld()); // CraftBukkit - Use BlockStateListPopulator
         if (blockpattern$patternhelper != null)
         {
             for (int i = 0; i < this.getSnowmanPattern().getThumbLength(); ++i)
             {
                 BlockWorldState blockworldstate = blockpattern$patternhelper.translateOffset(0, i, 0);
-                worldIn.setBlockState(blockworldstate.getPos(), Blocks.AIR.getDefaultState(), 2);
+                // CraftBukkit start
+                // worldIn.setBlockState(blockworldstate.getPos(), Blocks.AIR.getDefaultState(), 2);
+                BlockPos blockpos = blockworldstate.getPos();
+                blockList.setTypeId(blockpos.getX(), blockpos.getY(), blockpos.getZ(), 0);
+                // CraftBukkit end
             }
 
             EntitySnowman entitysnowman = new EntitySnowman(worldIn);
             BlockPos blockpos1 = blockpattern$patternhelper.translateOffset(0, 2, 0).getPos();
             entitysnowman.setLocationAndAngles((double)blockpos1.getX() + 0.5D, (double)blockpos1.getY() + 0.05D, (double)blockpos1.getZ() + 0.5D, 0.0F, 0.0F);
-            worldIn.spawnEntity(entitysnowman);
+            // CraftBukkit start
+            if (worldIn.addEntity(entitysnowman, SpawnReason.BUILD_SNOWMAN)) {
+                blockList.updateList();
 
             for (EntityPlayerMP entityplayermp : worldIn.getEntitiesWithinAABB(EntityPlayerMP.class, entitysnowman.getEntityBoundingBox().grow(5.0D)))
             {
@@ -91,6 +102,7 @@ public class BlockPumpkin extends BlockHorizontal
                 BlockWorldState blockworldstate2 = blockpattern$patternhelper.translateOffset(0, i1, 0);
                 worldIn.notifyNeighborsRespectDebug(blockworldstate2.getPos(), Blocks.AIR, false);
             }
+            } // CraftBukkit end
         }
         else
         {
@@ -102,7 +114,11 @@ public class BlockPumpkin extends BlockHorizontal
                 {
                     for (int k = 0; k < this.getGolemPattern().getThumbLength(); ++k)
                     {
-                        worldIn.setBlockState(blockpattern$patternhelper.translateOffset(j, k, 0).getPos(), Blocks.AIR.getDefaultState(), 2);
+                        // CraftBukkit start
+                        // worldIn.setBlockState(blockpattern$patternhelper.translateOffset(j, k, 0).getPos(), Blocks.AIR.getDefaultState(), 2);
+                        BlockPos blockpos = blockpattern$patternhelper.translateOffset(j, k, 0).getPos();
+                        blockList.setTypeId(blockpos.getX(), blockpos.getY(), blockpos.getZ(), 0);
+                        // CraftBukkit end
                     }
                 }
 
@@ -110,7 +126,9 @@ public class BlockPumpkin extends BlockHorizontal
                 EntityIronGolem entityirongolem = new EntityIronGolem(worldIn);
                 entityirongolem.setPlayerCreated(true);
                 entityirongolem.setLocationAndAngles((double)blockpos.getX() + 0.5D, (double)blockpos.getY() + 0.05D, (double)blockpos.getZ() + 0.5D, 0.0F, 0.0F);
-                worldIn.spawnEntity(entityirongolem);
+                // CraftBukkit start
+                if (worldIn.addEntity(entityirongolem, SpawnReason.BUILD_IRONGOLEM)) {
+                    blockList.updateList();
 
                 for (EntityPlayerMP entityplayermp1 : worldIn.getEntitiesWithinAABB(EntityPlayerMP.class, entityirongolem.getEntityBoundingBox().grow(5.0D)))
                 {
@@ -130,6 +148,7 @@ public class BlockPumpkin extends BlockHorizontal
                         worldIn.notifyNeighborsRespectDebug(blockworldstate1.getPos(), Blocks.AIR, false);
                     }
                 }
+                } // CraftBukkit end
             }
         }
     }

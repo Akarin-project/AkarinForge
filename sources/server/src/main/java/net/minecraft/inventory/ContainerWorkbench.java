@@ -12,25 +12,14 @@ import net.minecraft.world.World;
 
 public class ContainerWorkbench extends Container
 {
-    public InventoryCrafting craftMatrix = new InventoryCrafting(this, 3, 3);
-    public InventoryCraftResult craftResult = new InventoryCraftResult();
+    public InventoryCrafting craftMatrix; // CraftBukkit - move initialization into constructor
+    public InventoryCraftResult craftResult; // CraftBukkit - move initialization into constructor
     private final World world;
     private final BlockPos pos;
     private final EntityPlayer player;
     // CraftBukkit start
     private CraftInventoryView bukkitEntity = null;
-    private InventoryPlayer playerInventory;
-    
-    @Override
-    public CraftInventoryView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
-        }
-
-        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
-        bukkitEntity = new CraftInventoryView(this.playerInventory.player.getBukkitEntity(), inventory, this);
-        return bukkitEntity;
-    }
+    private InventoryPlayer inventoryPlayer;
     // CraftBukkit end
 
     public ContainerWorkbench(InventoryPlayer playerInventory, World worldIn, BlockPos posIn)
@@ -39,7 +28,7 @@ public class ContainerWorkbench extends Container
         this.craftResult = new InventoryCraftResult();
         this.craftMatrix = new InventoryCrafting(this, 3, 3, playerInventory.player); // CraftBukkit - pass player
         this.craftMatrix.resultInventory = this.craftResult;
-        this.playerInventory = playerInventory;
+        this.inventoryPlayer = playerInventory;
         // CraftBukkit end
         this.world = worldIn;
         this.pos = posIn;
@@ -165,4 +154,16 @@ public class ContainerWorkbench extends Container
     {
         return slotIn.inventory != this.craftResult && super.canMergeSlot(stack, slotIn);
     }
+    // CraftBukkit start
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (bukkitEntity != null) {
+            return bukkitEntity;
+        }
+
+        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
+        bukkitEntity = new CraftInventoryView(this.inventoryPlayer.player.getBukkitEntity(), inventory, this);
+        return bukkitEntity;
+    }
+    // CraftBukkit end
 }

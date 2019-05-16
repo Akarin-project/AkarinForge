@@ -23,18 +23,7 @@ public class ContainerPlayer extends Container
     private final EntityPlayer player;
     // CraftBukkit start
     private CraftInventoryView bukkitEntity = null;
-    private InventoryPlayer playerInventory;
-    
-    @Override
-    public CraftInventoryView getBukkitView() {
-        if (bukkitEntity != null) {
-            return bukkitEntity;
-        }
-
-        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
-        bukkitEntity = new CraftInventoryView(this.playerInventory.player.getBukkitEntity(), inventory, this);
-        return bukkitEntity;
-    }
+    private InventoryPlayer inventoryPlayer;
     // CraftBukkit end
 
     public ContainerPlayer(InventoryPlayer playerInventory, boolean localWorld, EntityPlayer playerIn)
@@ -45,7 +34,7 @@ public class ContainerPlayer extends Container
         this.craftResult = new InventoryCraftResult(); // CraftBukkit - moved to before InventoryCrafting construction
         this.craftMatrix = new InventoryCrafting(this, 2, 2, playerInventory.player); // CraftBukkit - pass player
         this.craftMatrix.resultInventory = this.craftResult; // CraftBukkit - let InventoryCrafting know about its result slot
-        this.playerInventory = playerInventory; // CraftBukkit - save player
+        this.inventoryPlayer = playerInventory; // CraftBukkit - save player
         // CraftBukkit end
         this.addSlotToContainer(new SlotCrafting(playerInventory.player, this.craftMatrix, this.craftResult, 0, 154, 28));
 
@@ -227,4 +216,16 @@ public class ContainerPlayer extends Container
     {
         return slotIn.inventory != this.craftResult && super.canMergeSlot(stack, slotIn);
     }
+    // CraftBukkit start
+    @Override
+    public CraftInventoryView getBukkitView() {
+        if (bukkitEntity != null) {
+            return bukkitEntity;
+        }
+
+        CraftInventoryCrafting inventory = new CraftInventoryCrafting(this.craftMatrix, this.craftResult);
+        bukkitEntity = new CraftInventoryView(this.inventoryPlayer.player.getBukkitEntity(), inventory, this);
+        return bukkitEntity;
+    }
+    // CraftBukkit end
 }

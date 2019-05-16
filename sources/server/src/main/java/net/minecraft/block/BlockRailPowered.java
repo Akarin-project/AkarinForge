@@ -2,6 +2,9 @@ package net.minecraft.block;
 
 import com.google.common.base.Predicate;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyEnum;
@@ -194,6 +197,13 @@ public class BlockRailPowered extends BlockRailBase
 
         if (flag1 != flag)
         {
+            // CraftBukkit start
+            int power = (Boolean) state.getValue(POWERED) ? 15 : 0;
+            int newPower = CraftEventFactory.callRedstoneChange(worldIn, pos.getX(), pos.getY(), pos.getZ(), power, 15 - power).getNewCurrent();
+            if (newPower == power) {
+                return;
+            }
+            // CraftBukkit end
             worldIn.setBlockState(pos, state.withProperty(POWERED, Boolean.valueOf(flag1)), 3);
             worldIn.notifyNeighborsOfStateChange(pos.down(), this, false);
 

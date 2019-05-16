@@ -34,7 +34,7 @@ public class BlockLilyPad extends BlockBush
     {
         super.onEntityCollidedWithBlock(worldIn, pos, state, entityIn);
 
-        if (entityIn instanceof EntityBoat)
+        if (entityIn instanceof EntityBoat && !org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callEntityChangeBlockEvent(entityIn, pos, Blocks.AIR, 0).isCancelled()) // CraftBukkit
         {
             worldIn.destroyBlock(new BlockPos(pos), true);
         }

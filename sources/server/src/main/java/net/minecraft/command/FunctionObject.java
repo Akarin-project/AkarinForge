@@ -5,6 +5,7 @@ import java.util.ArrayDeque;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.advancements.FunctionManager;
+import net.minecraft.tileentity.CommandBlockBaseLogic;
 import net.minecraft.util.ResourceLocation;
 
 public class FunctionObject
@@ -108,7 +109,15 @@ public class FunctionObject
 
             public void execute(FunctionManager functionManagerIn, ICommandSender sender, ArrayDeque<FunctionManager.QueuedCommand> commandQueue, int maxCommandChainLength)
             {
-                functionManagerIn.getCommandManager().executeCommand(sender, this.command);
+                // CraftBukkit start
+                org.bukkit.command.CommandSender bsender;
+                if (sender instanceof FunctionManager.CustomFunctionListener) {
+                    bsender = ((FunctionManager.CustomFunctionListener) sender).sender;
+                } else {
+                    bsender = CommandBlockBaseLogic.unwrapSender(sender);
+                }
+                CommandBlockBaseLogic.executeSafely(sender, bsender, this.command);
+                // CraftBukkit end
             }
 
             public String toString()

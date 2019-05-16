@@ -200,17 +200,17 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
 
     public void update()
     {
-        boolean flag = (this.getBlockType() == Blocks.LIT_FURNACE); // Akarin - AWS SPIGOT-844
+        boolean flag = this.isBurning();
         boolean flag1 = false;
-
-        // Akarin start - wall clock time
+        // CraftBukkit start - Use wall time instead of ticks for cooking
         int elapsedTicks = MinecraftServer.currentTick - this.lastTick;
         this.lastTick = MinecraftServer.currentTick;
-        
+
+        // CraftBukkit - moved from below - edited for wall time
         if (this.isBurning() && this.canSmelt()) {
             this.cookTime += elapsedTicks;
             if (this.cookTime >= this.totalCookTime) {
-                this.cookTime -= this.totalCookTime;
+                this.cookTime -= this.totalCookTime; // Paper
                 this.totalCookTime = this.getCookTime((ItemStack) this.furnaceItemStacks.get(0));
                 this.smeltItem();
                 flag1 = true;
@@ -218,8 +218,9 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
         } else {
             this.cookTime = 0;
         }
-        // Akarin end
-        if (this.isBurning() && this.canSmelt())
+        // CraftBukkit end
+
+        if (this.isBurning())
         {
             this.furnaceBurnTime -= elapsedTicks; // CraftBukkit - use elapsedTicks in place of constant
         }
@@ -230,12 +231,12 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
 
             if (this.isBurning() || !itemstack.isEmpty() && !((ItemStack)this.furnaceItemStacks.get(0)).isEmpty())
             {
-            	// Akarin start - fire event
+                // CraftBukkit start - Handle multiple elapsed ticks
                 if (this.furnaceBurnTime <= 0 && this.canSmelt()) { // CraftBukkit - == to <=
                     CraftItemStack fuel = CraftItemStack.asCraftMirror(itemstack);
 
                     FurnaceBurnEvent furnaceBurnEvent = new FurnaceBurnEvent(this.world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()), fuel, getItemBurnTime(itemstack));
-                    MinecraftServer.instance().server.getPluginManager().callEvent(furnaceBurnEvent);
+                    this.world.getServer().getPluginManager().callEvent(furnaceBurnEvent);
 
                     if (furnaceBurnEvent.isCancelled()) {
                         return;
@@ -243,17 +244,8 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
 
                     this.currentItemBurnTime = furnaceBurnEvent.getBurnTime();
                     this.furnaceBurnTime += this.currentItemBurnTime;
-                    
                     if (this.furnaceBurnTime > 0 && furnaceBurnEvent.isBurning()) {
-            	/* // Akarin end
-                if (!this.isBurning() && this.canSmelt())
-                {
-                    this.furnaceBurnTime = getItemBurnTime(itemstack);
-                    this.currentItemBurnTime = this.furnaceBurnTime;
-
-                    if (this.isBurning())
-                    {
-                    */ // Akarin - fire event
+                        // CraftBukkit end
                         flag1 = true;
 
                         if (!itemstack.isEmpty())
@@ -270,7 +262,7 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
                     }
                 }
 
-                /* // Akarin - earlier
+                /* // CraftBukkit - Moved up
                 if (this.isBurning() && this.canSmelt())
                 {
                     ++this.cookTime;
@@ -287,7 +279,7 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
                 {
                     this.cookTime = 0;
                 }
-                */ // Akarin - earlier
+                */ // CraftBukkit - Moved up
             }
             else if (!this.isBurning() && this.cookTime > 0)
             {
@@ -358,13 +350,12 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
             ItemStack itemstack = this.furnaceItemStacks.get(0);
             ItemStack itemstack1 = FurnaceRecipes.instance().getSmeltingResult(itemstack);
             ItemStack itemstack2 = this.furnaceItemStacks.get(2);
-
-            // Akarin start - fire event
+            // CraftBukkit start - fire FurnaceSmeltEvent
             CraftItemStack source = CraftItemStack.asCraftMirror(itemstack);
             org.bukkit.inventory.ItemStack result = CraftItemStack.asBukkitCopy(itemstack1);
 
             FurnaceSmeltEvent furnaceSmeltEvent = new FurnaceSmeltEvent(this.world.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()), source, result);
-            MinecraftServer.instance().server.getPluginManager().callEvent(furnaceSmeltEvent);
+            this.world.getServer().getPluginManager().callEvent(furnaceSmeltEvent);
 
             if (furnaceSmeltEvent.isCancelled()) {
                 return;
@@ -382,8 +373,8 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
                     return;
                 }
             }
-            
-            /* // Akarin end
+
+            /*
             if (itemstack2.isEmpty())
             {
                 this.furnaceItemStacks.set(2, itemstack1.copy());
@@ -392,7 +383,8 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
             {
                 itemstack2.grow(itemstack1.getCount());
             }
-            */ // Akarin - fire event
+            */
+            // CraftBukkit end
 
             if (itemstack.getItem() == Item.getItemFromBlock(Blocks.SPONGE) && itemstack.getMetadata() == 1 && !((ItemStack)this.furnaceItemStacks.get(1)).isEmpty() && ((ItemStack)this.furnaceItemStacks.get(1)).getItem() == Items.BUCKET)
             {

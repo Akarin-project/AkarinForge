@@ -64,6 +64,11 @@ public class BlockBush extends Block implements net.minecraftforge.common.IPlant
     {
         if (!this.canBlockStay(worldIn, pos, state))
         {
+            // CraftBukkit start
+            if (org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callBlockPhysicsEvent(worldIn, pos).isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
             this.dropBlockAsItem(worldIn, pos, state, 0);
             worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
         }

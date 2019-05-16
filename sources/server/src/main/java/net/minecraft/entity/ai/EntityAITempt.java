@@ -2,7 +2,14 @@ package net.minecraft.entity.ai;
 
 import com.google.common.collect.Sets;
 import java.util.Set;
+
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+
 import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -17,7 +24,7 @@ public class EntityAITempt extends EntityAIBase
     private double targetZ;
     private double pitch;
     private double yaw;
-    private EntityPlayer temptingPlayer;
+    private EntityLivingBase temptingPlayer; // CraftBukkit
     private int delayTemptCounter;
     private boolean isRunning;
     private final Set<Item> temptItem;
@@ -52,15 +59,17 @@ public class EntityAITempt extends EntityAIBase
         else
         {
             this.temptingPlayer = this.temptedEntity.world.getClosestPlayerToEntity(this.temptedEntity, 10.0D);
-
-            if (this.temptingPlayer == null)
-            {
-                return false;
+            // CraftBukkit start
+            boolean tempt = this.temptingPlayer == null ? false : this.isTempting(this.temptingPlayer.getHeldItemMainhand()) || this.isTempting(this.temptingPlayer.getHeldItemOffhand());
+            if (tempt) {
+                EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(this.temptedEntity, this.temptingPlayer, TargetReason.TEMPT);
+                if (event.isCancelled()) {
+                    return false;
+                }
+                this.temptingPlayer = (event.getTarget() == null) ? null : ((CraftLivingEntity) event.getTarget()).getHandle();
             }
-            else
-            {
-                return this.isTempting(this.temptingPlayer.getHeldItemMainhand()) || this.isTempting(this.temptingPlayer.getHeldItemOffhand());
-            }
+            return tempt && this.temptingPlayer != null; // Paper - must have target - plugin might of cancelled
+            // CraftBukkit end
         }
     }
 

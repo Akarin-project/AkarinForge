@@ -116,6 +116,7 @@ public class CrashReport
                 return IntCache.getCacheSizes();
             }
         });
+        this.systemDetailsCategory.addDetail("CraftBukkit Information", (ICrashReportDetail) new org.bukkit.craftbukkit.v1_12_R1.CraftCrashReport()); // CraftBukkit
         net.minecraftforge.fml.common.FMLCommonHandler.instance().enhanceCrashReport(this, this.systemDetailsCategory);
     }
 

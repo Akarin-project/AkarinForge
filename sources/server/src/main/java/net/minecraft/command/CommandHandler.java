@@ -146,7 +146,6 @@ public abstract class CommandHandler implements ICommandManager
 
     public ICommand registerCommand(ICommand command)
     {
-    	if (MinecraftServer.instance().server != null) MinecraftServer.instance().server.registerCommand(command); // Akarin - register command to Bukkit later for mods
         this.commandMap.put(command.getName(), command);
         this.commandSet.add(command);
 

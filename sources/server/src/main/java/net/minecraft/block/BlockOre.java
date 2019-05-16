@@ -112,6 +112,30 @@ public class BlockOre extends Block
         }
         return 0;
     }
+    // CraftBukkit start
+    @Override
+    public int getExpDrop(World world, IBlockState iblockdata, int i) {
+        if (this.getItemDropped(iblockdata, world.rand, i) != Item.getItemFromBlock(this)) {
+            int j = 0;
+
+            if (this == Blocks.COAL_ORE) {
+                j = MathHelper.getInt(world.rand, 0, 2);
+            } else if (this == Blocks.DIAMOND_ORE) {
+                j = MathHelper.getInt(world.rand, 3, 7);
+            } else if (this == Blocks.EMERALD_ORE) {
+                j = MathHelper.getInt(world.rand, 3, 7);
+            } else if (this == Blocks.LAPIS_ORE) {
+                j = MathHelper.getInt(world.rand, 2, 5);
+            } else if (this == Blocks.QUARTZ_ORE) {
+                j = MathHelper.getInt(world.rand, 2, 5);
+            }
+
+            return j;
+        }
+
+        return 0;
+    }
+    // CraftBukkit end
 
     public ItemStack getItem(World worldIn, BlockPos pos, IBlockState state)
     {

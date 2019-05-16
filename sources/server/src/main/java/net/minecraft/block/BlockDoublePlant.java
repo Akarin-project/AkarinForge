@@ -81,6 +81,11 @@ public class BlockDoublePlant extends BlockBush implements IGrowable, net.minecr
     {
         if (!this.canBlockStay(worldIn, pos, state))
         {
+            // CraftBukkit start
+            if (org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callBlockPhysicsEvent(worldIn, pos).isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
             boolean flag = state.getValue(HALF) == BlockDoublePlant.EnumBlockHalf.UPPER;
             BlockPos blockpos = flag ? pos : pos.up();
             BlockPos blockpos1 = flag ? pos.down() : pos;

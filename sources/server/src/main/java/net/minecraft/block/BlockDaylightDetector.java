@@ -76,6 +76,7 @@ public class BlockDaylightDetector extends BlockContainer
 
             if (((Integer)iblockstate.getValue(POWER)).intValue() != i)
             {
+                i = org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callRedstoneChange(worldIn, pos.getX(), pos.getY(), pos.getZ(), ((Integer) iblockstate.getValue(POWER)), i).getNewCurrent(); // CraftBukkit - Call BlockRedstoneEvent
                 worldIn.setBlockState(pos, iblockstate.withProperty(POWER, Integer.valueOf(i)), 3);
             }
         }

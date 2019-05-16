@@ -74,24 +74,11 @@ public class CommandTP extends CommandBase
             {
                 Entity entity1 = getEntity(server, sender, args[args.length - 1]);
 
-                if (entity1.world != entity.world)
-                {
-                    throw new CommandException("commands.tp.notSameDimension", new Object[0]);
-                }
-                else
-                {
-                    entity.dismountRidingEntity();
-
-                    if (entity instanceof EntityPlayerMP)
-                    {
-                        ((EntityPlayerMP)entity).connection.setPlayerLocation(entity1.posX, entity1.posY, entity1.posZ, entity1.rotationYaw, entity1.rotationPitch);
-                    }
-                    else
-                    {
-                        entity.setLocationAndAngles(entity1.posX, entity1.posY, entity1.posZ, entity1.rotationYaw, entity1.rotationPitch);
-                    }
-
-                    notifyCommandListener(sender, this, "commands.tp.success", new Object[] {entity.getName(), entity1.getName()});
+                // CraftBukkit start
+                // Use Bukkit teleport method in all cases. It has cross dimensional handling, events
+                if (entity.getBukkitEntity().teleport(entity1.getBukkitEntity(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND)) {
+                	// CraftBukkit end
+                	notifyCommandListener(sender, this, "commands.tp.success", new Object[] {entity.getName(), entity1.getName()});
                 }
             }
         }
@@ -143,7 +130,7 @@ public class CommandTP extends CommandBase
             }
 
             teleportingEntity.dismountRidingEntity();
-            ((EntityPlayerMP)teleportingEntity).connection.setPlayerLocation(argX.getAmount(), argY.getAmount(), argZ.getAmount(), f, f1, set);
+            ((EntityPlayerMP)teleportingEntity).connection.setPlayerLocation(argX.getAmount(), argY.getAmount(), argZ.getAmount(), f, f1, set, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND); // CraftBukkit
             teleportingEntity.setRotationYawHead(f);
         }
         else

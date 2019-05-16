@@ -1,6 +1,10 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityInteractEvent;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyInteger;
@@ -72,16 +76,40 @@ public class BlockFarmland extends Block
 
     public void onFallenUpon(World worldIn, BlockPos pos, Entity entityIn, float fallDistance)
     {
+    	super.onFallenUpon(worldIn, pos, entityIn, fallDistance); // CraftBukkit - moved here as game rules / events shouldn't affect fall damage.
         if (net.minecraftforge.common.ForgeHooks.onFarmlandTrample(worldIn, pos, Blocks.DIRT.getDefaultState(), fallDistance, entityIn)) // Forge: Move logic to Entity#canTrample
         {
+            // CraftBukkit start - Interact soil
+            org.bukkit.event.Cancellable cancellable;
+            if (entityIn instanceof EntityPlayer) {
+                cancellable = CraftEventFactory.callPlayerInteractEvent((EntityPlayer) entityIn, org.bukkit.event.block.Action.PHYSICAL, pos, null, null, null);
+            } else {
+                cancellable = new EntityInteractEvent(entityIn.getBukkitEntity(), worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()));
+                worldIn.getServer().getPluginManager().callEvent((EntityInteractEvent) cancellable);
+            }
+
+            if (cancellable.isCancelled()) {
+                return;
+            }
+
+            if (CraftEventFactory.callEntityChangeBlockEvent(entityIn, pos, Blocks.DIRT, 0).isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
             turnToDirt(worldIn, pos);
         }
 
-        super.onFallenUpon(worldIn, pos, entityIn, fallDistance);
+        // super.onFallenUpon(worldIn, pos, entityIn, fallDistance); // CraftBukkit
     }
 
     protected static void turnToDirt(World p_190970_0_, BlockPos worldIn)
     {
+        // CraftBukkit start
+        org.bukkit.block.Block block = p_190970_0_.getWorld().getBlockAt(worldIn.getX(), worldIn.getY(), worldIn.getZ());
+        if (CraftEventFactory.callBlockFadeEvent(block, Blocks.DIRT).isCancelled()) {
+            return;
+        }
+        // CraftBukkit end
         p_190970_0_.setBlockState(worldIn, Blocks.DIRT.getDefaultState());
         AxisAlignedBB axisalignedbb = field_194405_c.offset(worldIn);
 

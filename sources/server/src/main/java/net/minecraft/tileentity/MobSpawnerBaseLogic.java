@@ -22,21 +22,21 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class MobSpawnerBaseLogic
 {
-    public int spawnDelay = 20; // Akarin - private -> public
+    public int spawnDelay = 20;
     private final List<WeightedSpawnerEntity> potentialSpawns = Lists.<WeightedSpawnerEntity>newArrayList();
     private WeightedSpawnerEntity spawnData = new WeightedSpawnerEntity();
     private double mobRotation;
     private double prevMobRotation;
-    public int minSpawnDelay = 200; // Akarin - private -> public
-    public int maxSpawnDelay = 800; // Akarin - private -> public
-    public int spawnCount = 4; // Akarin - private -> public
+    public int minSpawnDelay = 200;
+    public int maxSpawnDelay = 800;
+    public int spawnCount = 4;
     private Entity cachedEntity;
-    public int maxNearbyEntities = 6; // Akarin - private -> public
-    public int activatingRangeFromPlayer = 16; // Akarin - private -> public
-    public int spawnRange = 4; // Akarin - private -> public
+    public int maxNearbyEntities = 6;
+    public int activatingRangeFromPlayer = 16;
+    public int spawnRange = 4;
 
     @Nullable
-	public ResourceLocation getEntityId() // Akarin - public
+	public ResourceLocation getEntityId()
     {
         String s = this.spawnData.getNbt().getString("id");
         return StringUtils.isNullOrEmpty(s) ? null : new ResourceLocation(s);

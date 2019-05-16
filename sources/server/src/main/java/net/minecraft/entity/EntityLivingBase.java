@@ -167,7 +167,7 @@ public abstract class EntityLivingBase extends Entity
     protected double interpTargetPitch;
     protected boolean potionsNeedUpdate = true; // Akarin
     public EntityLivingBase revengeTarget; // Akarin
-    private int revengeTimer;
+    public int revengeTimer;
     private EntityLivingBase lastAttackedEntity;
     private int lastAttackedEntityTime;
     private float landMovementFactor;

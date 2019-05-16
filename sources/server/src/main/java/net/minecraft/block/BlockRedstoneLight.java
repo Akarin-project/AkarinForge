@@ -1,6 +1,9 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -30,10 +33,20 @@ public class BlockRedstoneLight extends Block
         {
             if (this.isOn && !worldIn.isBlockPowered(pos))
             {
+                // CraftBukkit start
+                if (CraftEventFactory.callRedstoneChange(worldIn, pos.getX(), pos.getY(), pos.getZ(), 15, 0).getNewCurrent() != 0) {
+                    return;
+                }
+                // CraftBukkit end
                 worldIn.setBlockState(pos, Blocks.REDSTONE_LAMP.getDefaultState(), 2);
             }
             else if (!this.isOn && worldIn.isBlockPowered(pos))
             {
+                // CraftBukkit start
+                if (CraftEventFactory.callRedstoneChange(worldIn, pos.getX(), pos.getY(), pos.getZ(), 0, 15).getNewCurrent() != 15) {
+                    return;
+                }
+                // CraftBukkit end
                 worldIn.setBlockState(pos, Blocks.LIT_REDSTONE_LAMP.getDefaultState(), 2);
             }
         }
@@ -49,6 +62,11 @@ public class BlockRedstoneLight extends Block
             }
             else if (!this.isOn && worldIn.isBlockPowered(pos))
             {
+                // CraftBukkit start
+                if (CraftEventFactory.callRedstoneChange(worldIn, pos.getX(), pos.getY(), pos.getZ(), 0, 15).getNewCurrent() != 15) {
+                    return;
+                }
+                // CraftBukkit end
                 worldIn.setBlockState(pos, Blocks.LIT_REDSTONE_LAMP.getDefaultState(), 2);
             }
         }
@@ -60,6 +78,11 @@ public class BlockRedstoneLight extends Block
         {
             if (this.isOn && !worldIn.isBlockPowered(pos))
             {
+                // CraftBukkit start
+                if (CraftEventFactory.callRedstoneChange(worldIn, pos.getX(), pos.getY(), pos.getZ(), 15, 0).getNewCurrent() != 0) {
+                    return;
+                }
+                // CraftBukkit end
                 worldIn.setBlockState(pos, Blocks.REDSTONE_LAMP.getDefaultState(), 2);
             }
         }

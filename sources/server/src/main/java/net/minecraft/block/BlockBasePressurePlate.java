@@ -2,6 +2,9 @@ package net.minecraft.block;
 
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.event.block.BlockRedstoneEvent;
+
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
@@ -124,6 +127,18 @@ public abstract class BlockBasePressurePlate extends Block
         int i = this.computeRedstoneStrength(worldIn, pos);
         boolean flag = oldRedstoneStrength > 0;
         boolean flag1 = i > 0;
+        // CraftBukkit start - Interact Pressure Plate
+        org.bukkit.World bworld = worldIn.getWorld();
+        org.bukkit.plugin.PluginManager manager = worldIn.getServer().getPluginManager();
+
+        if (flag != flag1) {
+            BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ()), oldRedstoneStrength, i);
+            manager.callEvent(eventRedstone);
+
+            flag1 = eventRedstone.getNewCurrent() > 0;
+            i = eventRedstone.getNewCurrent();
+        }
+        // CraftBukkit end
 
         if (oldRedstoneStrength != i)
         {

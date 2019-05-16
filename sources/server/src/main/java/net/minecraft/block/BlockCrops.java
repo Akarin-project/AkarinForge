@@ -1,6 +1,9 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
@@ -81,7 +84,10 @@ public class BlockCrops extends BlockBush implements IGrowable
 
                 if(net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, rand.nextInt((int)(25.0F / f) + 1) == 0))
                 {
-                    worldIn.setBlockState(pos, this.withAge(i + 1), 2);
+                    // CraftBukkit start
+                    IBlockState data = this.withAge(i + 1);
+                    if (CraftEventFactory.handleBlockGrowEvent(worldIn, pos.getX(), pos.getY(), pos.getZ(), this, getMetaFromState(data)))
+                    // CraftBukkit end
                     net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state, worldIn.getBlockState(pos));
                 }
             }
@@ -98,7 +104,10 @@ public class BlockCrops extends BlockBush implements IGrowable
             i = j;
         }
 
-        worldIn.setBlockState(pos, this.withAge(i), 2);
+        // CraftBukkit start
+        IBlockState data = this.withAge(i);
+        CraftEventFactory.handleBlockGrowEvent(worldIn, pos.getX(), pos.getY(), pos.getZ(), this, getMetaFromState(data));
+        // CraftBukkit end
     }
 
     protected int getBonemealAgeIncrease(World worldIn)

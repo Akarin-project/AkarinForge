@@ -2,6 +2,9 @@ package net.minecraft.block;
 
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyDirection;
@@ -78,7 +81,8 @@ public class BlockStem extends BlockBush implements IGrowable
                 if (i < 7)
                 {
                     IBlockState newState = state.withProperty(AGE, Integer.valueOf(i + 1));
-                    worldIn.setBlockState(pos, newState, 2);
+                    // worldIn.setBlockState(pos, newState, 2); // CraftBukkit
+                    CraftEventFactory.handleBlockGrowEvent(worldIn, pos.getX(), pos.getY(), pos.getZ(), this, getMetaFromState(newState)); // CraftBukkit
                 }
                 else
                 {
@@ -96,7 +100,8 @@ public class BlockStem extends BlockBush implements IGrowable
 
                     if (worldIn.isAirBlock(pos) && (block.canSustainPlant(soil, worldIn, pos.down(), EnumFacing.UP, this) || block == Blocks.DIRT || block == Blocks.GRASS))
                     {
-                        worldIn.setBlockState(pos, this.crop.getDefaultState());
+                        // worldIn.setBlockState(pos, this.crop.getDefaultState()); // CraftBukkit
+                        CraftEventFactory.handleBlockGrowEvent(worldIn, pos.getX(), pos.getY(), pos.getZ(), this.crop, 0); // CraftBukkit
                     }
                 }
                 net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state, worldIn.getBlockState(pos));
@@ -107,7 +112,8 @@ public class BlockStem extends BlockBush implements IGrowable
     public void growStem(World worldIn, BlockPos pos, IBlockState state)
     {
         int i = ((Integer)state.getValue(AGE)).intValue() + MathHelper.getInt(worldIn.rand, 2, 5);
-        worldIn.setBlockState(pos, state.withProperty(AGE, Integer.valueOf(Math.min(7, i))), 2);
+        // worldIn.setBlockState(pos, state.withProperty(AGE, Integer.valueOf(Math.min(7, i))), 2);
+        CraftEventFactory.handleBlockGrowEvent(worldIn, pos.getX(), pos.getY(), pos.getZ(), this, Math.min(7, i)); // CraftBukkit
     }
 
     public void dropBlockAsItemWithChance(World worldIn, BlockPos pos, IBlockState state, float chance, int fortune)

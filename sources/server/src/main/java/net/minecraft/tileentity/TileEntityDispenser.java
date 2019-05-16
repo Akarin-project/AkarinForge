@@ -26,27 +26,22 @@ public class TileEntityDispenser extends TileEntityLockableLoot
     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
     private int maxStack = 64;
 
-    @Override
     public List<ItemStack> getContents() {
         return this.stacks;
     }
 
-    @Override
     public void onOpen(CraftHumanEntity who) {
         transaction.add(who);
     }
 
-    @Override
     public void onClose(CraftHumanEntity who) {
         transaction.remove(who);
     }
 
-    @Override
     public List<HumanEntity> getViewers() {
         return transaction;
     }
 
-    @Override
     public void setMaxStackSize(int size) {
         maxStack = size;
     }

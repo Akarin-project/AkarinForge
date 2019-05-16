@@ -32,7 +32,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
-// Akarin - AWS add event back
 public class TileEntityHopper extends TileEntityLockableLoot implements IHopper, ITickable
 {
     private NonNullList<ItemStack> inventory = NonNullList.<ItemStack>withSize(5, ItemStack.EMPTY);
@@ -148,7 +147,6 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
             if (!this.isOnTransferCooldown())
             {
                 this.setTransferCooldown(0);
-                this.updateHopper();
             }
         }
     }

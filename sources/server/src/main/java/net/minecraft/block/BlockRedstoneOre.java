@@ -1,6 +1,10 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+import org.bukkit.event.entity.EntityInteractEvent;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -40,22 +44,58 @@ public class BlockRedstoneOre extends Block
 
     public void onBlockClicked(World worldIn, BlockPos pos, EntityPlayer playerIn)
     {
-        this.activate(worldIn, pos);
+        this.interact(worldIn, pos, playerIn); // CraftBukkit - add entityhuman
         super.onBlockClicked(worldIn, pos, playerIn);
     }
 
     public void onEntityWalk(World worldIn, BlockPos pos, Entity entityIn)
     {
-        this.activate(worldIn, pos);
-        super.onEntityWalk(worldIn, pos, entityIn);
+        // CraftBukkit start
+        // this.activate(worldIn, pos);
+        // super.onEntityWalk(worldIn, pos, entityIn);
+        if (entityIn instanceof EntityPlayer) {
+            org.bukkit.event.player.PlayerInteractEvent event = org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callPlayerInteractEvent((EntityPlayer) entityIn, org.bukkit.event.block.Action.PHYSICAL, pos, null, null, null);
+            if (!event.isCancelled()) {
+                this.interact(worldIn, pos, entityIn); // add entity
+                super.onEntityWalk(worldIn, pos, entityIn);
+            }
+        } else {
+            EntityInteractEvent event = new EntityInteractEvent(entityIn.getBukkitEntity(), worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()));
+            worldIn.getServer().getPluginManager().callEvent(event);
+            if (!event.isCancelled()) {
+                this.interact(worldIn, pos, entityIn); // add entity
+                super.onEntityWalk(worldIn, pos, entityIn);
+            }
+        }
+        // CraftBukkit end
     }
 
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
-        this.activate(worldIn, pos);
+        this.interact(worldIn, pos, playerIn); // CraftBukkit - add entityhuman
         return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
     }
 
+    // CraftBukkit start
+    private void interact(World world, BlockPos blockposition, Entity entity) { // CraftBukkit - add Entity
+        this.spawnParticles(world, blockposition);
+        if (this == Blocks.REDSTONE_ORE) {
+            if (CraftEventFactory.callEntityChangeBlockEvent(entity, blockposition, Blocks.LIT_REDSTONE_ORE, 0).isCancelled()) {
+                return;
+            }
+            world.setBlockState(blockposition, Blocks.LIT_REDSTONE_ORE.getDefaultState());
+        }
+    }
+    
+    @Override
+    public int getExpDrop(World world, IBlockState data, int i) {
+        if (this.getItemDropped(data, world.rand, i) != Item.getItemFromBlock(this)) {
+            int j = 1 + world.rand.nextInt(5);
+            return j;
+        }
+        return 0;
+    }
+    // CraftBukkit end
     private void activate(World worldIn, BlockPos pos)
     {
         this.spawnParticles(worldIn, pos);
@@ -70,6 +110,11 @@ public class BlockRedstoneOre extends Block
     {
         if (this == Blocks.LIT_REDSTONE_ORE)
         {
+            // CraftBukkit start
+            if (CraftEventFactory.callBlockFadeEvent(worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()), Blocks.REDSTONE_ORE).isCancelled()) {
+                return;
+            }
+            // CraftBukkit end
             worldIn.setBlockState(pos, Blocks.REDSTONE_ORE.getDefaultState());
         }
     }

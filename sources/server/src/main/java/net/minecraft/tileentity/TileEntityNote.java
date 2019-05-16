@@ -93,7 +93,12 @@ public class TileEntityNote extends TileEntity
                 i = 9;
             }
 
-            worldIn.addBlockEvent(posIn, Blocks.NOTEBLOCK, i, this.note);
+            // CraftBukkit start
+            org.bukkit.event.block.NotePlayEvent event = org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callNotePlayEvent(this.world, posIn.getX(), posIn.getY(), posIn.getZ(), (byte) i, this.note);
+            if (!event.isCancelled()) {
+                world.addBlockEvent(posIn, Blocks.NOTEBLOCK, event.getInstrument().getType(), event.getNote().getId());
+            }
+            // CraftBukkit end
         }
     }
 }

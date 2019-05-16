@@ -122,7 +122,7 @@ public class EntityAINearestAttackableTarget<T extends EntityLivingBase> extends
 
     public void startExecuting()
     {
-        this.taskOwner.setAttackTarget(this.targetEntity);
+        this.taskOwner.setGoalTarget(this.targetEntity, targetEntity instanceof EntityPlayerMP ? org.bukkit.event.entity.EntityTargetEvent.TargetReason.CLOSEST_PLAYER : org.bukkit.event.entity.EntityTargetEvent.TargetReason.CLOSEST_ENTITY, true); // Craftbukkit - reason
         super.startExecuting();
     }
 

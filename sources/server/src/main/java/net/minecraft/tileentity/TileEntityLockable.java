@@ -9,15 +9,14 @@ import net.minecraft.world.LockCode;
 
 public abstract class TileEntityLockable extends TileEntity implements ILockableContainer
 {
-	// Akarin start - add implementation
+    private LockCode code = LockCode.EMPTY_CODE;
+    // CraftBukkit start
     @Override
     public org.bukkit.Location getLocation() {
-        if (world == null)
-        	return null;
+        if (world == null) return null;
         return new org.bukkit.Location(world.getWorld(), pos.getX(), pos.getY(), pos.getZ());
     }
-	// Akarin end
-    private LockCode code = LockCode.EMPTY_CODE;
+    // CraftBukkit end
 
     public void readFromNBT(NBTTagCompound compound)
     {

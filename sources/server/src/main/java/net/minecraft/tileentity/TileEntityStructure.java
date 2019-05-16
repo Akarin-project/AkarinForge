@@ -36,20 +36,20 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntityStructure extends TileEntity
 {
-    private String name = "";
-    public String author = ""; // Akarin - private -> public
-    public String metadata = ""; // Akarin - private -> public
-    public BlockPos position = new BlockPos(0, 1, 0); // Akarin - private -> public
-    public BlockPos size = BlockPos.ORIGIN; // Akarin - private -> public
-    public Mirror mirror = Mirror.NONE; // Akarin - private -> public
-    public Rotation rotation = Rotation.NONE; // Akarin - private -> public
-    private TileEntityStructure.Mode mode = TileEntityStructure.Mode.DATA;
-    public boolean ignoreEntities = true; // Akarin - private -> public
+    private String name = ""; // PAIL: rename name
+    public String author = ""; // PAIL: private -> public
+    public String metadata = ""; // PAIL: private -> public
+    public BlockPos position = new BlockPos(0, 1, 0); // PAIL: private -> public
+    public BlockPos size; // PAIL: private -> public
+    public Mirror mirror; // PAIL: private -> public
+    public Rotation rotation; // PAIL: private -> public
+    private TileEntityStructure.Mode mode; // PAIL: rename
+    public boolean ignoreEntities; // PAIL: private -> public
     private boolean powered;
-    public boolean showAir; // Akarin - private -> public
-    public boolean showBoundingBox = true; // Akarin - private -> public
-    public float integrity = 1.0F; // Akarin - private -> public
-    public long seed; // Akarin - private -> public
+    public boolean showAir; // PAIL: private -> public
+    public boolean showBoundingBox; // PAIL: private -> public
+    public float integrity; // PAIL: private -> public
+    public long seed; // PAIL: private -> public
 
     public NBTTagCompound writeToNBT(NBTTagCompound compound)
     {

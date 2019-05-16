@@ -284,15 +284,21 @@ public abstract class BlockLiquid extends Block
 
                 if (integer.intValue() == 0)
                 {
-                    worldIn.setBlockState(pos, net.minecraftforge.event.ForgeEventFactory.fireFluidPlaceBlockEvent(worldIn, pos, pos, Blocks.OBSIDIAN.getDefaultState()));
-                    this.triggerMixEffects(worldIn, pos);
+                    // CraftBukkit start
+                    if (org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.handleBlockFormEvent(worldIn, pos,  net.minecraftforge.event.ForgeEventFactory.fireFluidPlaceBlockEvent(worldIn, pos, pos, Blocks.OBSIDIAN.getDefaultState()), null)) {
+                        this.triggerMixEffects(worldIn, pos);
+                    }
+                    // CraftBukkit end
                     return true;
                 }
 
                 if (integer.intValue() <= 4)
                 {
-                    worldIn.setBlockState(pos, net.minecraftforge.event.ForgeEventFactory.fireFluidPlaceBlockEvent(worldIn, pos, pos, Blocks.COBBLESTONE.getDefaultState()));
-                    this.triggerMixEffects(worldIn, pos);
+                    // CraftBukkit start
+                    if (org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.handleBlockFormEvent(worldIn, pos, net.minecraftforge.event.ForgeEventFactory.fireFluidPlaceBlockEvent(worldIn, pos, pos, Blocks.COBBLESTONE.getDefaultState()), null)) {
+                        this.triggerMixEffects(worldIn, pos);
+                    }
+                    // CraftBukkit end
                     return true;
                 }
             }

@@ -114,6 +114,11 @@ public class EntityAIVillagerMate extends EntityAIBase
     private void giveBirth()
     {
         net.minecraft.entity.EntityAgeable entityvillager = this.villager.createChild(this.mate);
+        // CraftBukkit start - call EntityBreedEvent
+        if (org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callEntityBreedEvent(entityvillager, this.villager, this.mate, null, null, 0).isCancelled()) {
+            return;
+        }
+        // CraftBukkit end
         this.mate.setGrowingAge(6000);
         this.villager.setGrowingAge(6000);
         this.mate.setIsWillingToMate(false);
@@ -124,7 +129,7 @@ public class EntityAIVillagerMate extends EntityAIBase
         entityvillager = event.getChild();
         entityvillager.setGrowingAge(-24000);
         entityvillager.setLocationAndAngles(this.villager.posX, this.villager.posY, this.villager.posZ, 0.0F, 0.0F);
-        this.world.spawnEntity(entityvillager);
+        this.world.addEntity(entityvillager, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.BREEDING); // CraftBukkit - added SpawnReason
         this.world.setEntityState(entityvillager, (byte)12);
     }
 }

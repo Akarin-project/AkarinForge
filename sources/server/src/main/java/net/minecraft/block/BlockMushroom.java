@@ -1,6 +1,11 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.TreeType;
+import org.bukkit.block.BlockState;
+import org.bukkit.event.block.BlockSpreadEvent;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -26,6 +31,7 @@ public class BlockMushroom extends BlockBush implements IGrowable
 
     public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand)
     {
+    	final int sourceX = pos.getX(), sourceY = pos.getY(), sourceZ = pos.getZ(); // CraftBukkit
         if (rand.nextInt(25) == 0)
         {
             int i = 5;
@@ -58,7 +64,20 @@ public class BlockMushroom extends BlockBush implements IGrowable
 
             if (worldIn.isAirBlock(blockpos1) && this.canBlockStay(worldIn, blockpos1, this.getDefaultState()))
             {
-                worldIn.setBlockState(blockpos1, this.getDefaultState(), 2);
+
+                // CraftBukkit start
+                // worldIn.setBlockState(blockpos1, this.getDefaultState(), 2);
+                org.bukkit.World bworld = worldIn.getWorld();
+                BlockState blockState = bworld.getBlockAt(blockpos1.getX(), blockpos1.getY(), blockpos1.getZ()).getState();
+                blockState.setType(org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers.getMaterial(this)); // nms: this.id, 0, 2
+
+                BlockSpreadEvent event = new BlockSpreadEvent(blockState.getBlock(), bworld.getBlockAt(sourceX, sourceY, sourceZ), blockState);
+                worldIn.getServer().getPluginManager().callEvent(event);
+
+                if (!event.isCancelled()) {
+                    blockState.update(true);
+                }
+                // CraftBukkit end
             }
         }
     }
@@ -105,10 +124,12 @@ public class BlockMushroom extends BlockBush implements IGrowable
 
         if (this == Blocks.BROWN_MUSHROOM)
         {
+        	BlockSapling.treeType = TreeType.BROWN_MUSHROOM; // CraftBukkit
             worldgenerator = new WorldGenBigMushroom(Blocks.BROWN_MUSHROOM_BLOCK);
         }
         else if (this == Blocks.RED_MUSHROOM)
         {
+        	BlockSapling.treeType = TreeType.RED_MUSHROOM; // CraftBukkit
             worldgenerator = new WorldGenBigMushroom(Blocks.RED_MUSHROOM_BLOCK);
         }
 

@@ -34,13 +34,14 @@ public class EntityAISkeletonRiders extends EntityAIBase
         this.horse.setGrowingAge(0);
         this.horse.world.addWeatherEffect(new EntityLightningBolt(this.horse.world, this.horse.posX, this.horse.posY, this.horse.posZ, true));
         EntitySkeleton entityskeleton = this.createSkeleton(difficultyinstance, this.horse);
-        entityskeleton.startRiding(this.horse);
+        if (entityskeleton != null) entityskeleton.startRiding(this.horse); // CraftBukkit
 
         for (int i = 0; i < 3; ++i)
         {
             AbstractHorse abstracthorse = this.createHorse(difficultyinstance);
+            if (abstracthorse == null) continue; // CraftBukkit
             EntitySkeleton entityskeleton1 = this.createSkeleton(difficultyinstance, abstracthorse);
-            entityskeleton1.startRiding(abstracthorse);
+            if (entityskeleton1 != null) entityskeleton1.startRiding(abstracthorse); // CraftBukkit
             abstracthorse.addVelocity(this.horse.getRNG().nextGaussian() * 0.5D, 0.0D, this.horse.getRNG().nextGaussian() * 0.5D);
         }
     }
@@ -54,7 +55,7 @@ public class EntityAISkeletonRiders extends EntityAIBase
         entityskeletonhorse.enablePersistence();
         entityskeletonhorse.setHorseTamed(true);
         entityskeletonhorse.setGrowingAge(0);
-        entityskeletonhorse.world.spawnEntity(entityskeletonhorse);
+        if (!entityskeletonhorse.world.addEntity(entityskeletonhorse, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.TRAP)) return null; // CraftBukkit
         return entityskeletonhorse;
     }
 
@@ -73,7 +74,7 @@ public class EntityAISkeletonRiders extends EntityAIBase
 
         entityskeleton.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, EnchantmentHelper.addRandomEnchantment(entityskeleton.getRNG(), entityskeleton.getHeldItemMainhand(), (int)(5.0F + p_188514_1_.getClampedAdditionalDifficulty() * (float)entityskeleton.getRNG().nextInt(18)), false));
         entityskeleton.setItemStackToSlot(EntityEquipmentSlot.HEAD, EnchantmentHelper.addRandomEnchantment(entityskeleton.getRNG(), entityskeleton.getItemStackFromSlot(EntityEquipmentSlot.HEAD), (int)(5.0F + p_188514_1_.getClampedAdditionalDifficulty() * (float)entityskeleton.getRNG().nextInt(18)), false));
-        entityskeleton.world.spawnEntity(entityskeleton);
+        if (!entityskeleton.world.addEntity(entityskeleton, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.JOCKEY)) return null; // CraftBukkit
         return entityskeleton;
     }
 }

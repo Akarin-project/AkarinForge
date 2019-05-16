@@ -601,6 +601,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
             double d2 = (double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D;
             EntityItem entityitem = new EntityItem(worldIn, (double)pos.getX() + d0, (double)pos.getY() + d1, (double)pos.getZ() + d2, stack);
             entityitem.setDefaultPickupDelay();
+            // CraftBukkit start
             worldIn.spawnEntity(entityitem);
         }
     }

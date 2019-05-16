@@ -6,7 +6,6 @@ import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftInventoryView;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
-import sun.net.www.content.text.plain;
 
 public class ContainerDispenser extends Container
 {
@@ -20,6 +19,7 @@ public class ContainerDispenser extends Container
     {
         this.dispenserInventory = dispenserInventoryIn;
         // CraftBukkit start - Save player
+        // TODO: Should we check to make sure it really is an InventoryPlayer?
         this.player = (InventoryPlayer) playerInventory;
         // CraftBukkit end
 
@@ -92,7 +92,6 @@ public class ContainerDispenser extends Container
 
         return itemstack;
     }
-    
     // CraftBukkit start
     @Override
     public CraftInventoryView getBukkitView() {

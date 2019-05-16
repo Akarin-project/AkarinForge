@@ -1,6 +1,9 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyInteger;
@@ -56,8 +59,9 @@ public class BlockCactus extends Block implements net.minecraftforge.common.IPla
                 {
                 if (j == 15)
                 {
-                    worldIn.setBlockState(blockpos, this.getDefaultState());
+                    // worldIn.setBlockState(blockpos, this.getDefaultState()); // CraftBukkit
                     IBlockState iblockstate = state.withProperty(AGE, Integer.valueOf(0));
+                    CraftEventFactory.handleBlockGrowEvent(worldIn, blockpos.getX(), blockpos.getY(), blockpos.getZ(), this, 0); // CraftBukkit
                     worldIn.setBlockState(pos, iblockstate, 4);
                     iblockstate.neighborChanged(worldIn, blockpos, this, pos);
                 }
@@ -123,7 +127,9 @@ public class BlockCactus extends Block implements net.minecraftforge.common.IPla
 
     public void onEntityCollidedWithBlock(World worldIn, BlockPos pos, IBlockState state, Entity entityIn)
     {
+    	CraftEventFactory.blockDamage = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ()); // CraftBukkit
         entityIn.attackEntityFrom(DamageSource.CACTUS, 1.0F);
+        CraftEventFactory.blockDamage = null; // CraftBukkit
     }
 
     public IBlockState getStateFromMeta(int meta)

@@ -52,7 +52,8 @@ public class BlockNetherWart extends BlockBush
         if (i < 3 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, rand.nextInt(10) == 0))
         {
             IBlockState newState = state.withProperty(AGE, Integer.valueOf(i + 1));
-            worldIn.setBlockState(pos, newState, 2);
+            // worldIn.setBlockState(pos, newState, 2); // CraftBukkit
+            org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.handleBlockGrowEvent(worldIn, pos.getX(), pos.getY(), pos.getZ(), this, getMetaFromState(state)); // CraftBukkit
             net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state, newState);
         }
 

@@ -84,6 +84,12 @@ public class EntityAIBreakDoor extends EntityAIDoorInteract
 
         if (this.breakingTime == 240 && this.entity.world.getDifficulty() == EnumDifficulty.HARD)
         {
+            // CraftBukkit start
+            if (org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory.callEntityBreakDoorEvent(this.entity, this.doorPosition.getX(), this.doorPosition.getY(), this.doorPosition.getZ()).isCancelled()) {
+                this.startExecuting();
+                return;
+            }
+            // CraftBukkit end
             this.entity.world.setBlockToAir(this.doorPosition);
             this.entity.world.playEvent(1021, this.doorPosition, 0);
             this.entity.world.playEvent(2001, this.doorPosition, Block.getIdFromBlock(this.doorBlock));

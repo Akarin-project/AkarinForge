@@ -2,6 +2,9 @@ package net.minecraft.block;
 
 import java.util.Random;
 import javax.annotation.Nullable;
+
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
@@ -233,7 +236,13 @@ public class BlockVine extends Block implements net.minecraftforge.common.IShear
 
                     if (((Boolean)iblockstate2.getValue(NORTH)).booleanValue() || ((Boolean)iblockstate2.getValue(EAST)).booleanValue() || ((Boolean)iblockstate2.getValue(SOUTH)).booleanValue() || ((Boolean)iblockstate2.getValue(WEST)).booleanValue())
                     {
-                        worldIn.setBlockState(blockpos2, iblockstate2, 2);
+                        // CraftBukkit start - Call BlockSpreadEvent
+                        // worldIn.setBlockState(blockpos2, iblockstate2, 2);
+                        BlockPos target = blockpos2;
+                        org.bukkit.block.Block source = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+                        org.bukkit.block.Block block = worldIn.getWorld().getBlockAt(target.getX(), target.getY(), target.getZ());
+                        CraftEventFactory.handleBlockSpreadEvent(block, source, this, getMetaFromState(iblockstate2));
+                        // CraftBukkit end
                     }
                 }
                 else if (enumfacing1.getAxis().isHorizontal() && !((Boolean)state.getValue(getPropertyFor(enumfacing1))).booleanValue())
@@ -252,22 +261,29 @@ public class BlockVine extends Block implements net.minecraftforge.common.IShear
                             boolean flag2 = ((Boolean)state.getValue(getPropertyFor(enumfacing4))).booleanValue();
                             BlockPos blockpos = blockpos4.offset(enumfacing3);
                             BlockPos blockpos1 = blockpos4.offset(enumfacing4);
+                            // CraftBukkit start - Call BlockSpreadEvent
+                            org.bukkit.block.Block source = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+                            org.bukkit.block.Block bukkitBlock = worldIn.getWorld().getBlockAt(blockpos4.getX(), blockpos4.getY(), blockpos4.getZ());
 
                             if (flag1 && this.canAttachTo(worldIn, blockpos.offset(enumfacing3), enumfacing3))
                             {
-                                worldIn.setBlockState(blockpos4, this.getDefaultState().withProperty(getPropertyFor(enumfacing3), Boolean.valueOf(true)), 2);
+                                // worldIn.setBlockState(blockpos4, this.getDefaultState().withProperty(getPropertyFor(enumfacing3), Boolean.valueOf(true)), 2);
+                                CraftEventFactory.handleBlockSpreadEvent(bukkitBlock, source, this, getMetaFromState(this.getDefaultState().withProperty(getPropertyFor(enumfacing3), Boolean.TRUE)));
                             }
                             else if (flag2 && this.canAttachTo(worldIn, blockpos1.offset(enumfacing4), enumfacing4))
                             {
-                                worldIn.setBlockState(blockpos4, this.getDefaultState().withProperty(getPropertyFor(enumfacing4), Boolean.valueOf(true)), 2);
+                                // worldIn.setBlockState(blockpos4, this.getDefaultState().withProperty(getPropertyFor(enumfacing4), Boolean.valueOf(true)), 2);
+                                CraftEventFactory.handleBlockSpreadEvent(bukkitBlock, source, this, getMetaFromState(this.getDefaultState().withProperty(getPropertyFor(enumfacing4), Boolean.TRUE)));
                             }
                             else if (flag1 && worldIn.isAirBlock(blockpos) && this.canAttachTo(worldIn, blockpos, enumfacing1))
                             {
-                                worldIn.setBlockState(blockpos, this.getDefaultState().withProperty(getPropertyFor(enumfacing1.getOpposite()), Boolean.valueOf(true)), 2);
+                                // worldIn.setBlockState(blockpos, this.getDefaultState().withProperty(getPropertyFor(enumfacing1.getOpposite()), Boolean.valueOf(true)), 2);
+                                CraftEventFactory.handleBlockSpreadEvent(bukkitBlock, source, this, getMetaFromState(this.getDefaultState().withProperty(getPropertyFor(enumfacing1.getOpposite()), Boolean.TRUE)));
                             }
                             else if (flag2 && worldIn.isAirBlock(blockpos1) && this.canAttachTo(worldIn, blockpos1, enumfacing1))
                             {
-                                worldIn.setBlockState(blockpos1, this.getDefaultState().withProperty(getPropertyFor(enumfacing1.getOpposite()), Boolean.valueOf(true)), 2);
+                                // worldIn.setBlockState(blockpos1, this.getDefaultState().withProperty(getPropertyFor(enumfacing1.getOpposite()), Boolean.valueOf(true)), 2);
+                                CraftEventFactory.handleBlockSpreadEvent(bukkitBlock, source, this, getMetaFromState(this.getDefaultState().withProperty(getPropertyFor(enumfacing1.getOpposite()), Boolean.TRUE)));
                             }
                         }
                         else if (iblockstate3.getBlockFaceShape(worldIn, blockpos4, enumfacing1) == BlockFaceShape.SOLID)
@@ -298,7 +314,12 @@ public class BlockVine extends Block implements net.minecraftforge.common.IShear
 
                             if (((Boolean)iblockstate1.getValue(NORTH)).booleanValue() || ((Boolean)iblockstate1.getValue(EAST)).booleanValue() || ((Boolean)iblockstate1.getValue(SOUTH)).booleanValue() || ((Boolean)iblockstate1.getValue(WEST)).booleanValue())
                             {
-                                worldIn.setBlockState(blockpos3, iblockstate1, 2);
+                                // CraftBukkit start - Call BlockSpreadEvent
+                                // worldIn.setBlockState(blockpos3, iblockstate1, 2);
+                                org.bukkit.block.Block source = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+                                org.bukkit.block.Block bukkitBlock = worldIn.getWorld().getBlockAt(blockpos3.getX(), blockpos3.getY(), blockpos3.getZ());
+                                CraftEventFactory.handleBlockSpreadEvent(bukkitBlock, source, this, getMetaFromState(iblockstate1));
+                                // CraftBukkit end
                             }
                         }
                         else if (block == this)

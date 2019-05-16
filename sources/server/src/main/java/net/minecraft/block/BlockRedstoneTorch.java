@@ -5,6 +5,9 @@ import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import org.bukkit.event.block.BlockRedstoneEvent;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -118,11 +121,27 @@ public class BlockRedstoneTorch extends BlockTorch
         {
             list.remove(0);
         }
+        // CraftBukkit start
+        org.bukkit.plugin.PluginManager manager = worldIn.getServer().getPluginManager();
+        org.bukkit.block.Block block = worldIn.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+        int oldCurrent = this.isOn ? 15 : 0;
+
+        BlockRedstoneEvent event = new BlockRedstoneEvent(block, oldCurrent, oldCurrent);
+        // CraftBukkit end
 
         if (this.isOn)
         {
             if (flag)
             {
+                // CraftBukkit start
+                if (oldCurrent != 0) {
+                    event.setNewCurrent(0);
+                    manager.callEvent(event);
+                    if (event.getNewCurrent() != 0) {
+                        return;
+                    }
+                }
+                // CraftBukkit end
                 worldIn.setBlockState(pos, Blocks.UNLIT_REDSTONE_TORCH.getDefaultState().withProperty(FACING, state.getValue(FACING)), 3);
 
                 if (this.isBurnedOut(worldIn, pos, true))
@@ -143,6 +162,15 @@ public class BlockRedstoneTorch extends BlockTorch
         }
         else if (!flag && !this.isBurnedOut(worldIn, pos, false))
         {
+            // CraftBukkit start
+            if (oldCurrent != 15) {
+                event.setNewCurrent(15);
+                manager.callEvent(event);
+                if (event.getNewCurrent() != 15) {
+                    return;
+                }
+            }
+            // CraftBukkit end
             worldIn.setBlockState(pos, Blocks.REDSTONE_TORCH.getDefaultState().withProperty(FACING, state.getValue(FACING)), 3);
         }
     }

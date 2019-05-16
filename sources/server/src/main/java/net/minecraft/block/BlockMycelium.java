@@ -1,6 +1,12 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.block.BlockState;
+import org.bukkit.craftbukkit.v1_12_R1.util.CraftMagicNumbers;
+import org.bukkit.event.block.BlockFadeEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
+
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -42,7 +48,19 @@ public class BlockMycelium extends Block
             if (!worldIn.isAreaLoaded(pos, 2)) return; // Forge: prevent loading unloaded chunks when checking neighbor's light and spreading
             if (worldIn.getLightFromNeighbors(pos.up()) < 4 && worldIn.getBlockState(pos.up()).getLightOpacity(worldIn, pos.up()) > 2)
             {
-                worldIn.setBlockState(pos, Blocks.DIRT.getDefaultState().withProperty(BlockDirt.VARIANT, BlockDirt.DirtType.DIRT));
+                // CraftBukkit start
+                // worldIn.setBlockState(pos, Blocks.DIRT.getDefaultState().withProperty(BlockDirt.VARIANT, BlockDirt.DirtType.DIRT));
+                org.bukkit.World bworld = worldIn.getWorld();
+                BlockState blockState = bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ()).getState();
+                blockState.setType(CraftMagicNumbers.getMaterial(Blocks.DIRT));
+
+                BlockFadeEvent event = new BlockFadeEvent(blockState.getBlock(), blockState);
+                worldIn.getServer().getPluginManager().callEvent(event);
+
+                if (!event.isCancelled()) {
+                    blockState.update(true);
+                }
+                // CraftBukkit end
             }
             else
             {
@@ -56,7 +74,19 @@ public class BlockMycelium extends Block
 
                         if (iblockstate.getBlock() == Blocks.DIRT && iblockstate.getValue(BlockDirt.VARIANT) == BlockDirt.DirtType.DIRT && worldIn.getLightFromNeighbors(blockpos.up()) >= 4 && iblockstate1.getLightOpacity(worldIn, blockpos.up()) <= 2)
                         {
-                            worldIn.setBlockState(blockpos, this.getDefaultState());
+                            // CraftBukkit start
+                            // worldIn.setBlockState(blockpos, this.getDefaultState());
+                            org.bukkit.World bworld = worldIn.getWorld();
+                            BlockState blockState = bworld.getBlockAt(blockpos.getX(), blockpos.getY(), blockpos.getZ()).getState();
+                            blockState.setType(CraftMagicNumbers.getMaterial(this));
+
+                            BlockSpreadEvent event = new BlockSpreadEvent(blockState.getBlock(), bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ()), blockState);
+                            worldIn.getServer().getPluginManager().callEvent(event);
+
+                            if (!event.isCancelled()) {
+                                blockState.update(true);
+                            }
+                            // CraftBukkit end
                         }
                     }
                 }

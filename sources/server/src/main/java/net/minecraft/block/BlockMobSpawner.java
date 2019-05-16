@@ -41,6 +41,14 @@ public class BlockMobSpawner extends BlockContainer
     {
         super.dropBlockAsItemWithChance(worldIn, pos, state, chance, fortune);
     }
+    
+    // CraftBukkit start
+    @Override
+    public int getExpDrop(World world, IBlockState iblockdata, int enchantmentLevel) {
+        int j = 15 + world.rand.nextInt(15) + world.rand.nextInt(15);
+        return j;
+    }
+    // CraftBukkit end
 
     @Override
     public int getExpDrop(IBlockState state, net.minecraft.world.IBlockAccess world, BlockPos pos, int fortune)

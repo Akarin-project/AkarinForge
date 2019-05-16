@@ -1,6 +1,9 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import org.bukkit.craftbukkit.v1_12_R1.event.CraftEventFactory;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -63,6 +66,13 @@ public class BlockStaticLiquid extends BlockLiquid
                         {
                             if (this.isSurroundingBlockFlammable(worldIn, blockpos))
                             {
+                                // CraftBukkit start - Prevent lava putting something on fire
+                               if (worldIn.getBlockState(blockpos) != Blocks.FIRE) {
+                                   if (CraftEventFactory.callBlockIgniteEvent(worldIn, blockpos.getX(), blockpos.getY(), blockpos.getZ(), pos.getX(), pos.getY(), pos.getZ()).isCancelled()) {
+                                       continue;
+                                   }
+                               }
+                               // CraftBukkit end
                                 worldIn.setBlockState(blockpos, net.minecraftforge.event.ForgeEventFactory.fireFluidPlaceBlockEvent(worldIn, blockpos, pos, Blocks.FIRE.getDefaultState()));
                                 return;
                             }
@@ -86,6 +96,14 @@ public class BlockStaticLiquid extends BlockLiquid
 
                         if (worldIn.isAirBlock(blockpos1.up()) && this.getCanBlockBurn(worldIn, blockpos1))
                         {
+                            // CraftBukkit start - Prevent lava putting something on fire
+                            BlockPos up = blockpos1.up();
+                            if (worldIn.getBlockState(up) != Blocks.FIRE) {
+                                if (CraftEventFactory.callBlockIgniteEvent(worldIn, up.getX(), up.getY(), up.getZ(), pos.getX(), pos.getY(), pos.getZ()).isCancelled()) {
+                                    continue;
+                                }
+                            }
+                            // CraftBukkit end
                             worldIn.setBlockState(blockpos1.up(), net.minecraftforge.event.ForgeEventFactory.fireFluidPlaceBlockEvent(worldIn, blockpos1.up(), pos, Blocks.FIRE.getDefaultState()));
                         }
                     }

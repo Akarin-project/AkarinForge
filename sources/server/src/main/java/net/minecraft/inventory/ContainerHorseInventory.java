@@ -28,11 +28,11 @@ public class ContainerHorseInventory extends Container
 
         return bukkitEntity = new CraftInventoryView(player.player.getBukkitEntity(), horseInventory.getOwner().getInventory(), this);
     }
+    // CraftBukkit end
 
     public ContainerHorseInventory(IInventory playerInventory, IInventory horseInventoryIn, final AbstractHorse horse, EntityPlayer player)
     {
-        this.player = (InventoryPlayer) playerInventory;
-        // CraftBukkit end
+    	this.player = (InventoryPlayer) playerInventory; // CraftBukkit
         this.horseInventory = horseInventoryIn;
         this.horse = horse;
         int i = 3;
