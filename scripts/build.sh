@@ -32,7 +32,7 @@ echo "[Akarin] Ready to build"
 	\cp -rf "$basedir/icon.ico" "$forgebasedir/"
 
 	echo "[Akarin] Touch forge.."
-	\rm -rf "$forgebasedir/projects/Forge/src"
+
 	\cp -rf "$basedir/sources/server/src" "$forgebasedir/projects/Forge/"
 	
 	echo "[Akarin] Touch server.."
