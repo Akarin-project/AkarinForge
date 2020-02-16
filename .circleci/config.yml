@@ -9,7 +9,7 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/build-image:ubuntu-1604:201903-01
+    - image: ubuntu-1604:201903-01
       command: /sbin/init
     steps:
     # Machine Setup
