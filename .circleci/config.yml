@@ -30,8 +30,9 @@ jobs:
     - run: export TERM=${TERM:-dumb}
     - run: git config --global user.email "circle@circleci.com"
     - run: git config --global user.name "CircleCI"
-    - run: chmod +x scripts/inst.sh
-    - run: ./scripts/inst.sh --setup
+    - run: chmod -Rv +x scripts/
+    - run: ./scripts/build.sh
+    - run: ./scripts/inst.sh --setup --remote
     # Save dependency cache
     - save_cache:
         key: v1-dep-{{ .Branch }}-{{ epoch }}
