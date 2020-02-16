@@ -1,0 +1,3 @@
+org.sqlite.JDBC
+com.mysql.jdbc.Driver
+com.mysql.fabric.jdbc.FabricMySQLDriver

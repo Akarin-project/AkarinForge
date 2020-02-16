@@ -1,8 +1,7 @@
 # <img src="https://i.loli.net/2018/05/17/5afd869c443ef.png" alt="Akarin Face" align="right">AkarinForge
 [![Powered by](https://img.shields.io/badge/Powered_by-Akarin_project-ee6aa7.svg?style=flat)](https://akarin.io)
 [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/fw2pJAj)
-[![bStats](https://img.shields.io/badge/bStats-Torch-0099ff.svg?style=flat)](https://bstats.org/plugin/bukkit/Torch)
-[![Circle CI](https://circleci.com/gh/Akarin-project/AkarinForge/tree/master.svg?style=svg)](https://circleci.com/gh/Akarin-project/AkarinForge)
+[![Jenkins](https://ci.codemc.org/buildStatus/icon?job=Akarin-project%2FAkarinForge)](https://ci.codemc.org/job/Akarin-project/job/AkarinForge/)
 
 AkarinForge is currently **under heavy development** and contributions are welcome!
 
@@ -10,7 +9,7 @@ Introduction
 ---
 > AkarinForge is a next-generation Forge server software with the Bukkit API from the 'new dimension'.
 
-As based on [MinecraftForge](https://github.com/MinecraftForge/MinecraftForge), it should provide high compatibility with mods. In other words, support plugins but not break mods are the main goal of the project.
+As a fork of [MinecraftForge](https://github.com/MinecraftForge/MinecraftForge), it should provide high compatibility with mods. In other words, support plugins but not break mods are the main goal of the project.
 
 Get Akarin
 ---
@@ -21,12 +20,12 @@ Get Akarin
 
 #### Compile
 ```sh
-./scripts/inst.sh
+./scripts/inst.sh --setup
 ```
 
 **Notes**
+* Run with `--setup` argument will regenerate codes in the submodule.
 * Please ensure that your machine has sufficient memory before compiling the project.
-* Add `--setup` option to setup the development workspace for [Eclipse](https://www.eclipse.org/), and following the [Forge Documentation](https://mcforge.readthedocs.io/en/latest/) if you are using others IDE.
 
 Demo Servers
 ---

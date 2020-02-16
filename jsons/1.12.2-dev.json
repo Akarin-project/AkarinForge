@@ -96,7 +96,22 @@
     {
       "name": "org.bukkit:bukkit:1.12.2-R0.1-SNAPSHOT",
       "children" : ["sources"],
-      "url" : "https://hub.spigotmc.org/nexus/content/groups/public/"
+      "url" : "http://hub.spigotmc.org/nexus/content/groups/public/"
+    },
+    {
+      "name": "net.md-5:bungeecord-chat:1.14-SNAPSHOT",
+      "children" : ["sources"],
+      "url" : "http://hub.spigotmc.org/nexus/content/groups/public/"
+    },
+    {
+      "name": "net.md-5:SpecialSource:1.8.5",
+      "children" : ["sources"],
+      "url" : "http://hub.spigotmc.org/nexus/content/groups/public/"
+    },
+    {
+      "name": "net.minecrell:terminalconsoleappender:1.1.1",
+      "children" : ["sources"],
+      "url" : "http://hub.spigotmc.org/nexus/content/groups/public/"
     }
   ]
 }
