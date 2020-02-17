@@ -12,6 +12,7 @@ if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
 		cd "$forgebasedir"
 		\cp -rf "$basedir/jsons" "$forgebasedir/"
 		echo "[Akarin] Setup forge.."
+		sudo chmod +x ./gradlew
 		./gradlew setupForge
 
 		echo "[Akarin] Touch workspace.."
