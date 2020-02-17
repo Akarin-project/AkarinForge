@@ -1,37 +1,28 @@
 #version: 2
 version: 2.1 # Use version 2.1 to enable Orb usage.
 
-#orbs:
-#  win: circleci/windows@2.2.0 # The Windows orb give you everything you need to start using the Windows executor.
+
 jobs:
   build: 
     working_directory: ~/Akarin-project/AkarinForge
- #   parallelism: 1
- #   shell: /bin/bash --login
+    parallelism: 1
     environment:
       TERM: dumb
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
- #   executor: win/default
     docker:
       - image: circleci/openjdk:8u242-jdk-stretch # ...with this image as the primary container; this is where all `steps` will run
       - image: circleci/postgres:12-alpine
         environment:
           POSTGRES_USER: postgres
           POSTGRES_DB: circle_test
-   #  - image: circleci/windows@2.2.0
-#    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-#      run: sudo service postgresql start
     steps:
     # Machine Setup
     - checkout
     # Prepare for artifact
     - run: mkdir -p %CIRCLE_ARTIFACTS% %CIRCLE_TEST_REPORTS%
-    #- run:
-    #    working_directory: ~/Akarin-project/AkarinForge
-   #     command: sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java; sudo update-alternatives --set javac /usr/lib/jvm/java-8-openjdk-amd64/bin/javac; echo -e "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64" >> $BASH_ENV
     # Dependencies
     # Restore the dependency cache
     - restore_cache:
@@ -45,10 +36,7 @@ jobs:
     - run: git config --global user.name "CircleCI"
     - run: chmod -Rv +x scripts/
     - run: chmod -Rv +x work/MinecraftForge/
-#    - run: ~/Akarin-project/AkarinForge/work/MinecraftForge/gradlew -p ~/Akarin-project/AkarinForge/work/MinecraftForge setupForge
-#    - run: cd ../../
-#    - run: ./scripts/build.sh
-    - run: ./scripts/inst.sh --setup --setup
+    - run: ./scripts/inst.sh --setup
     # Save dependency cache
     - save_cache:
         key: v1-dep-{{ .Branch }}-{{ epoch }}
