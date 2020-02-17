@@ -30,6 +30,10 @@ echo "[Akarin] Ready to build"
 	echo "[Akarin] Touch resources.."
 	\cp -rf "$basedir/jsons" "$forgebasedir/"
 	\cp -rf "$basedir/icon.ico" "$forgebasedir/"
+
+	echo "[Akarin] Touch forge.."
+	\rm -rf "$forgebasedir/projects/Forge/src"
+	\cp -rf "$basedir/sources/server/src" "$forgebasedir/projects/Forge/"
 	
 	echo "[Akarin] Touch server.."
 	\rm -rf "$forgebasedir/src"
