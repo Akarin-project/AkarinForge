@@ -33,7 +33,7 @@ jobs:
     - run: chmod -Rv +x scripts/
     - run: chmod -Rv +x work/MinecraftForge/
     - run: ./work/MinecraftForge/gradlew setupForge
-    - run: ./scripts/inst.sh
+    - run: ./scripts/build.sh
     # Save dependency cache
     - save_cache:
         key: v1-dep-{{ .Branch }}-{{ epoch }}
