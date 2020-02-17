@@ -31,7 +31,7 @@ jobs:
     - run: git config --global user.email "circle@circleci.com"
     - run: git config --global user.name "CircleCI"
     - run: chmod -Rv +x scripts/
-    - run: ./scripts/build.sh
+    - run: ./scripts/build.sh --setup --setup
     - run: ./scripts/inst.sh --setup --setup
     # Save dependency cache
     - save_cache:
