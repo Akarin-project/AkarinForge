@@ -12,7 +12,7 @@ if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
 		cd "$forgebasedir"
 		\cp -rf "$basedir/jsons" "$forgebasedir/"
 		echo "[Akarin] Setup forge.."
-		sh ./gradlew setupForge
+		sudo bash gradlew setupForge
 
 		echo "[Akarin] Touch workspace.."
 		#\cp -rf "$forgebasedir/projects/Forge/.settings" "$basedir/"
@@ -41,9 +41,9 @@ echo "[Akarin] Ready to build"
 
 	cd "$forgebasedir"
 	echo "[Akarin] Build Forge.. (1/2)"
-	./gradlew genPatches
+	sudo bash gradlew genPatches
 	echo "[Akarin] Build Forge.. (2/2)"
-	./gradlew launch4j
+	sudo bash gradlew launch4j
 
 	build="$forgebasedir/build/distributions"
 	\cp -rf "$build" "$basedir/"
