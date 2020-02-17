@@ -32,8 +32,8 @@ jobs:
     - run: git config --global user.name "CircleCI"
     - run: chmod -Rv +x scripts/
     - run: chmod -Rv +x work/MinecraftForge/
-    - run: sudo bash ./work/MinecraftForge/gradlew setupForge
-    - run: ./scripts/inst.sh --setup --setup
+    - run: ./work/MinecraftForge/gradlew setupForge
+    - run: ./scripts/inst.sh
     # Save dependency cache
     - save_cache:
         key: v1-dep-{{ .Branch }}-{{ epoch }}
