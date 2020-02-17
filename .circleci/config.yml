@@ -32,7 +32,7 @@ jobs:
     - run: git config --global user.name "CircleCI"
     - run: chmod -Rv +x scripts/
     - run: chmod -Rv +x work/MinecraftForge/
-    - run: cd work/MinecraftForge/ | sudo bash ./gradlew setupForge
+    - run: cd work/MinecraftForge/ | sudo bash gradlew setupForge
     - run: cd ../../
     - run: ./scripts/build.sh
     # Save dependency cache
