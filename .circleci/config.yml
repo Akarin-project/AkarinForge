@@ -1,4 +1,8 @@
-version: 2
+#version: 2
+version: 2.1 # Use version 2.1 to enable Orb usage.
+
+orbs:
+  win: circleci/windows@2.2.0 # The Windows orb give you everything you need to start using the Windows executor.
 jobs:
   build:
     working_directory: ~/Akarin-project/AkarinForge
@@ -8,8 +12,9 @@ jobs:
       TERM: dumb
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
-    docker:
-     - image: circleci/windows@2.2.0
+   executor: win/default
+   # docker:
+   #  - image: circleci/windows@2.2.0
 #    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
 #      run: sudo service postgresql start
     steps:
