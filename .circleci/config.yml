@@ -9,8 +9,9 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-      run: sudo service postgresql start
+     - image: circleci/windows@2.2.0
+#    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
+#      run: sudo service postgresql start
     steps:
     # Machine Setup
     - checkout
@@ -32,9 +33,10 @@ jobs:
     - run: git config --global user.name "CircleCI"
     - run: chmod -Rv +x scripts/
     - run: chmod -Rv +x work/MinecraftForge/
-    - run: ~/Akarin-project/AkarinForge/work/MinecraftForge/gradlew -p ~/Akarin-project/AkarinForge/work/MinecraftForge setupForge
-    - run: cd ../../
-    - run: ./scripts/build.sh
+#    - run: ~/Akarin-project/AkarinForge/work/MinecraftForge/gradlew -p ~/Akarin-project/AkarinForge/work/MinecraftForge setupForge
+#    - run: cd ../../
+#    - run: ./scripts/build.sh
+    - run: ./scripts/inst.sh --setup --setup
     # Save dependency cache
     - save_cache:
         key: v1-dep-{{ .Branch }}-{{ epoch }}
