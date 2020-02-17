@@ -25,6 +25,7 @@ jobs:
     # Prepare for artifact
     - run: mkdir -p %CIRCLE_ARTIFACTS% %CIRCLE_TEST_REPORTS%
     # Dependencies
+    - run: mvn dependency:go-offline
     # Restore the dependency cache
     - restore_cache:
         keys:
