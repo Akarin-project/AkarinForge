@@ -21,7 +21,7 @@ jobs:
     # Machine Setup
     - checkout
     # Prepare for artifact
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+    - run: mkdir -p CIRCLE_ARTIFACTS CIRCLE_TEST_REPORTS
     - run:
         working_directory: ~/Akarin-project/AkarinForge
         command: sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java; sudo update-alternatives --set javac /usr/lib/jvm/java-8-openjdk-amd64/bin/javac; echo -e "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64" >> $BASH_ENV
