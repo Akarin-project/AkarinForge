@@ -4,7 +4,7 @@ version: 2.1 # Use version 2.1 to enable Orb usage.
 orbs:
   win: circleci/windows@2.2.0 # The Windows orb give you everything you need to start using the Windows executor.
 jobs:
-  build: 
+  build akarinforge: 
   #  working_directory: ~/Akarin-project/AkarinForge
  #   parallelism: 1
  #   shell: /bin/bash --login
