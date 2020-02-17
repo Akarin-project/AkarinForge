@@ -33,7 +33,7 @@ jobs:
     - run: chmod -Rv +x scripts/
     - run: chmod -Rv +x work/MinecraftForge/
     - run: cd work/MinecraftForge/
-    - run: ./gradlew setupForge
+    - run: sudo bash ./gradlew setupForge
     - run: cd ../../
     - run: ./scripts/build.sh
     # Save dependency cache
