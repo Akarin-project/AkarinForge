@@ -32,6 +32,7 @@ jobs:
     - run: git config --global user.name "CircleCI"
     - run: chmod -Rv +x scripts/
     - run: ./scripts/inst.sh --setup --setup
+    - run: ./scripts/build.sh
     # Save dependency cache
     - save_cache:
         key: v1-dep-{{ .Branch }}-{{ epoch }}
