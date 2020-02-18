@@ -44,6 +44,7 @@ jobs:
     - run: chmod -Rv +x scripts/
   #  - run: ./scripts/maven.sh
     - run: chmod -Rv +x work/MinecraftForge/
+    - run: ./scripts/build.sh
     - run: ./scripts/inst.sh --setup
     # Save dependency cache
     - save_cache:
