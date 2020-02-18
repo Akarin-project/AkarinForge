@@ -28,7 +28,6 @@ if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
 fi
 
 echo "[Akarin] Ready to build"
-(
 	echo "[Akarin] Touch resources.."
 	\cp -rf "$basedir/jsons" "$forgebasedir/"
 	\cp -rf "$basedir/icon.ico" "$forgebasedir/"
@@ -53,6 +52,4 @@ echo "[Akarin] Ready to build"
 	echo ""
 	echo "[Akarin] Build successful"
 	echo "[Akarin] Migrated final build to $basedir/distributions"
-)
-
 )
