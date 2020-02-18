@@ -1,5 +1,5 @@
 #version: 2
-version: 2.1 # Use version 2.1 to enable Orb usage.
+version: 2 # Use version 2.1 to enable Orb usage.
 
 
 jobs:
@@ -8,7 +8,6 @@ jobs:
     parallelism: 1
     shell: /bin/bash --login
     environment:
-      TERM: dumb
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
@@ -35,7 +34,7 @@ jobs:
     - run: git config --global user.email "circle@circleci.com"
     - run: git config --global user.name "CircleCI"
     - run: chmod -Rv +x scripts/
-    - run: ./scripts/maven.sh
+    #- run: ./scripts/maven.sh
     - run: chmod -Rv +x work/MinecraftForge/
     - run: ./scripts/inst.sh --setup
     # Save dependency cache
