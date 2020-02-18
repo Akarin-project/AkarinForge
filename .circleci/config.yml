@@ -35,7 +35,7 @@ jobs:
     - run: export TERM=${TERM:-dumb}
     - run: git config --global user.email "circle@circleci.com"
     - run: git config --global user.name "CircleCI"
-    - run: sudo apt install maven
+    - run: sudo apt-get install maven
     - run: mvn dependency:go-offline
     - run: chmod -Rv +x scripts/
   #  - run: ./scripts/maven.sh
