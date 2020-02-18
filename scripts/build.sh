@@ -14,9 +14,6 @@ if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
 		echo "[Akarin] Setup forge.."
 		./gradlew setupForge
 		
-		echo "[Akarin] Brute Forcing"
-		cp  "$basedir/changelog_new.txt" "$forgebasedir/build/"
-		
 		echo "[Akarin] Touch workspace.."
 		#\cp -rf "$forgebasedir/projects/Forge/.settings" "$basedir/"
 		#\cp -rf "$forgebasedir/projects/Forge/.project" "$basedir/"
@@ -44,6 +41,8 @@ echo "[Akarin] Ready to build"
 	cd "$forgebasedir"
 	echo "[Akarin] Build Forge.. (1/2)"
 	./gradlew genPatches
+	echo "[Akarin] Brute Forcing"
+	\cp "$basedir/changelog_new.txt" "$forgebasedir/build/"
 	echo "[Akarin] Build Forge.. (2/2)"
 	./gradlew launch4j
 
