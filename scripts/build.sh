@@ -5,12 +5,11 @@ set -e
 basedir="$(cd "$1" && pwd -P)"
 workdir="$basedir/work"
 forgebasedir="$basedir/work/MinecraftForge"
-
+echo "[Akarin] Brute Forcing"
+\cp -rf "$basedir/changelog_new.txt" "$forgebasedir/build/"
 if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
 	echo "[Akarin] Setup workspace.."
 	(
-		echo "[Akarin] Brute Forcing"
-		\cp -rf "$basedir/changelog_new.txt" "$forgebasedir/build/"
 		cd "$forgebasedir"
 		\cp -rf "$basedir/jsons" "$forgebasedir/"
 		echo "[Akarin] Setup forge.."
