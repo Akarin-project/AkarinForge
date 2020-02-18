@@ -25,7 +25,7 @@ jobs:
     # Prepare for artifact
     - run: mkdir -p %CIRCLE_ARTIFACTS% %CIRCLE_TEST_REPORTS%
     # Dependencies
-    - run: mvn dependency:go-offline
+  #  - run: mvn dependency:go-offline
     # Restore the dependency cache
     - restore_cache:
         keys:
@@ -37,6 +37,7 @@ jobs:
     - run: git config --global user.email "circle@circleci.com"
     - run: git config --global user.name "CircleCI"
     - run: chmod -Rv +x scripts/
+    - run: ./scripts/maven.sh
     - run: chmod -Rv +x work/MinecraftForge/
     - run: ./scripts/inst.sh --setup
     # Save dependency cache
