@@ -1,6 +1,4 @@
-#version: 2
 version: 2.1 # Use version 2.1 to enable Orb usage.
-
 
 jobs:
   build: 
@@ -11,7 +9,7 @@ jobs:
       TERM: dumb
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
-      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+  #    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
     docker:
       - image: circleci/openjdk:8u242-jdk-stretch # ...with this image as the primary container; this is where all `steps` will run
       - image: circleci/postgres:12-alpine
