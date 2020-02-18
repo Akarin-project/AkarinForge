@@ -8,13 +8,14 @@ forgebasedir="$basedir/work/MinecraftForge"
 
 if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
 	echo "[Akarin] Setup workspace.."
-	(
-		cd "$forgebasedir"
-		\cp -rf "$basedir/jsons" "$forgebasedir/"
-		echo "[Akarin] Setup forge.."
-		./gradlew setupForge
+	(	
 		echo "[Akarin] Brute Forcing"
 		cp  "$basedir/changelog_new.txt" "$forgebasedir/build/"
+		cd "$forgebasedir"
+	#	\cp -rf "$basedir/jsons" "$forgebasedir/"
+		echo "[Akarin] Setup forge.."
+		./gradlew setupForge
+		
 		echo "[Akarin] Touch workspace.."
 		#\cp -rf "$forgebasedir/projects/Forge/.settings" "$basedir/"
 		#\cp -rf "$forgebasedir/projects/Forge/.project" "$basedir/"
