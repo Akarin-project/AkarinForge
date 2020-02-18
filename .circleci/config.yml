@@ -11,18 +11,18 @@ jobs:
       TERM: dumb
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
-      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+
     docker:
-      - image: circleci/openjdk:8u242-jdk-stretch # ...with this image as the primary container; this is where all `steps` will run
-      - image: circleci/postgres:12-alpine
-        environment:
-          POSTGRES_USER: postgres
-          POSTGRES_DB: circle_test
+    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
+      run: sudo service postgresql start
     steps:
     # Machine Setup
     - checkout
     # Prepare for artifact
     - run: mkdir -p %CIRCLE_ARTIFACTS% %CIRCLE_TEST_REPORTS%
+    - run:
+        working_directory: ~/Akarin-project/AkarinForge
+        command: sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java; sudo update-alternatives --set javac /usr/lib/jvm/java-8-openjdk-amd64/bin/javac; echo -e "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64" >> $BASH_ENV
     # Dependencies
   #  - run: mvn dependency:go-offline
     # Restore the dependency cache
