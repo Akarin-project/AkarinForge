@@ -5,8 +5,7 @@ set -e
 basedir="$(cd "$1" && pwd -P)"
 workdir="$basedir/work"
 forgebasedir="$basedir/work/MinecraftForge"
-echo "[Akarin] Brute Forcing"
-\cp -rf "$basedir/changelog_new.txt" "$forgebasedir/build/"
+
 if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
 	echo "[Akarin] Setup workspace.."
 	(
@@ -25,8 +24,10 @@ if [ "$2" == "--setup" ] || [ "$3" == "--setup" ] || [ "$4" == "--setup" ]; then
 		#\cp -rf "$forgebasedir/projects/Forge/Forge Server.launch" "$basedir/"
 	)
 fi
-
+echo "[Akarin] Brute Forcing"
+cp  "$basedir/changelog_new.txt" "$forgebasedir/build/"
 echo "[Akarin] Ready to build"
+(
 	echo "[Akarin] Touch resources.."
 	\cp -rf "$basedir/jsons" "$forgebasedir/"
 	\cp -rf "$basedir/icon.ico" "$forgebasedir/"
@@ -51,4 +52,6 @@ echo "[Akarin] Ready to build"
 	echo ""
 	echo "[Akarin] Build successful"
 	echo "[Akarin] Migrated final build to $basedir/distributions"
+)
+
 )
