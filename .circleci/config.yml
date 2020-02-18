@@ -9,6 +9,7 @@ jobs:
       TERM: dumb
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+      _JAVA_OPTIONS: "-Xmx4g"
     docker:
       - image: circleci/openjdk:8u242-jdk-stretch # ...with this image as the primary container; this is where all `steps` will run
       - image: circleci/postgres:12-alpine
@@ -37,7 +38,7 @@ jobs:
     - run: sudo apt-get install maven
     - run: chmod -Rv +x scripts/
     - run: chmod -Rv +x work/MinecraftForge/
-    - run: ./scripts/inst.sh --setup
+    - run: ./scripts/inst.sh --setup --setup
     # Save dependency cache
     - save_cache:
         key: v1-dep-{{ .Branch }}-{{ epoch }}
