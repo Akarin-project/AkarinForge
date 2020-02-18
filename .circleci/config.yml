@@ -38,7 +38,7 @@ jobs:
     - run: sudo apt update
     - run: sudo apt upgrade
     - run: sudo apt-get install maven
-    - run: mvn dependency:go-offline
+   # - run: mvn dependency:go-offline
     - run: chmod -Rv +x scripts/
   #  - run: ./scripts/maven.sh
     - run: chmod -Rv +x work/MinecraftForge/
