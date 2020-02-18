@@ -9,7 +9,6 @@ jobs:
       TERM: dumb
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
-  #    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
     docker:
       - image: circleci/openjdk:8u242-jdk-stretch # ...with this image as the primary container; this is where all `steps` will run
       - image: circleci/postgres:12-alpine
@@ -36,11 +35,7 @@ jobs:
     - run: sudo apt update
     - run: sudo apt upgrade
     - run: sudo apt-get install maven
-   # - run: mvn dependency:go-offline
- #   - run: mkdir ./work/MinecraftForge/Build
- #   - run: cp ./changelog_new.txt ./work/MinecraftForge/Build
     - run: chmod -Rv +x scripts/
-  #  - run: ./scripts/maven.sh
     - run: chmod -Rv +x work/MinecraftForge/
     - run: ./scripts/inst.sh --setup
     # Save dependency cache
