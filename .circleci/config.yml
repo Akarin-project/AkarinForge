@@ -40,7 +40,7 @@ jobs:
     - run: sudo apt-get install maven
    # - run: mvn dependency:go-offline
     - run: mkdir ./work/MinecraftForge/Build
-    - run: cp ./changelog_new.txt /work/MinecraftForge/Build
+    - run: cp ./changelog_new.txt ./work/MinecraftForge/Build
     - run: chmod -Rv +x scripts/
   #  - run: ./scripts/maven.sh
     - run: chmod -Rv +x work/MinecraftForge/
