@@ -31,28 +31,33 @@ echo "[Akarin] Ready to build"
 	\cp -rf "$basedir/icon.ico" "$forgebasedir/"
 
 	echo "[Akarin] Touch server.."
-	if [ "$2" == "--delsrc" ] || [ "$3" == "--delsrc" ] || [ "$4" == "--delsrc" ]; then
-		\rm -rf "$forgebasedir/projects/Forge/src"
+	if [ "$2" == "--nodelsrc" ] || [ "$3" == "--nodelsrc" ] || [ "$4" == "--nodelsrc" ]; then
 		\cp -rf "$basedir/sources/server/src" "$forgebasedir/projects/Forge/"
 	else
+		\rm -rf "$forgebasedir/projects/Forge/src"
 		\cp -rf "$basedir/sources/server/src" "$forgebasedir/projects/Forge/"
 	fi
 	
 	echo "[Akarin] Touch forge.."
-	if [ "$2" == "--delsrc" ] || [ "$3" == "--delsrc" ] || [ "$4" == "--delsrc" ]; then
-		\rm -rf "$forgebasedir/src"
+	if [ "$2" == "--nodelsrc" ] || [ "$3" == "--nodelsrc" ] || [ "$4" == "--nodelsrc" ]; then
 		\cp -rf "$basedir/sources/forge/src" "$forgebasedir/"
 	else
+		\rm -rf "$forgebasedir/src"
 		\cp -rf "$basedir/sources/forge/src" "$forgebasedir/"
 	fi
 
 	cd "$forgebasedir"
 	echo "[Akarin] Build Forge.. (1/2)"
 	./gradlew genPatches
-	echo "[Akarin] Brute Forcing"
-	\cp "$basedir/changelog_new.txt" "$forgebasedir/build/"
-	echo "[Akarin] Build Forge.. (2/2)"
-	./gradlew launch4j
+	if [ "$2" == "--nobrute" ] || [ "$3" == "--nobrute" ] || [ "$4" == "--nobrute" ]; then
+		echo "[Akarin] Build Forge.. (2/2)"
+		./gradlew createExe
+	else
+		echo "[Akarin] Brute Forcing"
+		\cp "$basedir/changelog_new.txt" "$forgebasedir/build/"
+		echo "[Akarin] Build Forge.. (2/2)"
+		./gradlew createExe
+	fi
 
 	build="$forgebasedir/build/distributions"
 	\cp -rf "$build" "$basedir/"
