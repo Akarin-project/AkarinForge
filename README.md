@@ -2,6 +2,7 @@
 [![Powered by](https://img.shields.io/badge/Powered_by-Akarin_project-ee6aa7.svg?style=flat)](https://akarin.io)
 [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/fw2pJAj)
 [![Build Status](http://josephworks.ddns.net:8080/job/Akarin-project/job/AkarinForge/badge/icon)](http://josephworks.ddns.net:8080/job/Akarin-project/job/AkarinForge/)
+
 AkarinForge is currently **under heavy development** and contributions are welcome!
 
 Introduction
